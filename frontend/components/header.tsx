@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/theme-toggle';
 import {
    Sheet,
@@ -10,6 +10,7 @@ import {
    SheetTrigger,
 } from '@/components/ui/sheet';
 import { Menu, Package, Phone, User } from 'lucide-react';
+import Link from 'next/link';
 
 export function Header() {
    const [isOpen, setIsOpen] = useState(false);
@@ -62,10 +63,17 @@ export function Header() {
                {/* Desktop Actions */}
                <div className="hidden items-center space-x-4 lg:flex">
                   <ThemeToggle />
-                  <Button variant="ghost" size="sm" className="text-sm">
+                  <Link
+                     href="/signin"
+                     className={buttonVariants({
+                        className: 'text-sm',
+                        variant: 'ghost',
+                        size: 'sm',
+                     })}
+                  >
                      <User className="mr-2 h-4 w-4" />
                      Sign In
-                  </Button>
+                  </Link>
                   <Button size="sm" className="text-sm">
                      <Phone className="mr-2 h-4 w-4" />
                      Get Quote
@@ -109,14 +117,17 @@ export function Header() {
                         </nav>
 
                         <div className="border-border mt-8 space-y-4 border-t pt-6">
-                           <Button
-                              variant="ghost"
-                              size="sm"
-                              className="w-full justify-start"
+                           <Link
+                              href="/signin"
+                              className={buttonVariants({
+                                 className: 'w-full justify-start',
+                                 variant: 'ghost',
+                                 size: 'sm',
+                              })}
                            >
                               <User className="mr-3 h-4 w-4" />
                               Sign In
-                           </Button>
+                           </Link>
                            <Button size="sm" className="w-full justify-start">
                               <Phone className="mr-3 h-4 w-4" />
                               Get Quote
