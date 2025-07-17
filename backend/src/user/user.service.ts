@@ -29,7 +29,7 @@ export class UserService {
 
       await this.prismaService.user.delete({ where: { id } });
 
-      return { msg: 'User deleted successfully' };
+      return { message: 'User deleted successfully' };
    }
 
    async usernameGenerator(email: string) {

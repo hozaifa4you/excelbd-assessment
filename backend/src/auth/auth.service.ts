@@ -33,7 +33,7 @@ export class AuthService {
          data: { ...createUserDto, username, password: hashedPassword },
       });
 
-      return { msg: 'Register successful' };
+      return { message: 'Register successful' };
    }
 
    async signin(userId: string) {
@@ -54,7 +54,7 @@ export class AuthService {
       const user = await this.userService.findByEmail(email);
       if (!user) throw new UnauthorizedException('Invalid credentials');
 
-      const isMatch = await argon2.verify(password, user.password);
+      const isMatch = await argon2.verify(user.password, password);
       if (!isMatch) throw new UnauthorizedException('Invalid credentials');
 
       return { id: user.id };
@@ -101,7 +101,7 @@ export class AuthService {
    async logout(userId: string) {
       await this.updateRefreshToken(userId, null);
 
-      return { msg: 'User logged out successfully' };
+      return { message: 'User logged out successfully' };
    }
 
    async validateJwtUser(userId: string) {

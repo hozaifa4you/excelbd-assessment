@@ -5,10 +5,13 @@ import {
    HttpStatus,
    Post,
    Req,
+   UseGuards,
 } from '@nestjs/common';
 import { SignupDto } from './dto/signup.dto';
 import { Request } from 'express';
 import { AuthService } from './auth.service';
+import { LocalAuthGuard } from './guards/local.guard';
+import { AuthRequest } from './types/auth-user';
 
 @Controller('auth')
 export class AuthController {
@@ -21,6 +24,9 @@ export class AuthController {
    }
 
    @HttpCode(HttpStatus.OK)
+   @UseGuards(LocalAuthGuard)
    @Post('signin')
-   async signin(@Req() req: Request) {}
+   async signin(@Req() req: AuthRequest) {
+      return this.authService.signin(req.user.id);
+   }
 }
