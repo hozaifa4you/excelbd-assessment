@@ -15,15 +15,16 @@ enum Role {
 }
 
 model User {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  name      String
-  username  String   @unique
-  email     String   @unique
-  phone     String?  @unique
-  password  String
-  role      Role     @default(USER)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  name          String
+  username      String   @unique
+  email         String   @unique
+  phone         String?  @unique
+  password      String
+  role          Role     @default(USER)
+  rememberToken String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   @@map("Users")
 }
