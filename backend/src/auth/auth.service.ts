@@ -36,15 +36,15 @@ export class AuthService {
       return { message: 'Register successful' };
    }
 
-   async signin(userId: string) {
-      const { accessToken, refreshToken } = await this.generateTokens(userId);
+   async signin(user: AuthUser) {
+      const { accessToken, refreshToken } = await this.generateTokens(user.id);
 
-      const hashRefreshToken = await argon2.hash(refreshToken);
+      const hashedRememberToken = await argon2.hash(refreshToken);
 
-      await this.updateRefreshToken(userId, hashRefreshToken);
+      await this.updateRememberToken(user.id, hashedRememberToken);
 
       return {
-         id: userId,
+         user,
          accessToken,
          refreshToken,
       };
@@ -57,7 +57,13 @@ export class AuthService {
       const isMatch = await argon2.verify(user.password, password);
       if (!isMatch) throw new UnauthorizedException('Invalid credentials');
 
-      return { id: user.id };
+      return {
+         id: user.id,
+         firstName: user.firstName,
+         lastName: user.lastName,
+         email: user.email,
+         role: user.role,
+      };
    }
 
    async generateTokens(userId: string) {
@@ -96,7 +102,7 @@ export class AuthService {
    }
 
    async logout(userId: string) {
-      await this.updateRefreshToken(userId, null);
+      await this.updateRememberToken(userId, null);
 
       return { message: 'User logged out successfully' };
    }
@@ -107,6 +113,9 @@ export class AuthService {
 
       const currentUser: AuthUser = {
          id: user.id,
+         firstName: user.firstName,
+         lastName: user.lastName,
+         email: user.email,
          role: user.role,
       };
 
@@ -126,10 +135,13 @@ export class AuthService {
       });
    }
 
-   async updateRefreshToken(userId: string, hashedRefreshToken: string | null) {
+   async updateRememberToken(
+      userId: string,
+      hashedRememberToken: string | null,
+   ) {
       return await this.prisma.user.update({
          where: { id: userId },
-         data: { rememberToken: hashedRefreshToken },
+         data: { rememberToken: hashedRememberToken },
       });
    }
 }

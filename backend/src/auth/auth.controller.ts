@@ -8,7 +8,6 @@ import {
    UseGuards,
 } from '@nestjs/common';
 import { SignupDto } from './dto/signup.dto';
-import { Request } from 'express';
 import { AuthService } from './auth.service';
 import { LocalAuthGuard } from './guards/local.guard';
 import { AuthRequest } from './types/auth-user';
@@ -27,6 +26,6 @@ export class AuthController {
    @UseGuards(LocalAuthGuard)
    @Post('signin')
    async signin(@Req() req: AuthRequest) {
-      return this.authService.signin(req.user.id);
+      return this.authService.signin(req.user);
    }
 }
