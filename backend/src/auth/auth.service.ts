@@ -33,7 +33,9 @@ export class AuthService {
          data: { ...createUserDto, username, password: hashedPassword },
       });
 
-      return { message: 'Register successful' };
+      return {
+         message: `Welcome to Quicko! We&apos;ve sent a verification email to ${createUserDto.email}. Please check your inbox and click the verification link to activate your account.`,
+      };
    }
 
    async signin(user: AuthUser) {

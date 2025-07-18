@@ -10,4 +10,19 @@ type LoginState =
      }
    | undefined;
 
-export type { LoginState };
+type SignUpState =
+   | {
+        error?: {
+           firstName?: string;
+           lastName?: string;
+           email?: string;
+           phone?: string;
+           password?: string;
+           confirmPassword?: string;
+        };
+        message?: string;
+        success: boolean;
+     }
+   | undefined;
+
+export type { LoginState, SignUpState };

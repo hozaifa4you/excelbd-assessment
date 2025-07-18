@@ -14,6 +14,10 @@ export class SignupDto {
    email: string;
 
    @IsString()
+   @Length(10, 15)
+   phone: string;
+
+   @IsString()
    @Length(6, 32)
    password: string;
 }
