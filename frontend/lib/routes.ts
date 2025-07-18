@@ -2,6 +2,7 @@ export type RouteType =
    | 'home'
    | 'signin'
    | 'signup'
+   | 'dashboard'
    | 'parcels'
    | 'parcel.details';
 
@@ -9,6 +10,7 @@ type RouteParamsMap = {
    home: undefined;
    signin: undefined;
    signup: undefined;
+   dashboard: undefined;
    parcels: undefined;
    'parcel.details': { slug: string };
 };
@@ -17,6 +19,7 @@ type RouteQueryMap = {
    home: Record<string, string>;
    signin: Record<string, string>;
    signup: Record<string, string>;
+   dashboard: Record<string, string>;
    parcels: Record<string, string>;
    'parcel.details': Record<string, string>;
 };
@@ -38,6 +41,8 @@ export const route = <T extends RouteType>(
          return '/signin' + queryString;
       case 'signup':
          return '/signup' + queryString;
+      case 'dashboard':
+         return '/dashboard' + queryString;
       case 'parcels':
          return '/parcels' + queryString;
       case 'parcel.details':

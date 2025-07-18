@@ -9,11 +9,17 @@ import {
    SheetTitle,
    SheetTrigger,
 } from '@/components/ui/sheet';
-import { Menu, Package, Phone, User } from 'lucide-react';
+import { LayoutDashboard, Menu, Package, Phone, User } from 'lucide-react';
 import Link from 'next/link';
 import { Logo } from './logo';
+import { Session } from '@/lib/sessions';
+import { route } from '@/lib/routes';
 
-export function Header() {
+interface HeaderProps {
+   session: Session | null;
+}
+
+export function Header({ session }: HeaderProps) {
    const [isOpen, setIsOpen] = useState(false);
 
    const navigation = [
@@ -57,21 +63,42 @@ export function Header() {
                {/* Desktop Actions */}
                <div className="hidden items-center space-x-4 lg:flex">
                   <ThemeToggle />
-                  <Link
-                     href="/signin"
-                     className={buttonVariants({
-                        className: 'text-sm',
-                        variant: 'ghost',
-                        size: 'sm',
-                     })}
-                  >
-                     <User className="mr-2 h-4 w-4" />
-                     Sign In
-                  </Link>
-                  <Button size="sm" className="text-sm">
-                     <Phone className="mr-2 h-4 w-4" />
-                     Get Quote
-                  </Button>
+                  {session ? (
+                     <>
+                        <Link
+                           href={route('dashboard')}
+                           className={buttonVariants({
+                              className: 'text-sm',
+                              variant: 'secondary',
+                              size: 'sm',
+                           })}
+                        >
+                           <LayoutDashboard className="mr-1 h-4 w-4" />
+                           Dashboard
+                        </Link>
+                        <Button size="icon" className="text-sm">
+                           <User className="size-4.5" />
+                        </Button>
+                     </>
+                  ) : (
+                     <>
+                        <Link
+                           href={route('signin')}
+                           className={buttonVariants({
+                              className: 'text-sm',
+                              variant: 'ghost',
+                              size: 'sm',
+                           })}
+                        >
+                           <User className="mr-2 h-4 w-4" />
+                           Sign In
+                        </Link>
+                        <Button size="sm" className="text-sm">
+                           <Phone className="mr-2 h-4 w-4" />
+                           Get Quote
+                        </Button>
+                     </>
+                  )}
                </div>
 
                {/* Mobile Actions */}
@@ -111,21 +138,49 @@ export function Header() {
                         </nav>
 
                         <div className="border-border mt-8 space-y-4 border-t pt-6">
-                           <Link
-                              href="/signin"
-                              className={buttonVariants({
-                                 className: 'w-full justify-start',
-                                 variant: 'ghost',
-                                 size: 'sm',
-                              })}
-                           >
-                              <User className="mr-3 h-4 w-4" />
-                              Sign In
-                           </Link>
-                           <Button size="sm" className="w-full justify-start">
-                              <Phone className="mr-3 h-4 w-4" />
-                              Get Quote
-                           </Button>
+                           {session ? (
+                              <>
+                                 <Link
+                                    href={route('dashboard')}
+                                    className={buttonVariants({
+                                       className: 'w-full justify-start',
+                                       variant: 'ghost',
+                                       size: 'sm',
+                                    })}
+                                 >
+                                    <LayoutDashboard className="mr-2 h-4 w-4" />
+                                    Dashboard
+                                 </Link>
+                                 <Button
+                                    size="sm"
+                                    className="w-full justify-start"
+                                 >
+                                    <User className="mr-2 h-4 w-4" />
+                                    Profile
+                                 </Button>
+                              </>
+                           ) : (
+                              <>
+                                 <Link
+                                    href={route('signin')}
+                                    className={buttonVariants({
+                                       className: 'w-full justify-start',
+                                       variant: 'ghost',
+                                       size: 'sm',
+                                    })}
+                                 >
+                                    <User className="mr-2 size-5" />
+                                    Sign In
+                                 </Link>
+                                 <Button
+                                    size="sm"
+                                    className="w-full justify-start"
+                                 >
+                                    <Phone className="mr-2 h-4 w-4" />
+                                    Get Quote
+                                 </Button>
+                              </>
+                           )}
                         </div>
                      </SheetContent>
                   </Sheet>

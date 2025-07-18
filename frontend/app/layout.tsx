@@ -5,6 +5,7 @@ import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 import { Raleway } from 'next/font/google';
 import { Toaster } from 'sonner';
+import { getSession } from '@/lib/sessions';
 
 const raleway = Raleway({
    subsets: ['latin'],
@@ -18,17 +19,20 @@ export const metadata: Metadata = {
       'Quicko is a personal delivery assistant that helps you manage your deliveries efficiently.',
 };
 
-export default function RootLayout({
+export default async function RootLayout({
    children,
 }: Readonly<{
    children: React.ReactNode;
 }>) {
+   const session = await getSession();
+   console.log(session);
+
    return (
       <html lang="en">
          <body className={`${raleway.className} antialiased`}>
             <Toaster richColors position="top-center" />
             <ThemeProvider defaultTheme="light" storageKey="quicko-ui-theme">
-               <Header />
+               <Header session={session} />
                {children}
                <Footer />
             </ThemeProvider>

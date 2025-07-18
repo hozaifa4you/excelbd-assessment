@@ -19,15 +19,17 @@ const initialState = {
 const SigninForm = () => {
    const [state, signinAction, pending] = useActionState(signIn, initialState);
    const [showPassword, setShowPassword] = useState(false);
+   const message = state?.message;
 
    useEffect(() => {
-      if (state?.message) {
+      if (!pending && message) {
          toast.error('Login Failed', {
-            description: state.message.toString(),
+            description: message.toString(),
             icon: <AlertCircle />,
          });
       }
-   }, [state?.message]);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+   }, [pending]);
 
    return (
       <form className="space-y-4" action={signinAction}>
