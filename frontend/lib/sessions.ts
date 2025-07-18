@@ -1,8 +1,8 @@
 'use server';
+import 'server-only';
 import { appEnv } from '@/config/env.config';
 import { Role } from '@/types/auth';
 import { jwtVerify, SignJWT } from 'jose';
-
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 
@@ -11,6 +11,7 @@ export type Session = {
       id: string;
       firstName: string;
       lastName: string;
+      email: string;
       role: Role;
    };
    accessToken: string;
@@ -28,17 +29,19 @@ export async function createSession(payload: Session) {
       .setExpirationTime(appEnv.SESSION_SECRET_EXP_WITH_UNITS)
       .sign(encodedKey);
 
-   (await cookies()).set('session', session, {
+   (await cookies()).set(appEnv.SESSION_NAME, session, {
       httpOnly: true,
       secure: true,
       expires: expiredAt,
       sameSite: 'lax',
       path: '/',
    });
+
+   return session;
 }
 
 export async function getSession() {
-   const cookie = (await cookies()).get('session')?.value;
+   const cookie = (await cookies()).get(appEnv.SESSION_NAME)?.value;
    if (!cookie) return null;
 
    try {
@@ -54,7 +57,7 @@ export async function getSession() {
 }
 
 export async function deleteSession() {
-   (await cookies()).delete('session');
+   (await cookies()).delete(appEnv.SESSION_NAME);
 }
 
 export async function updateTokens({
@@ -64,7 +67,7 @@ export async function updateTokens({
    accessToken: string;
    refreshToken: string;
 }) {
-   const cookie = (await cookies()).get('session')?.value;
+   const cookie = (await cookies()).get(appEnv.SESSION_NAME)?.value;
    if (!cookie) return null;
 
    const { payload } = await jwtVerify<Session>(cookie, encodedKey);

@@ -8,7 +8,7 @@ import { zodErrorFormat } from '@/lib/utils';
 import { createSession } from '@/lib/sessions';
 
 export async function signIn(
-   state: LoginState,
+   initialState: unknown,
    formData: FormData,
 ): Promise<LoginState> {
    const validatedFields = LoginFormSchema.safeParse({
@@ -33,16 +33,13 @@ export async function signIn(
    if (response.ok) {
       const result = await response.json();
 
-      await createSession({
-         user: {
-            id: result.id,
-            firstName: result.firstName,
-            lastName: result.lastName,
-            role: result.role,
-         },
+      const payload = {
+         user: result.user,
          accessToken: result.accessToken,
          refreshToken: result.refreshToken,
-      });
+      };
+
+      await createSession(payload);
       redirect('/');
    } else {
       return {

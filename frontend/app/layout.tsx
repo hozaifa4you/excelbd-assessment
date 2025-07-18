@@ -4,6 +4,7 @@ import { ThemeProvider } from '@/components/theme-provider';
 import { Header } from '@/components/header';
 import { Footer } from '@/components/footer';
 import { Raleway } from 'next/font/google';
+import { Toaster } from 'sonner';
 
 const raleway = Raleway({
    subsets: ['latin'],
@@ -25,6 +26,7 @@ export default function RootLayout({
    return (
       <html lang="en">
          <body className={`${raleway.className} antialiased`}>
+            <Toaster richColors position="top-center" />
             <ThemeProvider defaultTheme="light" storageKey="quicko-ui-theme">
                <Header />
                {children}

@@ -1,16 +1,36 @@
 'use client';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { ArrowRight, Eye, EyeOff, Lock, Mail } from 'lucide-react';
-import { useState } from 'react';
+import { AlertCircle, ArrowRight, Eye, EyeOff, Lock, Mail } from 'lucide-react';
+import { useActionState, useEffect, useState } from 'react';
 import { Checkbox } from '../ui/checkbox';
 import { Button } from '../ui/button';
+import { signIn } from '@/actions/auth.action';
+import { toast } from 'sonner';
+
+const initialState = {
+   error: {
+      email: undefined,
+      password: undefined,
+   },
+   message: undefined,
+};
 
 const SigninForm = () => {
+   const [state, signinAction, pending] = useActionState(signIn, initialState);
    const [showPassword, setShowPassword] = useState(false);
 
+   useEffect(() => {
+      if (state?.message) {
+         toast.error('Login Failed', {
+            description: state.message.toString(),
+            icon: <AlertCircle />,
+         });
+      }
+   }, [state?.message]);
+
    return (
-      <form className="space-y-4">
+      <form className="space-y-4" action={signinAction}>
          <div className="space-y-2">
             <Label htmlFor="email">Email Address</Label>
             <div className="relative">
@@ -21,9 +41,14 @@ const SigninForm = () => {
                   placeholder="Enter your email"
                   className="h-12 pl-10"
                   required
+                  name="email"
                />
             </div>
          </div>
+
+         {state?.error?.email && (
+            <p className="text-primary text-sm">{state.error.email}</p>
+         )}
 
          <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
@@ -35,6 +60,7 @@ const SigninForm = () => {
                   placeholder="Enter your password"
                   className="h-12 pr-10 pl-10"
                   required
+                  name="password"
                />
                <button
                   type="button"
@@ -49,6 +75,10 @@ const SigninForm = () => {
                </button>
             </div>
          </div>
+
+         {state?.error?.password && (
+            <p className="text-primary text-sm">{state.error.password}</p>
+         )}
 
          <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
@@ -66,7 +96,7 @@ const SigninForm = () => {
          </div>
 
          <Button type="submit" className="h-12 w-full text-base font-semibold">
-            {false ? (
+            {pending ? (
                <div className="flex items-center space-x-2">
                   <div className="border-primary-foreground/30 border-t-primary-foreground h-4 w-4 animate-spin rounded-full border-2"></div>
                   <span>Signing in...</span>
