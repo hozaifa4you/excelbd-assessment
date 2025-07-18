@@ -1,9 +1,9 @@
 import { CreditCard, Shield, Truck } from 'lucide-react';
-import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
-import { Label } from '../ui/label';
-import { Separator } from '../ui/separator';
-import { Checkbox } from '../ui/checkbox';
-import { Badge } from '../ui/badge';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
+import { Separator } from '@/components/ui/separator';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Badge } from '@/components/ui/badge';
 
 const deliveryOptions = [
    {

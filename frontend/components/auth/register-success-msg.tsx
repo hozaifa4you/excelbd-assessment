@@ -1,10 +1,10 @@
 'use client';
 import { CheckCircle } from 'lucide-react';
-import { Card, CardContent } from '../ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { useOptions } from '@/hooks/use-options';
 import Link from 'next/link';
 import { route } from '@/lib/routes';
-import { buttonVariants } from '../ui/button';
+import { buttonVariants } from '@/components/ui/button';
 
 const RegisterSuccessMsg = () => {
    const options = useOptions();

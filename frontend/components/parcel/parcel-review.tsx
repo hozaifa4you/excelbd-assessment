@@ -1,5 +1,5 @@
 import { Calculator, MapPin, Package, Truck } from 'lucide-react';
-import { Separator } from '../ui/separator';
+import { Separator } from '@/components/ui/separator';
 
 const ParcelReview = () => {
    return (

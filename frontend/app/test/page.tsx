@@ -9,6 +9,13 @@ import { ParcelAddress } from '@/components/parcel/parcel-address';
 import { DeliveryOptions } from '@/components/parcel/delivery-options';
 import { ParcelReview } from '@/components/parcel/parcel-review';
 import { BookingSuccess } from '@/components/parcel/booking-success';
+import { useSelector } from 'react-redux';
+import {
+   selectStep,
+   nextStep as nextStepStore,
+   prevStep as prevStepStore,
+} from '@/redux/reducers/parcelBookingSlice';
+import { useAppDispatch } from '@/redux/hooks';
 
 interface Address {
    street: string;
@@ -89,6 +96,8 @@ export default function ParcelBooking() {
    const [isLoading, setIsLoading] = useState(false);
    const [error, setError] = useState('');
    const [success, setSuccess] = useState(false);
+   const stepsState = useSelector(selectStep);
+   const dispatch = useAppDispatch();
 
    const steps = [
       {
@@ -201,8 +210,8 @@ export default function ParcelBooking() {
    };
 
    const nextStep = () => {
-      if (validateStep(currentStep)) {
-         if (currentStep === 3) {
+      if (validateStep(stepsState)) {
+         if (stepsState === 3) {
             const fee = calculateDeliveryFee();
             updateFormData('deliveryFee', fee);
 
@@ -225,12 +234,13 @@ export default function ParcelBooking() {
                estimatedDate.toLocaleDateString(),
             );
          }
-         setCurrentStep((prev) => Math.min(prev + 1, 4));
+
+         dispatch(nextStepStore());
       }
    };
 
    const prevStep = () => {
-      setCurrentStep((prev) => Math.max(prev - 1, 1));
+      dispatch(prevStepStore());
    };
 
    const handleSubmit = async () => {
@@ -323,16 +333,16 @@ export default function ParcelBooking() {
                <Card className="bg-card/80 border-0 shadow-2xl backdrop-blur">
                   <CardContent className="p-6 lg:p-8">
                      {/* Step 1: Parcel Details */}
-                     {currentStep === 1 && <ParcelDetails />}
+                     {stepsState === 0 && <ParcelDetails />}
 
                      {/* Step 2: Addresses */}
-                     {currentStep === 2 && <ParcelAddress />}
+                     {stepsState === 1 && <ParcelAddress />}
 
                      {/* Step 3: Delivery Options */}
-                     {currentStep === 3 && <DeliveryOptions />}
+                     {stepsState === 2 && <DeliveryOptions />}
 
                      {/* Step 4: Review & Book */}
-                     {currentStep === 4 && <ParcelReview />}
+                     {stepsState === 3 && <ParcelReview />}
 
                      {/* Navigation Buttons */}
                      <div className="border-border flex items-center justify-between border-t pt-8">

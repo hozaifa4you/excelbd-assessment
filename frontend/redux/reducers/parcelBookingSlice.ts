@@ -1,51 +1,79 @@
 import type { PayloadAction } from '@reduxjs/toolkit';
 import { createAppSlice } from '../createAppSlice';
-import { AppThunk } from '../store';
 
-export interface CounterSliceState {
-   value: number;
-   status: 'idle' | 'loading' | 'failed';
+export interface Recipient {
+   id?: string;
 }
 
-const initialState: CounterSliceState = {
-   value: 0,
-   status: 'idle',
+export interface Address {
+   street: string;
+   city: string;
+   state: string;
+   country: string;
+   zip?: string;
+}
+
+interface Fees {
+   codPrice?: number;
+   deliveryFee?: number;
+   handlingFee?: number;
+   insuranceFee?: number;
+   signatureFee?: number;
+}
+
+type PaymentStatus = 'COD' | 'PAID';
+type PaymentMethod = 'CASH' | 'CARD' | 'ONLINE';
+
+export interface ParcelBookingSliceType {
+   parcelType?: string;
+   weight?: number;
+   dimensions?: string;
+   recipient?: Recipient;
+   pickupAddress?: Address;
+   deliveryAddress?: Address;
+   fees?: Fees;
+   paymentStatus?: PaymentStatus;
+   paymentMethod?: PaymentMethod;
+   deliveryType?: 'STANDARD' | 'EXPRESS' | 'SAME_DAY' | 'OVERNIGHT';
+   notes?: string;
+   step: number;
+}
+
+interface ParcelBookingState {
+   type: keyof ParcelBookingSliceType;
+   data: ParcelBookingSliceType[keyof ParcelBookingSliceType];
+}
+
+const initialState: ParcelBookingSliceType = {
+   step: 0,
 };
 
 export const parcelBookingSlice = createAppSlice({
    name: 'parcelBooking',
    initialState,
    reducers: (create) => ({
-      increment: create.reducer((state) => {
-         state.value += 1;
-      }),
-      decrement: create.reducer((state) => {
-         state.value -= 1;
-      }),
-      incrementByAmount: create.reducer(
-         (state, action: PayloadAction<number>) => {
-            state.value += action.payload;
+      setParcelBooking: create.reducer(
+         (state, action: PayloadAction<ParcelBookingState>) => {
+            return { ...state, [action.payload.type]: action.payload.data };
          },
       ),
+      nextStep: create.reducer((state) => {
+         state.step += 1;
+      }),
+      prevStep: create.reducer((state) => {
+         if (state.step > 0) {
+            state.step -= 1;
+         }
+      }),
    }),
 
    selectors: {
-      selectCount: (counter) => counter.value,
-      selectStatus: (counter) => counter.status,
+      selectParcelBooking: (state) => state,
+      selectStep: (state) => state.step,
    },
 });
 
-export const { decrement, increment, incrementByAmount } =
+export const { setParcelBooking, nextStep, prevStep } =
    parcelBookingSlice.actions;
 
-export const { selectCount, selectStatus } = parcelBookingSlice.selectors;
-
-export const incrementIfOdd =
-   (amount: number): AppThunk =>
-   (dispatch, getState) => {
-      const currentValue = selectCount(getState());
-
-      if (currentValue % 2 === 1 || currentValue % 2 === -1) {
-         dispatch(incrementByAmount(amount));
-      }
-   };
+export const { selectParcelBooking, selectStep } = parcelBookingSlice.selectors;

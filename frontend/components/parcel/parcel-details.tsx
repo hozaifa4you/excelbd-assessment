@@ -1,3 +1,4 @@
+'use client';
 import {
    ArrowsUpFromLine,
    Cable,
@@ -7,11 +8,17 @@ import {
    Shapes,
    Shirt,
 } from 'lucide-react';
-import { Badge } from '../ui/badge';
-import { Checkbox } from '../ui/checkbox';
-import { Input } from '../ui/input';
-import { Label } from '../ui/label';
-import { Textarea } from '../ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { useAppDispatch, useAppSelector } from '@/redux/hooks';
+import {
+   selectParcelBooking,
+   setParcelBooking,
+} from '@/redux/reducers/parcelBookingSlice';
+import { cn } from '@/lib/utils';
 
 const parcelTypes = [
    { value: 'document', label: 'Documents', Icon: Mails },
@@ -24,6 +31,9 @@ const parcelTypes = [
 ];
 
 const ParcelDetails = () => {
+   const dispatch = useAppDispatch();
+   const parcel = useAppSelector(selectParcelBooking);
+
    return (
       <div className="space-y-6">
          <div className="space-y-4">
@@ -35,13 +45,21 @@ const ParcelDetails = () => {
                   <button
                      key={type.value}
                      type="button"
-                     // onClick={() => updateFormData('parcelType', type.value)}
-                     className={`grid justify-center rounded-xl border-2 p-4 transition-all hover:scale-105 ${
-                        // formData.parcelType === type.value
-                        false
-                           ? 'border-primary bg-primary/10 text-primary'
-                           : 'border-border hover:border-primary/50'
-                     }`}
+                     onClick={() =>
+                        dispatch(
+                           setParcelBooking({
+                              type: 'parcelType',
+                              data: type.value,
+                           }),
+                        )
+                     }
+                     className={cn(
+                        `border-border hover:border-primary/50 grid justify-center rounded-xl border-2 p-4 transition-all hover:scale-105`,
+                        {
+                           'border-primary bg-primary/10 text-primary':
+                              parcel.parcelType === type.value,
+                        },
+                     )}
                   >
                      <div className="mx-auto mb-2">
                         <type.Icon className="size-6" />
@@ -61,11 +79,33 @@ const ParcelDetails = () => {
                   step="0.1"
                   placeholder="0.5"
                   className="h-12"
+                  value={parcel.weight}
+                  onChange={(e) =>
+                     dispatch(
+                        setParcelBooking({
+                           type: 'weight',
+                           data: parseFloat(e.target.value),
+                        }),
+                     )
+                  }
                />
             </div>
             <div className="space-y-2">
                <Label htmlFor="dimensions">Dimensions (L×W×H cm)</Label>
-               <Input id="dimensions" placeholder="20×15×10" className="h-12" />
+               <Input
+                  id="dimensions"
+                  placeholder="20×15×10"
+                  className="h-12"
+                  value={parcel.dimensions}
+                  onChange={(e) =>
+                     dispatch(
+                        setParcelBooking({
+                           type: 'dimensions',
+                           data: e.target.value,
+                        }),
+                     )
+                  }
+               />
             </div>
          </div>
 
@@ -73,7 +113,21 @@ const ParcelDetails = () => {
             <Label className="text-base font-semibold">Special Handling</Label>
             <div className="space-y-3">
                <div className="flex items-center space-x-2">
-                  <Checkbox id="fragile" />
+                  <Checkbox
+                     id="fragile"
+                     checked={parcel.fees?.handlingFee ? true : false}
+                     onCheckedChange={(checked) =>
+                        dispatch(
+                           setParcelBooking({
+                              type: 'fees',
+                              data: {
+                                 ...parcel.fees,
+                                 handlingFee: checked ? 2.99 : undefined,
+                              },
+                           }),
+                        )
+                     }
+                  />
                   <Label
                      htmlFor="fragile"
                      className="flex items-center space-x-2"
@@ -91,6 +145,15 @@ const ParcelDetails = () => {
                id="notes"
                placeholder="Any special delivery instructions..."
                className="min-h-[100px]"
+               value={parcel.notes}
+               onChange={(e) =>
+                  dispatch(
+                     setParcelBooking({
+                        type: 'notes',
+                        data: e.target.value,
+                     }),
+                  )
+               }
             />
          </div>
       </div>

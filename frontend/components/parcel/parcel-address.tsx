@@ -1,14 +1,14 @@
 import { MapPin, User } from 'lucide-react';
-import { Label } from '../ui/label';
-import { Input } from '../ui/input';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import {
    Select,
    SelectContent,
    SelectItem,
    SelectTrigger,
    SelectValue,
-} from '../ui/select';
-import { Separator } from '../ui/separator';
+} from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
 
 const ParcelAddress = () => {
    return (

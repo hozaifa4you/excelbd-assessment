@@ -3,8 +3,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { AlertCircle, ArrowRight, Eye, EyeOff, Lock, Mail } from 'lucide-react';
 import { useActionState, useEffect, useState } from 'react';
-import { Checkbox } from '../ui/checkbox';
-import { Button } from '../ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Button } from '@/components/ui/button';
 import { signIn } from '@/actions/auth.action';
 import { toast } from 'sonner';
 

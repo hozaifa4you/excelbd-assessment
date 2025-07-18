@@ -13,7 +13,7 @@ import {
    ArrowRight,
    AlertCircle,
 } from 'lucide-react';
-import { Button } from '../ui/button';
+import { Button } from '@/components/ui/button';
 import { signUp } from '@/actions/auth.action';
 import { toast } from 'sonner';
 import { useOptions } from '@/hooks/use-options';
