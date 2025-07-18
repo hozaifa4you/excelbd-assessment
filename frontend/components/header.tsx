@@ -14,6 +14,7 @@ import Link from 'next/link';
 import { Logo } from './logo';
 import { Session } from '@/lib/sessions';
 import { route } from '@/lib/routes';
+import { NavUser } from './auth/nav-user';
 
 interface HeaderProps {
    session: Session | null;
@@ -76,9 +77,13 @@ export function Header({ session }: HeaderProps) {
                            <LayoutDashboard className="mr-1 h-4 w-4" />
                            Dashboard
                         </Link>
-                        <Button size="icon" className="text-sm">
-                           <User className="size-4.5" />
-                        </Button>
+                        <NavUser
+                           user={{
+                              avatar: 'CN',
+                              name: `${session.user.firstName} ${session.user.lastName}`,
+                              email: session.user.email,
+                           }}
+                        />
                      </>
                   ) : (
                      <>
