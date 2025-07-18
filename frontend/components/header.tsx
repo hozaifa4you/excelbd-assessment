@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/sheet';
 import { Menu, Package, Phone, User } from 'lucide-react';
 import Link from 'next/link';
+import { Logo } from './logo';
 
 export function Header() {
    const [isOpen, setIsOpen] = useState(false);
@@ -38,14 +39,7 @@ export function Header() {
          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex h-16 items-center justify-between">
                {/* Logo */}
-               <div className="flex items-center space-x-3">
-                  <div className="bg-primary flex h-10 w-10 items-center justify-center rounded-xl">
-                     <Package className="text-primary-foreground h-6 w-6" />
-                  </div>
-                  <span className="text-foreground text-2xl font-bold">
-                     Quicko
-                  </span>
-               </div>
+               <Logo />
 
                {/* Desktop Navigation */}
                <nav className="hidden items-center space-x-8 lg:flex">

@@ -87,10 +87,7 @@ export class AuthService {
          throw new UnauthorizedException('Unauthorized');
       }
 
-      const isMatch = await argon2.verify(
-         user.rememberToken as string,
-         refreshToken,
-      );
+      const isMatch = await argon2.verify(user.rememberToken, refreshToken);
       if (!isMatch) {
          throw new UnauthorizedException('Unauthorized');
       }
