@@ -1,3 +1,12 @@
+import {
+   ArrowsUpFromLine,
+   Cable,
+   Cookie,
+   Mails,
+   Package,
+   Shapes,
+   Shirt,
+} from 'lucide-react';
 import { Badge } from '../ui/badge';
 import { Checkbox } from '../ui/checkbox';
 import { Input } from '../ui/input';
@@ -5,13 +14,13 @@ import { Label } from '../ui/label';
 import { Textarea } from '../ui/textarea';
 
 const parcelTypes = [
-   { value: 'document', label: 'Documents', icon: '📄' },
-   { value: 'package', label: 'Package', icon: '📦' },
-   { value: 'fragile', label: 'Fragile Items', icon: '🔸' },
-   { value: 'electronics', label: 'Electronics', icon: '💻' },
-   { value: 'clothing', label: 'Clothing', icon: '👕' },
-   { value: 'food', label: 'Food Items', icon: '🍕' },
-   { value: 'other', label: 'Other', icon: '📋' },
+   { value: 'document', label: 'Documents', Icon: Mails },
+   { value: 'package', label: 'Package', Icon: Package },
+   { value: 'fragile', label: 'Fragile Items', Icon: ArrowsUpFromLine },
+   { value: 'electronics', label: 'Electronics', Icon: Cable },
+   { value: 'clothing', label: 'Clothing', Icon: Shirt },
+   { value: 'food', label: 'Food Items', Icon: Cookie },
+   { value: 'other', label: 'Other', Icon: Shapes },
 ];
 
 const ParcelDetails = () => {
@@ -27,14 +36,16 @@ const ParcelDetails = () => {
                      key={type.value}
                      type="button"
                      // onClick={() => updateFormData('parcelType', type.value)}
-                     className={`rounded-xl border-2 p-4 text-center transition-all hover:scale-105 ${
+                     className={`grid justify-center rounded-xl border-2 p-4 transition-all hover:scale-105 ${
                         // formData.parcelType === type.value
                         false
                            ? 'border-primary bg-primary/10 text-primary'
                            : 'border-border hover:border-primary/50'
                      }`}
                   >
-                     <div className="mb-2 text-2xl">{type.icon}</div>
+                     <div className="mx-auto mb-2">
+                        <type.Icon className="size-6" />
+                     </div>
                      <div className="text-sm font-medium">{type.label}</div>
                   </button>
                ))}
