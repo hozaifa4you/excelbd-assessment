@@ -3,6 +3,7 @@ import { ThemeProvider } from '@/components/theme-provider';
 import { Raleway } from 'next/font/google';
 import { Toaster } from 'sonner';
 import './globals.css';
+import { StoreProvider } from '@/redux/StoreProvider';
 
 const raleway = Raleway({
    subsets: ['latin'],
@@ -22,13 +23,15 @@ export default async function RootLayout({
    children: React.ReactNode;
 }>) {
    return (
-      <html lang="en">
-         <body className={`${raleway.className} antialiased`}>
-            <Toaster richColors position="top-center" />
-            <ThemeProvider defaultTheme="light" storageKey="quicko-ui-theme">
-               {children}
-            </ThemeProvider>
-         </body>
-      </html>
+      <StoreProvider>
+         <ThemeProvider defaultTheme="light" storageKey="quicko-ui-theme">
+            <html lang="en">
+               <body className={`${raleway.className} antialiased`}>
+                  <Toaster richColors position="top-center" />
+                  {children}
+               </body>
+            </html>
+         </ThemeProvider>
+      </StoreProvider>
    );
 }
