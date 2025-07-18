@@ -56,7 +56,9 @@ type Address {
 
 enum ParcelStatus {
   PENDING
+  PICKED_UP
   IN_TRANSIT
+  DELIVERING
   DELIVERED
   CANCELLED
 }
@@ -66,8 +68,31 @@ enum PaymentStatus {
   PAID
 }
 
+enum PaymentMethod {
+  CASH
+  CARD
+  ONLINE
+}
+
+type Fees {
+  price        Float? @default(0)
+  deliveryFee  Float
+  handlingFee  Float? @default(0)
+  insuranceFee Float? @default(0)
+  signatureFee Float? @default(0)
+  packagingFee Float? @default(0)
+}
+
+enum DeliveryType {
+  STANDARD
+  EXPRESS
+  OVERNIGHT
+  SAME_DAY
+}
+
 model Parcel {
   id                String        @id @default(auto()) @map("_id") @db.ObjectId
+  trackingNumber    String        @unique
   parcelType        String
   weight            Float
   dimensions        String?
@@ -78,12 +103,13 @@ model Parcel {
   recipientId       String        @db.ObjectId
   pickupAddress     Address
   deliveryAddress   Address
+  fees              Fees
+  paymentStatus     PaymentStatus
+  paymentMethod     PaymentMethod @default(CASH)
   deliveryAgent     User?         @relation("ParcelDeliveryAgent", fields: [deliveryAgentId], references: [id])
   deliveryAgentId   String?       @db.ObjectId
-  trackingNumber    String        @unique
-  deliveryFee       Float
-  paymentStatus     PaymentStatus
   estimatedDelivery DateTime?
+  deliveryType      DeliveryType  @default(STANDARD)
   deliveredAt       DateTime?
   notes             String?
   createdAt         DateTime      @default(now())
