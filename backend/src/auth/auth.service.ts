@@ -50,6 +50,11 @@ export class AuthService {
       };
    }
 
+   async signout(userId: string) {
+      await this.updateRememberToken(userId, null);
+      return { message: 'User signed out successfully' };
+   }
+
    async validateUser(email: string, password: string) {
       const user = await this.userService.findByEmail(email);
       if (!user) throw new UnauthorizedException('Invalid credentials');

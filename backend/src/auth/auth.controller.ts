@@ -1,6 +1,7 @@
 import {
    Body,
    Controller,
+   Delete,
    HttpCode,
    HttpStatus,
    Post,
@@ -11,6 +12,7 @@ import { SignupDto } from './dto/signup.dto';
 import { AuthService } from './auth.service';
 import { LocalAuthGuard } from './guards/local.guard';
 import { AuthRequest } from './types/auth-user';
+import { JwtGuard } from './guards/jwt.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -27,5 +29,13 @@ export class AuthController {
    @Post('signin')
    async signin(@Req() req: AuthRequest) {
       return this.authService.signin(req.user);
+   }
+
+   @HttpCode(HttpStatus.NO_CONTENT)
+   @UseGuards(JwtGuard)
+   @Delete('signout')
+   signout(@Req() req: AuthRequest) {
+      const userId = req.user.id;
+      return this.authService.signout(userId);
    }
 }
