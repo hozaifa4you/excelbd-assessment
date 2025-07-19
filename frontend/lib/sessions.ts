@@ -31,7 +31,7 @@ export async function createSession(payload: Session) {
 
    (await cookies()).set(appEnv.SESSION_NAME, session, {
       httpOnly: true,
-      secure: true,
+      secure: process.env.NODE_ENV==='production',
       expires: expiredAt,
       sameSite: 'lax',
       path: '/',

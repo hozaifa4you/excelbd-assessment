@@ -118,7 +118,7 @@ export const bookParcel =
    ) => {
       const { status, step, error, ...parcel } = getState().parcelBooking;
 
-      console.log(token);
+      console.log({token});
 
       dispatch(setStatus('loading'));
       const response = await fetch(

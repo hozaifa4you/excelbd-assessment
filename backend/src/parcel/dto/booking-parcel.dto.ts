@@ -92,6 +92,7 @@ export class BookingParcelDto {
    @IsEnum(PaymentStatus as object)
    paymentStatus: PaymentStatus;
 
+   @IsOptional()
    @IsEnum(PaymentMethod as object)
    paymentMethod: PaymentMethod;
 
