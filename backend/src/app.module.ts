@@ -6,6 +6,7 @@ import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import { ParcelModule } from './parcel/parcel.module';
 import { ConfigModule } from '@nestjs/config';
+import { UploaderModule } from './uploader/uploader.module';
 import appConfig from './config/app.config';
 
 @Module({
@@ -19,6 +20,7 @@ import appConfig from './config/app.config';
       AuthModule,
       UserModule,
       ParcelModule,
+      UploaderModule,
    ],
    controllers: [AppController],
    providers: [AppService],
