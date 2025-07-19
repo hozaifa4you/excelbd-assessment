@@ -116,6 +116,9 @@ export class AuthService {
 
    async validateJwtUser(userId: string) {
       const user = await this.userService.findMe(userId);
+
+      console.log({ user });
+
       if (!user) throw new UnauthorizedException('Unauthorized');
 
       const currentUser: AuthUser = {

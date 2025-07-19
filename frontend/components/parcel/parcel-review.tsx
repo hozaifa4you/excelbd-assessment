@@ -1,7 +1,11 @@
 import { Calculator, MapPin, Package, Truck } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
+import { useAppSelector } from '@/redux/hooks';
+import { selectParcelBooking } from '@/redux/reducers/parcelBookingSlice';
 
 const ParcelReview = () => {
+   const parcel = useAppSelector(selectParcelBooking);
+
    return (
       <div className="space-y-8">
          <div className="space-y-2 text-center">
@@ -25,17 +29,21 @@ const ParcelReview = () => {
                      <div className="flex justify-between">
                         <span>Type:</span>
                         <span className="font-medium capitalize">
-                           parcelType
+                           {parcel.parcelType}
                         </span>
                      </div>
                      <div className="flex justify-between">
                         <span>Weight:</span>
-                        <span className="font-medium">weight kg</span>
+                        <span className="font-medium">{parcel.weight} kg</span>
                      </div>
                      {true && (
                         <div className="flex justify-between">
                            <span>Dimensions:</span>
-                           <span className="font-medium">dimensions cm</span>
+                           <span className="font-medium">
+                              {parcel.dimensions
+                                 ? `${parcel.dimensions} cm`
+                                 : 'Not mention'}
+                           </span>
                         </div>
                      )}
                   </div>
@@ -48,24 +56,30 @@ const ParcelReview = () => {
                      <span>Addresses</span>
                   </h4>
                   <div className="space-y-4 text-sm">
-                     <div>
+                     <address>
                         <div className="text-primary mb-1 font-medium">
                            From:
                         </div>
-                        <div>Sender name</div>
-                        <div>{'street'}</div>
+                        <strong>{parcel.sender?.name}</strong>
+                        <div>{parcel.sender?.phone}</div>
+                        <div>{parcel.pickupAddress?.street}</div>
                         <div>
-                           {'city'}, {'state'} {'zip'}
+                           {parcel.pickupAddress?.city},{' '}
+                           {parcel.pickupAddress?.state}{' '}
+                           {parcel.pickupAddress?.zip}
                         </div>
-                     </div>
-                     <div>
+                     </address>
+                     <address>
                         <div className="text-primary mb-1 font-medium">To:</div>
-                        <div>{'recipientName'}</div>
-                        <div>{'street'}</div>
+                        <strong>{parcel.recipient?.name}</strong>
+                        <div>{parcel.recipient?.phone}</div>
+                        <div>{parcel.deliveryAddress?.street}</div>
                         <div>
-                           {'city'}, {'state'} {'zip'}
+                           {parcel.deliveryAddress?.city},{' '}
+                           {parcel.deliveryAddress?.state}{' '}
+                           {parcel.deliveryAddress?.zip}
                         </div>
-                     </div>
+                     </address>
                   </div>
                </div>
             </div>
@@ -82,19 +96,19 @@ const ParcelReview = () => {
                      <div className="flex justify-between">
                         <span>Speed:</span>
                         <span className="font-medium capitalize">
-                           {'deliverySpeed'}
+                           {parcel.deliveryType}
                         </span>
                      </div>
                      <div className="flex justify-between">
                         <span>Estimated Delivery:</span>
                         <span className="text-primary font-medium">
-                           {'estimatedDelivery'}
+                           {parcel.estimateDelivery}
                         </span>
                      </div>
                      <div className="flex justify-between">
                         <span>Payment:</span>
                         <span className="font-medium">
-                           {true ? 'Cash on Delivery' : 'Pay Now'}
+                           {parcel.paymentStatus}
                         </span>
                      </div>
                   </div>
@@ -108,36 +122,34 @@ const ParcelReview = () => {
                   </h4>
                   <div className="space-y-2 text-sm">
                      <div className="flex justify-between">
-                        <span>Base Delivery Fee:</span>
-                        <span>$ base price</span>
+                        <span>Product Price:</span>
+                        <span>{parcel.fees?.price ?? 0}Tk</span>
                      </div>
-                     {parseFloat('6') > 5 && (
-                        <div className="flex justify-between">
-                           <span>
-                              Extra Weight ({(parseFloat('6') - 5).toFixed(1)}{' '}
-                              kg):
-                           </span>
-                           <span>
-                              ${((parseFloat('6') - 5) * 2).toFixed(2)}
-                           </span>
-                        </div>
-                     )}
-                     {true && (
-                        <div className="flex justify-between">
-                           <span>Insurance:</span>
-                           <span>$5.99</span>
-                        </div>
-                     )}
-                     {true && (
-                        <div className="flex justify-between">
-                           <span>Signature Required:</span>
-                           <span>$2.99</span>
-                        </div>
-                     )}
+                     <div className="flex justify-between">
+                        <span>Delivery Fee:</span>
+                        <span>{parcel.fees?.deliveryFee ?? 0}Tk</span>
+                     </div>
+                     <div className="flex justify-between">
+                        <span>Insurance:</span>
+                        <span>{parcel.fees?.insuranceFee ?? 0}Tk</span>
+                     </div>
+                     <div className="flex justify-between">
+                        <span>Signature Required:</span>
+                        <span>{parcel.fees?.signatureFee ?? 0}Tk</span>
+                     </div>
                      <Separator />
                      <div className="text-primary flex justify-between text-lg font-bold">
                         <span>Total:</span>
-                        <span>${'total'}</span>
+                        <span>
+                           {(
+                              (parcel.fees?.price ?? 0) +
+                              (parcel.fees?.deliveryFee ?? 0) +
+                              (parcel.fees?.insuranceFee ?? 0) +
+                              (parcel.fees?.signatureFee ?? 0) +
+                              (parcel.fees?.handlingFee ?? 0)
+                           ).toFixed(2)}
+                           Tk
+                        </span>
                      </div>
                   </div>
                </div>

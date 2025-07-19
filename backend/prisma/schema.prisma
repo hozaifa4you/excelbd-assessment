@@ -88,7 +88,7 @@ enum DeliveryType {
   SAME_DAY
 }
 
-type Recipient {
+type Person {
   name  String
   phone String
   email String?
@@ -101,22 +101,24 @@ model Parcel {
   weight            Float
   dimensions        String?
   status            ParcelStatus   @default(PENDING)
-  sender            User           @relation(fields: [senderId], references: [id])
-  senderId          String         @db.ObjectId
-  recipient         Recipient
-  pickupAddress     Address
-  deliveryAddress   Address
-  fees              Fees
   paymentStatus     PaymentStatus
   paymentMethod     PaymentMethod?
-  deliveryAgent     User?          @relation("ParcelDeliveryAgent", fields: [deliveryAgentId], references: [id])
-  deliveryAgentId   String?        @db.ObjectId
   estimatedDelivery DateTime?
   deliveryType      DeliveryType   @default(STANDARD)
   deliveredAt       DateTime?
   notes             String?
+  sender            Person
+  recipient         Person
+  pickupAddress     Address
+  deliveryAddress   Address
+  fees              Fees
   createdAt         DateTime       @default(now())
   updatedAt         DateTime       @updatedAt
+
+  deliveryAgent   User?   @relation("ParcelDeliveryAgent", fields: [deliveryAgentId], references: [id])
+  deliveryAgentId String? @db.ObjectId
+  creator         User    @relation(fields: [creatorId], references: [id])
+  creatorId       String  @db.ObjectId
 
   @@map("Parcels")
 }

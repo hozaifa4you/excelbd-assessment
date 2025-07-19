@@ -14,6 +14,7 @@ export class ParcelService {
          recipient,
          fees,
          paymentStatus,
+         sender,
          ...rest
       } = bookingParcelDto;
 
@@ -34,11 +35,12 @@ export class ParcelService {
             fees,
             pickupAddress,
             trackingNumber,
-            senderId: userId,
+            creatorId: userId,
             recipient,
             estimatedDelivery,
             paymentMethod,
             paymentStatus,
+            sender,
          },
       });
 

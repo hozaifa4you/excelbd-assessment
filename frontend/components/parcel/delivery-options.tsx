@@ -130,6 +130,15 @@ const DeliveryOptions = () => {
                                  data: option.value,
                               }),
                            );
+                           dispatch(
+                              setParcelBooking({
+                                 type: 'fees',
+                                 data: {
+                                    ...parcel.fees,
+                                    deliveryFee: option.price,
+                                 },
+                              }),
+                           );
                         }}
                         className={`cursor-pointer rounded-xl border-2 p-4 transition-all ${
                            parcel.deliveryType === option.value

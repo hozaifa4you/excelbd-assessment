@@ -15,16 +15,18 @@ import {
    prevStep as prevStepStore,
    selectParcelBooking,
    setParcelBooking,
+   bookParcel,
 } from '@/redux/reducers/parcelBookingSlice';
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
+import { useSession } from '@/hooks/use-session';
 
 export default function ParcelBooking() {
-   const [isLoading, setIsLoading] = useState(false);
    const [error, setError] = useState('');
    const [success, setSuccess] = useState(false);
    const stepsState = useAppSelector(selectStep);
    const dispatch = useAppDispatch();
    const parcel = useAppSelector(selectParcelBooking);
+   const { session } = useSession();
 
    const steps = [
       {
@@ -48,56 +50,6 @@ export default function ParcelBooking() {
          description: 'Confirm your booking',
       },
    ];
-
-   const deliveryOptions = [
-      {
-         value: 'standard',
-         label: 'Standard Delivery',
-         time: '3-5 business days',
-         price: 12.99,
-         description: 'Reliable delivery at an affordable price',
-      },
-      {
-         value: 'express',
-         label: 'Express Delivery',
-         time: '1-2 business days',
-         price: 24.99,
-         description: 'Faster delivery for urgent packages',
-      },
-      {
-         value: 'overnight',
-         label: 'Overnight Delivery',
-         time: 'Next business day',
-         price: 39.99,
-         description: 'Next day delivery guaranteed',
-      },
-      {
-         value: 'same-day',
-         label: 'Same Day Delivery',
-         time: 'Within 6 hours',
-         price: 59.99,
-         description: 'Ultra-fast same day delivery',
-      },
-   ];
-
-   const calculateDeliveryFee = () => {
-      const selectedOption = deliveryOptions.find(
-         (opt) => opt.value === parcel.deliveryType,
-      );
-      let baseFee = selectedOption?.price || 0;
-
-      // Add weight-based pricing
-      const weight = parcel.weight || 0;
-      if (weight > 5) baseFee += (weight - 5) * 2;
-
-      // Add insurance fee
-      if (parcel.fees?.insuranceFee) baseFee += 5.99;
-
-      // Add signature confirmation fee
-      if (parcel.fees?.signatureFee) baseFee += 2.99;
-
-      return baseFee;
-   };
 
    const validateStep = (step: number): boolean => {
       setError('');
@@ -135,17 +87,6 @@ export default function ParcelBooking() {
    const handleNextStep = () => {
       if (validateStep(stepsState)) {
          if (stepsState === 2) {
-            const fee = calculateDeliveryFee();
-            dispatch(
-               setParcelBooking({
-                  type: 'fees',
-                  data: {
-                     ...parcel.fees,
-                     deliveryFee: fee,
-                  },
-               }),
-            );
-
             const estimatedDate = new Date();
             switch (parcel.deliveryType) {
                case 'SAME_DAY':
@@ -178,16 +119,7 @@ export default function ParcelBooking() {
    };
 
    const handleSubmit = async () => {
-      if (!validateStep(4)) return;
-
-      setIsLoading(true);
-      setError('');
-
-      // Simulate API call
-      setTimeout(() => {
-         setSuccess(true);
-         setIsLoading(false);
-      }, 2000);
+      dispatch(bookParcel(session?.accessToken ?? ''));
    };
 
    if (success) {
@@ -283,14 +215,14 @@ export default function ParcelBooking() {
                         <Button
                            variant="outline"
                            onClick={prevStep}
-                           disabled={stepsState === 1}
+                           disabled={stepsState === 0}
                            className="h-12 px-6"
                         >
                            <ArrowLeft className="mr-2 h-4 w-4" />
                            Previous
                         </Button>
 
-                        {stepsState < 4 ? (
+                        {stepsState < 3 ? (
                            <Button
                               onClick={handleNextStep}
                               className="h-12 px-6"
@@ -301,10 +233,10 @@ export default function ParcelBooking() {
                         ) : (
                            <Button
                               onClick={handleSubmit}
-                              disabled={isLoading}
+                              disabled={parcel.status === 'loading'}
                               className="h-12 px-8"
                            >
-                              {isLoading ? (
+                              {parcel.status === 'loading' ? (
                                  <div className="flex items-center space-x-2">
                                     <div className="border-primary-foreground/30 border-t-primary-foreground h-4 w-4 animate-spin rounded-full border-2"></div>
                                     <span>Booking...</span>

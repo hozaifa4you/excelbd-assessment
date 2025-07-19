@@ -17,6 +17,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
          throw new HttpException('JWT secret is not defined', 500);
       }
 
+      console.log({ secret: config.secret });
+
       super({
          jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
          secretOrKey: config.secret,
@@ -26,6 +28,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
    async validate(payload: AuthJwtPayload) {
       const userId = payload.sub;
+      console.log({ userId });
 
       return this.authService.validateJwtUser(userId);
    }

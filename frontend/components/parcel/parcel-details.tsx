@@ -122,7 +122,7 @@ const ParcelDetails = () => {
                               type: 'fees',
                               data: {
                                  ...parcel.fees,
-                                 handlingFee: checked ? 2.99 : undefined,
+                                 handlingFee: checked ? 199 : undefined,
                               },
                            }),
                         )
@@ -133,7 +133,7 @@ const ParcelDetails = () => {
                      className="flex items-center space-x-2"
                   >
                      <span>Fragile - Handle with care</span>
-                     <Badge variant="secondary">+$2.99</Badge>
+                     <Badge variant="secondary">+199Tk</Badge>
                   </Label>
                </div>
             </div>

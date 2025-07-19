@@ -1,5 +1,7 @@
-import type { PayloadAction } from '@reduxjs/toolkit';
+import type { Dispatch, PayloadAction } from '@reduxjs/toolkit';
 import { createAppSlice } from '../createAppSlice';
+import { AppThunk } from '../store';
+import { toast } from 'sonner';
 
 export interface Person {
    name?: string;
@@ -27,6 +29,8 @@ type PaymentStatus = 'COD' | 'PAID';
 type PaymentMethod = 'CASH' | 'CARD' | 'ONLINE';
 
 export interface ParcelBookingSliceType {
+   status: 'idle' | 'loading' | 'success' | 'error';
+   error?: string;
    parcelType?: string;
    weight?: number;
    dimensions?: string;
@@ -49,6 +53,8 @@ interface ParcelBookingState {
 }
 
 const initialState: ParcelBookingSliceType = {
+   status: 'idle',
+   error: '',
    step: 0,
    sender: { name: '', phone: '', email: '' },
    recipient: { name: '', phone: '', email: '' },
@@ -85,6 +91,17 @@ export const parcelBookingSlice = createAppSlice({
             state.step -= 1;
          }
       }),
+      setError: create.reducer((state, action: PayloadAction<string>) => {
+         state.error = action.payload;
+      }),
+      setStatus: create.reducer(
+         (
+            state,
+            action: PayloadAction<'idle' | 'loading' | 'success' | 'error'>,
+         ) => {
+            state.status = action.payload;
+         },
+      ),
    }),
 
    selectors: {
@@ -93,7 +110,44 @@ export const parcelBookingSlice = createAppSlice({
    },
 });
 
-export const { setParcelBooking, nextStep, prevStep } =
+export const bookParcel =
+   (token: string): AppThunk =>
+   async (
+      dispatch: Dispatch,
+      getState: () => { parcelBooking: ParcelBookingSliceType },
+   ) => {
+      const { status, step, error, ...parcel } = getState().parcelBooking;
+
+      console.log(token);
+
+      dispatch(setStatus('loading'));
+      const response = await fetch(
+         `${process.env.NEXT_PUBLIC_API_URL}/api/parcels/booking`,
+         {
+            method: 'POST',
+            headers: {
+               'Content-Type': 'application/json',
+               Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify(parcel),
+         },
+      );
+      const result = await response.json();
+      console.log(response);
+      console.log(result);
+
+      // if (!response.ok) {
+      //    throw new Error(result.message || 'Failed to book parcel');
+      // }
+
+      // toast.success('Parcel booked successfully', {
+      //    description: `Booking ID: ${result.bookingId}`,
+      // });
+
+      dispatch(setStatus('success'));
+   };
+
+export const { setParcelBooking, nextStep, prevStep, setError, setStatus } =
    parcelBookingSlice.actions;
 
 export const { selectParcelBooking, selectStep } = parcelBookingSlice.selectors;

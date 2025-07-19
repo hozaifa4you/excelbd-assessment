@@ -8,11 +8,7 @@ import {
 } from 'class-validator';
 import { DeliveryType, PaymentMethod, PaymentStatus } from 'generated/prisma';
 
-class Recipient {
-   @IsOptional()
-   @IsString()
-   id?: string;
-
+class Person {
    @IsString()
    name: string;
 
@@ -74,8 +70,12 @@ export class BookingParcelDto {
    dimensions?: string;
 
    @ValidateNested()
-   @Type(() => Recipient)
-   recipient: Recipient;
+   @Type(() => Person)
+   sender: Person;
+
+   @ValidateNested()
+   @Type(() => Person)
+   recipient: Person;
 
    @ValidateNested()
    @Type(() => Address)
