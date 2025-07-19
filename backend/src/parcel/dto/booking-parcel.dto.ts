@@ -45,7 +45,7 @@ class Address {
 class Fees {
    @IsOptional()
    @IsNumber()
-   codPrice?: number;
+   price?: number;
 
    @IsNumber()
    deliveryFee: number;

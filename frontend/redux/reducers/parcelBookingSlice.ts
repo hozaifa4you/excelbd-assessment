@@ -15,8 +15,8 @@ export interface Address {
    zip?: string;
 }
 
-interface Fees {
-   codPrice?: number;
+export interface Fees {
+   price?: number;
    deliveryFee?: number;
    handlingFee?: number;
    insuranceFee?: number;

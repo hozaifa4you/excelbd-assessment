@@ -123,7 +123,7 @@ export default function ParcelBooking() {
             }
             break;
          case 2:
-            if (!parcel.deliveryType || !parcel.paymentMethod) {
+            if (!parcel.deliveryType || !parcel.paymentStatus) {
                setError('Please select delivery speed and payment method');
                return false;
             }
