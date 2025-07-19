@@ -1,15 +1,17 @@
 import type { PayloadAction } from '@reduxjs/toolkit';
 import { createAppSlice } from '../createAppSlice';
 
-export interface Recipient {
-   id?: string;
+export interface Person {
+   name?: string;
+   phone?: string;
+   email?: string;
 }
 
 export interface Address {
-   street: string;
-   city: string;
-   state: string;
-   country: string;
+   street?: string;
+   city?: string;
+   state?: string;
+   country?: string;
    zip?: string;
 }
 
@@ -28,7 +30,8 @@ export interface ParcelBookingSliceType {
    parcelType?: string;
    weight?: number;
    dimensions?: string;
-   recipient?: Recipient;
+   sender?: Person;
+   recipient?: Person;
    pickupAddress?: Address;
    deliveryAddress?: Address;
    fees?: Fees;
@@ -37,6 +40,7 @@ export interface ParcelBookingSliceType {
    deliveryType?: 'STANDARD' | 'EXPRESS' | 'SAME_DAY' | 'OVERNIGHT';
    notes?: string;
    step: number;
+   estimateDelivery?: string;
 }
 
 interface ParcelBookingState {
@@ -46,6 +50,22 @@ interface ParcelBookingState {
 
 const initialState: ParcelBookingSliceType = {
    step: 0,
+   sender: { name: '', phone: '', email: '' },
+   recipient: { name: '', phone: '', email: '' },
+   pickupAddress: {
+      street: '',
+      city: '',
+      state: '',
+      country: 'Bangladesh',
+      zip: '',
+   },
+   deliveryAddress: {
+      street: '',
+      city: '',
+      state: '',
+      country: 'Bangladesh',
+      zip: '',
+   },
 };
 
 export const parcelBookingSlice = createAppSlice({

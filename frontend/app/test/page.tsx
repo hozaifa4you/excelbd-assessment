@@ -9,114 +9,41 @@ import { ParcelAddress } from '@/components/parcel/parcel-address';
 import { DeliveryOptions } from '@/components/parcel/delivery-options';
 import { ParcelReview } from '@/components/parcel/parcel-review';
 import { BookingSuccess } from '@/components/parcel/booking-success';
-import { useSelector } from 'react-redux';
 import {
    selectStep,
    nextStep as nextStepStore,
    prevStep as prevStepStore,
+   selectParcelBooking,
+   setParcelBooking,
 } from '@/redux/reducers/parcelBookingSlice';
-import { useAppDispatch } from '@/redux/hooks';
-
-interface Address {
-   street: string;
-   city: string;
-   state: string;
-   country: string;
-   zip: string;
-}
-
-interface ParcelData {
-   // Parcel Details
-   parcelType: string;
-   weight: string;
-   dimensions: string;
-   notes: string;
-
-   // Sender Details
-   senderName: string;
-   senderPhone: string;
-   senderEmail: string;
-   pickupAddress: Address;
-
-   // Recipient Details
-   recipientName: string;
-   recipientPhone: string;
-   recipientEmail: string;
-   deliveryAddress: Address;
-
-   // Delivery Options
-   deliverySpeed: string;
-   paymentMethod: string;
-   estimatedDelivery: string;
-   deliveryFee: number;
-
-   // Additional Options
-   insurance: boolean;
-   signature: boolean;
-   fragile: boolean;
-}
-
-const initialFormData: ParcelData = {
-   parcelType: '',
-   weight: '',
-   dimensions: '',
-   notes: '',
-   senderName: '',
-   senderPhone: '',
-   senderEmail: '',
-   pickupAddress: {
-      street: '',
-      city: '',
-      state: '',
-      country: 'United States',
-      zip: '',
-   },
-   recipientName: '',
-   recipientPhone: '',
-   recipientEmail: '',
-   deliveryAddress: {
-      street: '',
-      city: '',
-      state: '',
-      country: 'United States',
-      zip: '',
-   },
-   deliverySpeed: '',
-   paymentMethod: '',
-   estimatedDelivery: '',
-   deliveryFee: 0,
-   insurance: false,
-   signature: false,
-   fragile: false,
-};
+import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 
 export default function ParcelBooking() {
-   const [currentStep, setCurrentStep] = useState(1);
-   const [formData, setFormData] = useState<ParcelData>(initialFormData);
    const [isLoading, setIsLoading] = useState(false);
    const [error, setError] = useState('');
    const [success, setSuccess] = useState(false);
-   const stepsState = useSelector(selectStep);
+   const stepsState = useAppSelector(selectStep);
    const dispatch = useAppDispatch();
+   const parcel = useAppSelector(selectParcelBooking);
 
    const steps = [
       {
-         number: 1,
+         number: 0,
          title: 'Parcel Details',
          description: 'Package information',
       },
       {
-         number: 2,
+         number: 1,
          title: 'Addresses',
          description: 'Pickup & delivery locations',
       },
       {
-         number: 3,
+         number: 2,
          title: 'Delivery Options',
          description: 'Speed & payment method',
       },
       {
-         number: 4,
+         number: 3,
          title: 'Review & Book',
          description: 'Confirm your booking',
       },
@@ -153,25 +80,21 @@ export default function ParcelBooking() {
       },
    ];
 
-   const updateFormData = (field: string, value: unknown) => {
-      setFormData((prev) => ({ ...prev, [field]: value }));
-   };
-
    const calculateDeliveryFee = () => {
       const selectedOption = deliveryOptions.find(
-         (opt) => opt.value === formData.deliverySpeed,
+         (opt) => opt.value === parcel.deliveryType,
       );
       let baseFee = selectedOption?.price || 0;
 
       // Add weight-based pricing
-      const weight = parseFloat(formData.weight) || 0;
+      const weight = parcel.weight || 0;
       if (weight > 5) baseFee += (weight - 5) * 2;
 
       // Add insurance fee
-      if (formData.insurance) baseFee += 5.99;
+      if (parcel.fees?.insuranceFee) baseFee += 5.99;
 
       // Add signature confirmation fee
-      if (formData.signature) baseFee += 2.99;
+      if (parcel.fees?.signatureFee) baseFee += 2.99;
 
       return baseFee;
    };
@@ -180,27 +103,27 @@ export default function ParcelBooking() {
       setError('');
 
       switch (step) {
-         case 1:
-            if (!formData.parcelType || !formData.weight) {
+         case 0:
+            if (!parcel.parcelType || !parcel.weight) {
                setError('Please fill in all required parcel details');
                return false;
             }
             break;
-         case 2:
+         case 1:
             if (
-               !formData.senderName ||
-               !formData.senderPhone ||
-               !formData.recipientName ||
-               !formData.recipientPhone ||
-               !formData.pickupAddress.street ||
-               !formData.deliveryAddress.street
+               !parcel?.sender?.name ||
+               !parcel.sender.phone ||
+               !parcel?.recipient?.name ||
+               !parcel.recipient.phone ||
+               !parcel.pickupAddress?.street ||
+               !parcel.deliveryAddress?.street
             ) {
                setError('Please fill in all required address information');
                return false;
             }
             break;
-         case 3:
-            if (!formData.deliverySpeed || !formData.paymentMethod) {
+         case 2:
+            if (!parcel.deliveryType || !parcel.paymentMethod) {
                setError('Please select delivery speed and payment method');
                return false;
             }
@@ -209,29 +132,40 @@ export default function ParcelBooking() {
       return true;
    };
 
-   const nextStep = () => {
+   const handleNextStep = () => {
       if (validateStep(stepsState)) {
-         if (stepsState === 3) {
+         if (stepsState === 2) {
             const fee = calculateDeliveryFee();
-            updateFormData('deliveryFee', fee);
+            dispatch(
+               setParcelBooking({
+                  type: 'fees',
+                  data: {
+                     ...parcel.fees,
+                     deliveryFee: fee,
+                  },
+               }),
+            );
 
             const estimatedDate = new Date();
-            switch (formData.deliverySpeed) {
-               case 'same-day':
-                  estimatedDate.setHours(estimatedDate.getHours() + 6);
+            switch (parcel.deliveryType) {
+               case 'SAME_DAY':
+                  estimatedDate.setHours(estimatedDate.getHours() + 12);
                   break;
-               case 'overnight':
+               case 'OVERNIGHT':
                   estimatedDate.setDate(estimatedDate.getDate() + 1);
                   break;
-               case 'express':
+               case 'EXPRESS':
                   estimatedDate.setDate(estimatedDate.getDate() + 2);
                   break;
                default:
-                  estimatedDate.setDate(estimatedDate.getDate() + 4);
+                  estimatedDate.setDate(estimatedDate.getDate() + 5);
             }
-            updateFormData(
-               'estimatedDelivery',
-               estimatedDate.toLocaleDateString(),
+
+            dispatch(
+               setParcelBooking({
+                  type: 'estimateDelivery',
+                  data: estimatedDate.toLocaleDateString(),
+               }),
             );
          }
 
@@ -286,12 +220,12 @@ export default function ParcelBooking() {
                         <div key={step.number} className="flex items-center">
                            <div
                               className={`flex h-10 w-10 items-center justify-center rounded-full border-2 transition-all ${
-                                 currentStep >= step.number
+                                 stepsState >= step.number
                                     ? 'bg-primary border-primary text-primary-foreground'
                                     : 'border-muted-foreground/30 text-muted-foreground'
                               }`}
                            >
-                              {currentStep > step.number ? (
+                              {stepsState > step.number ? (
                                  <CheckCircle className="h-5 w-5" />
                               ) : (
                                  <span className="text-sm font-semibold">
@@ -302,7 +236,7 @@ export default function ParcelBooking() {
                            {index < steps.length - 1 && (
                               <div
                                  className={`mx-2 hidden h-0.5 w-16 sm:block lg:w-24 ${
-                                    currentStep > step.number
+                                    stepsState > step.number
                                        ? 'bg-primary'
                                        : 'bg-muted-foreground/30'
                                  }`}
@@ -313,10 +247,10 @@ export default function ParcelBooking() {
                   </div>
                   <div className="text-center">
                      <h2 className="text-xl font-bold">
-                        {steps[currentStep - 1].title}
+                        {steps[stepsState].title}
                      </h2>
                      <p className="text-muted-foreground">
-                        {steps[currentStep - 1].description}
+                        {steps[stepsState].description}
                      </p>
                   </div>
                </div>
@@ -349,15 +283,18 @@ export default function ParcelBooking() {
                         <Button
                            variant="outline"
                            onClick={prevStep}
-                           disabled={currentStep === 1}
+                           disabled={stepsState === 1}
                            className="h-12 px-6"
                         >
                            <ArrowLeft className="mr-2 h-4 w-4" />
                            Previous
                         </Button>
 
-                        {currentStep < 4 ? (
-                           <Button onClick={nextStep} className="h-12 px-6">
+                        {stepsState < 4 ? (
+                           <Button
+                              onClick={handleNextStep}
+                              className="h-12 px-6"
+                           >
                               Next
                               <ArrowRight className="ml-2 h-4 w-4" />
                            </Button>
