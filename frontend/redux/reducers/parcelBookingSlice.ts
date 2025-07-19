@@ -9,6 +9,13 @@ export interface Person {
    email?: string;
 }
 
+interface SuccessResponse {
+   trackingNumber: string;
+   parcelId: string;
+   cost: number;
+   qrCode: string;
+}
+
 export interface Address {
    street?: string;
    city?: string;
@@ -45,6 +52,7 @@ export interface ParcelBookingSliceType {
    notes?: string;
    step: number;
    estimateDelivery?: string;
+   successResponse?: SuccessResponse;
 }
 
 interface ParcelBookingState {
@@ -91,6 +99,11 @@ export const parcelBookingSlice = createAppSlice({
             state.step -= 1;
          }
       }),
+      setSuccessResponse: create.reducer(
+         (state, action: PayloadAction<SuccessResponse>) => {
+            state.successResponse = action.payload;
+         },
+      ),
       setError: create.reducer((state, action: PayloadAction<string>) => {
          state.error = action.payload;
       }),
@@ -107,6 +120,8 @@ export const parcelBookingSlice = createAppSlice({
    selectors: {
       selectParcelBooking: (state) => state,
       selectStep: (state) => state.step,
+      selectSuccessResponse: (state) => state.successResponse,
+      selectStatus: (state) => state.status,
    },
 });
 
@@ -116,9 +131,9 @@ export const bookParcel =
       dispatch: Dispatch,
       getState: () => { parcelBooking: ParcelBookingSliceType },
    ) => {
-      const { status, step, error, ...parcel } = getState().parcelBooking;
-
-      console.log({token});
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { status, step, error, successResponse, ...parcel } =
+         getState().parcelBooking;
 
       dispatch(setStatus('loading'));
       const response = await fetch(
@@ -133,21 +148,30 @@ export const bookParcel =
          },
       );
       const result = await response.json();
-      console.log(response);
-      console.log(result);
 
-      // if (!response.ok) {
-      //    throw new Error(result.message || 'Failed to book parcel');
-      // }
+      if (!response.ok) {
+         dispatch(setStatus('error'));
+         dispatch(setError(result.message || 'Booking failed'));
+         toast.error(result.message || 'Booking failed');
+         return;
+      }
 
-      // toast.success('Parcel booked successfully', {
-      //    description: `Booking ID: ${result.bookingId}`,
-      // });
-
+      dispatch(setSuccessResponse(result));
       dispatch(setStatus('success'));
    };
 
-export const { setParcelBooking, nextStep, prevStep, setError, setStatus } =
-   parcelBookingSlice.actions;
+export const {
+   setParcelBooking,
+   nextStep,
+   prevStep,
+   setError,
+   setStatus,
+   setSuccessResponse,
+} = parcelBookingSlice.actions;
 
-export const { selectParcelBooking, selectStep } = parcelBookingSlice.selectors;
+export const {
+   selectParcelBooking,
+   selectStep,
+   selectSuccessResponse,
+   selectStatus,
+} = parcelBookingSlice.selectors;

@@ -2,10 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { BookingParcelDto } from './dto/booking-parcel.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { DeliveryType, PaymentMethod } from 'generated/prisma';
+import { UploaderService } from 'src/uploader/uploader.service';
 
 @Injectable()
 export class ParcelService {
-   constructor(private readonly prisma: PrismaService) {}
+   constructor(
+      private readonly prisma: PrismaService,
+      private readonly uploaderService: UploaderService,
+   ) {}
 
    async bookParcel(userId: string, bookingParcelDto: BookingParcelDto) {
       const {
@@ -44,9 +48,17 @@ export class ParcelService {
          },
       });
 
-      const cost = newBooking.fees;
-      // FIXME: QR code generator should be implemented here
-      const qrCode = 'https://placehold.co/250/png';
+      const qrCode = await this.uploaderService.qrCodeUploader(
+         newBooking.trackingNumber,
+         newBooking.trackingNumber,
+      );
+
+      const cost =
+         (newBooking.fees.price ?? 0) +
+         (newBooking.fees.deliveryFee ?? 0) +
+         (newBooking.fees.handlingFee ?? 0) +
+         (newBooking.fees.insuranceFee ?? 0) +
+         (newBooking.fees.signatureFee ?? 0);
 
       return {
          trackingNumber: newBooking.trackingNumber,

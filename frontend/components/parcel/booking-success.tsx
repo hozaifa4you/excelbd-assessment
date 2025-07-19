@@ -2,8 +2,13 @@ import { CheckCircle } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { selectSuccessResponse } from '@/redux/reducers/parcelBookingSlice';
+import { useAppSelector } from '@/redux/hooks';
+import Image from 'next/image';
 
 const BookingSuccess = () => {
+   const successResponse = useAppSelector(selectSuccessResponse);
+
    return (
       <div className="bg-background relative min-h-screen overflow-hidden">
          {/* Success Content */}
@@ -30,25 +35,33 @@ const BookingSuccess = () => {
                            variant="secondary"
                            className="px-4 py-2 text-lg"
                         >
-                           QK
-                           {Math.random()
-                              .toString(36)
-                              .substr(2, 9)
-                              .toUpperCase()}
+                           {successResponse?.trackingNumber}
                         </Badge>
                      </div>
                      <div className="flex items-center justify-between">
-                        <span className="font-medium">Estimated Delivery:</span>
+                        <span className="font-medium">Parcel ID:</span>
                         <span className="text-primary font-semibold">
-                           {'estimatedDelivery'}
+                           {successResponse?.parcelId}Tk
                         </span>
                      </div>
                      <div className="flex items-center justify-between">
                         <span className="font-medium">Total Cost:</span>
                         <span className="text-primary text-2xl font-bold">
-                           ${'total cost'}
+                           {successResponse?.cost}Tk
                         </span>
                      </div>
+                  </div>
+
+                  <div className="flex flex-col items-center justify-center">
+                     <Image
+                        src={successResponse?.qrCode ?? ''}
+                        alt="Quicko"
+                        width={300}
+                        height={300}
+                     />
+                     <p className="text-muted-foreground text-sm">
+                        Scan the QR code to track your parcel
+                     </p>
                   </div>
 
                   <div className="space-y-3">

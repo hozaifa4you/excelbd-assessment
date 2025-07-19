@@ -16,13 +16,14 @@ import {
    selectParcelBooking,
    setParcelBooking,
    bookParcel,
+   selectStatus,
 } from '@/redux/reducers/parcelBookingSlice';
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import { useSession } from '@/hooks/use-session';
 
 export default function ParcelBooking() {
    const [error, setError] = useState('');
-   const [success, setSuccess] = useState(false);
+   const status = useAppSelector(selectStatus);
    const stepsState = useAppSelector(selectStep);
    const dispatch = useAppDispatch();
    const parcel = useAppSelector(selectParcelBooking);
@@ -122,7 +123,7 @@ export default function ParcelBooking() {
       dispatch(bookParcel(session?.accessToken ?? ''));
    };
 
-   if (success) {
+   if (status === 'success') {
       return <BookingSuccess />;
    }
 
