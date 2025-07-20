@@ -4,7 +4,7 @@ import { SectionCards } from '@/components/section-cards';
 
 import data from '@/lib/data.json';
 
-const Dashboard = () => {
+export default function Page() {
    return (
       <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
          <SectionCards />
@@ -14,6 +14,4 @@ const Dashboard = () => {
          <DataTable data={data} />
       </div>
    );
-};
-
-export default Dashboard;
+}

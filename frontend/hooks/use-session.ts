@@ -31,5 +31,24 @@ export const useSession = () => {
       ? `${session.user.firstName} ${session.user.lastName}`
       : undefined;
 
-   return { session, loading, isAuthenticated: !!session, fullName };
+   const handleLogout = async () => {
+      const response = await fetch('/api/auth/signout', {
+         method: 'DELETE',
+         headers: {
+            'Content-Type': 'application/json',
+         },
+      });
+
+      if (response.ok) {
+         window.location.href = '/';
+      }
+   };
+
+   return {
+      session,
+      loading,
+      isAuthenticated: !!session,
+      fullName,
+      handleLogout,
+   };
 };

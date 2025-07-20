@@ -4,7 +4,10 @@ export type RouteType =
    | 'signup'
    | 'dashboard'
    | 'parcels'
-   | 'parcel.details';
+   | 'parcel.details'
+   | 'profile'
+   | 'agent.dashboard'
+   | 'admin.dashboard';
 
 type RouteParamsMap = {
    home: undefined;
@@ -13,6 +16,9 @@ type RouteParamsMap = {
    dashboard: undefined;
    parcels: undefined;
    'parcel.details': { slug: string };
+   profile: { username: string };
+   'agent.dashboard': undefined;
+   'admin.dashboard': undefined;
 };
 
 type RouteQueryMap = {
@@ -22,6 +28,9 @@ type RouteQueryMap = {
    dashboard: Record<string, string>;
    parcels: Record<string, string>;
    'parcel.details': Record<string, string>;
+   profile: Record<string, string>;
+   'agent.dashboard': Record<string, string>;
+   'admin.dashboard': Record<string, string>;
 };
 
 export const route = <T extends RouteType>(
@@ -47,6 +56,15 @@ export const route = <T extends RouteType>(
          return '/parcels' + queryString;
       case 'parcel.details':
          return `/parcels/${(params as { slug: string }).slug}` + queryString;
+      case 'profile':
+         return (
+            `/profile/@${(params as { username: string }).username}` +
+            queryString
+         );
+      case 'agent.dashboard':
+         return '/agent/dashboard' + queryString;
+      case 'admin.dashboard':
+         return '/admin/dashboard' + queryString;
       default:
          return '/' + queryString;
    }

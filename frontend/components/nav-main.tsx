@@ -1,6 +1,5 @@
 'use client';
-
-import { IconCirclePlusFilled, IconMail, type Icon } from '@tabler/icons-react';
+import { IconCirclePlusFilled, IconMail } from '@tabler/icons-react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -10,16 +9,13 @@ import {
    SidebarMenuButton,
    SidebarMenuItem,
 } from '@/components/ui/sidebar';
+import { AppSidebarItem } from '@/lib/navigate';
 
-export function NavMain({
-   items,
-}: {
-   items: {
-      title: string;
-      url: string;
-      icon?: Icon;
-   }[];
-}) {
+interface NavMainProps {
+   items: AppSidebarItem[];
+}
+
+export function NavMain({ items }: NavMainProps) {
    return (
       <SidebarGroup>
          <SidebarGroupContent className="flex flex-col gap-2">
@@ -46,7 +42,7 @@ export function NavMain({
                {items.map((item) => (
                   <SidebarMenuItem key={item.title}>
                      <SidebarMenuButton tooltip={item.title}>
-                        {item.icon && <item.icon />}
+                        <item.Icon />
                         <span>{item.title}</span>
                      </SidebarMenuButton>
                   </SidebarMenuItem>
