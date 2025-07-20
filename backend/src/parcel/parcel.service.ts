@@ -158,6 +158,7 @@ export class ParcelService {
                   phone: true,
                },
             },
+            fees: true,
          },
       });
 

@@ -96,6 +96,11 @@ import {
    TableRow,
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+   Tooltip,
+   TooltipContent,
+   TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 export const schema = z.object({
    id: z.string(),
@@ -113,6 +118,13 @@ export const schema = z.object({
    }),
    pickupAddress: z.object({ city: z.string() }),
    deliveryAddress: z.object({ city: z.string() }),
+   fees: z.object({
+      deliveryFee: z.number().nullable(),
+      handlingFee: z.number().nullable(),
+      insuranceFee: z.number().nullable(),
+      price: z.number(),
+      signatureFee: z.number().nullable(),
+   }),
 });
 
 type ParcelData = z.infer<typeof schema>;
@@ -287,6 +299,67 @@ const columns: ColumnDef<ParcelData>[] = [
                      </span>
                   </div>
                </div>
+            </div>
+         );
+      },
+   },
+   {
+      accessorKey: 'fees',
+      header: 'Fees',
+      cell: ({ row }) => {
+         const fees = row.original.fees;
+         const feeItems = [
+            { label: 'Delivery Fee', value: fees.deliveryFee },
+            { label: 'Handling Fee', value: fees.handlingFee },
+            { label: 'Insurance Fee', value: fees.insuranceFee },
+            { label: 'Signature Fee', value: fees.signatureFee },
+            { label: 'Base Price', value: fees.price },
+         ].filter((item) => item.value !== null && item.value !== undefined);
+
+         const totalFees = feeItems.reduce(
+            (sum, item) => sum + (item.value || 0),
+            0,
+         );
+         const feeCount = feeItems.length;
+
+         return (
+            <div className="text-sm">
+               <Tooltip>
+                  <TooltipTrigger asChild>
+                     <div className="cursor-help">
+                        <div className="font-medium">
+                           ${totalFees.toFixed(2)}
+                        </div>
+                        <div className="text-muted-foreground text-xs">
+                           {feeCount} fee{feeCount !== 1 ? 's' : ''}
+                        </div>
+                     </div>
+                  </TooltipTrigger>
+                  <TooltipContent side="left" className="max-w-48">
+                     <div className="space-y-1">
+                        <div className="mb-2 text-xs font-medium">
+                           Fee Breakdown:
+                        </div>
+                        {feeItems.map((item, index) => (
+                           <div
+                              key={index}
+                              className="flex justify-between text-xs"
+                           >
+                              <span>{item.label}:</span>
+                              <span className="font-medium">
+                                 ${(item.value || 0).toFixed(2)}
+                              </span>
+                           </div>
+                        ))}
+                        <div className="mt-2 border-t pt-1">
+                           <div className="flex justify-between text-xs font-medium">
+                              <span>Total:</span>
+                              <span>${totalFees.toFixed(2)}</span>
+                           </div>
+                        </div>
+                     </div>
+                  </TooltipContent>
+               </Tooltip>
             </div>
          );
       },
