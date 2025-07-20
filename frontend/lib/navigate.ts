@@ -22,14 +22,14 @@ export const dashboardMenuItems: MenuItemType = {
       },
       {
          title: 'Bookings',
-         url: route('dashboard'),
+         url: route('user.bookings'),
          Icon: IconPackage,
       },
    ],
    agent: [
       {
          title: 'Dashboard',
-         url: route('dashboard'),
+         url: route('agent.dashboard'),
          Icon: IconDashboard,
       },
       {

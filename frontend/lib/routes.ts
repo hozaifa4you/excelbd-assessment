@@ -3,22 +3,20 @@ export type RouteType =
    | 'signin'
    | 'signup'
    | 'dashboard'
-   | 'parcels'
-   | 'parcel.details'
-   | 'profile'
    | 'agent.dashboard'
-   | 'admin.dashboard';
+   | 'admin.dashboard'
+   | 'user.bookings'
+   | 'parcels.booking';
 
 type RouteParamsMap = {
    home: undefined;
    signin: undefined;
    signup: undefined;
    dashboard: undefined;
-   parcels: undefined;
-   'parcel.details': { slug: string };
-   profile: { username: string };
    'agent.dashboard': undefined;
    'admin.dashboard': undefined;
+   'user.bookings': undefined;
+   'parcels.booking': undefined;
 };
 
 type RouteQueryMap = {
@@ -26,11 +24,10 @@ type RouteQueryMap = {
    signin: Record<string, string>;
    signup: Record<string, string>;
    dashboard: Record<string, string>;
-   parcels: Record<string, string>;
-   'parcel.details': Record<string, string>;
-   profile: Record<string, string>;
    'agent.dashboard': Record<string, string>;
    'admin.dashboard': Record<string, string>;
+   'user.bookings': Record<string, string>;
+   'parcels.booking': Record<string, string>;
 };
 
 export const route = <T extends RouteType>(
@@ -52,19 +49,19 @@ export const route = <T extends RouteType>(
          return '/signup' + queryString;
       case 'dashboard':
          return '/dashboard' + queryString;
-      case 'parcels':
-         return '/parcels' + queryString;
-      case 'parcel.details':
-         return `/parcels/${(params as { slug: string }).slug}` + queryString;
-      case 'profile':
-         return (
-            `/profile/@${(params as { username: string }).username}` +
-            queryString
-         );
+      // case 'profile':
+      //    return (
+      //       `/profile/@${(params as { username: string }).username}` +
+      //       queryString
+      //    );
       case 'agent.dashboard':
          return '/agent/dashboard' + queryString;
       case 'admin.dashboard':
          return '/admin/dashboard' + queryString;
+      case 'user.bookings':
+         return '/bookings' + queryString;
+      case 'parcels.booking':
+         return '/parcels/booking' + queryString;
       default:
          return '/' + queryString;
    }

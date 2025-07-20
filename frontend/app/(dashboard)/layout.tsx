@@ -15,7 +15,7 @@ export default function DashboardLayout({ children }: PropsWithChildren) {
       >
          <AppSidebar variant="sidebar" dashboardFor="user" />
          <SidebarInset>
-            <SiteHeader />
+            <SiteHeader dashboardFor="user" />
             <div className="flex flex-1 flex-col">
                <div className="@container/main flex flex-1 flex-col gap-2">
                   {children}
