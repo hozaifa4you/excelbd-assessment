@@ -1,5 +1,4 @@
 'use client';
-
 import * as React from 'react';
 import {
    closestCenter,
@@ -28,7 +27,6 @@ import {
    IconChevronsRight,
    IconCircleCheckFilled,
    IconDotsVertical,
-   IconGripVertical,
    IconLayoutColumns,
    IconLoader,
    IconPlus,
@@ -50,7 +48,6 @@ import {
    VisibilityState,
 } from '@tanstack/react-table';
 import { Area, AreaChart, CartesianGrid, XAxis } from 'recharts';
-import { toast } from 'sonner';
 import { z } from 'zod';
 
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -78,7 +75,6 @@ import {
    DropdownMenuCheckboxItem,
    DropdownMenuContent,
    DropdownMenuItem,
-   DropdownMenuSeparator,
    DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
@@ -102,41 +98,26 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export const schema = z.object({
-   id: z.number(),
-   header: z.string(),
-   type: z.string(),
+   id: z.string(),
+   parcelType: z.string(),
+   trackingNumber: z.string(),
    status: z.string(),
-   target: z.string(),
-   limit: z.string(),
-   reviewer: z.string(),
+   estimatedDelivery: z.string().nullable(),
+   recipient: z.object({
+      name: z.string(),
+      phone: z.string(),
+   }),
+   sender: z.object({
+      name: z.string(),
+      phone: z.string(),
+   }),
+   pickupAddress: z.object({ city: z.string() }),
+   deliveryAddress: z.object({ city: z.string() }),
 });
 
-// Create a separate component for the drag handle
-function DragHandle({ id }: { id: number }) {
-   const { attributes, listeners } = useSortable({
-      id,
-   });
+type ParcelData = z.infer<typeof schema>;
 
-   return (
-      <Button
-         {...attributes}
-         {...listeners}
-         variant="ghost"
-         size="icon"
-         className="text-muted-foreground size-7 hover:bg-transparent"
-      >
-         <IconGripVertical className="text-muted-foreground size-3" />
-         <span className="sr-only">Drag to reorder</span>
-      </Button>
-   );
-}
-
-const columns: ColumnDef<z.infer<typeof schema>>[] = [
-   {
-      id: 'drag',
-      header: () => null,
-      cell: ({ row }) => <DragHandle id={row.original.id} />,
-   },
+const columns: ColumnDef<ParcelData>[] = [
    {
       id: 'select',
       header: ({ table }) => (
@@ -166,21 +147,33 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
       enableHiding: false,
    },
    {
-      accessorKey: 'header',
-      header: 'Header',
+      accessorKey: 'parcelType',
+      header: 'Parcel Type',
       cell: ({ row }) => {
          return <TableCellViewer item={row.original} />;
       },
       enableHiding: false,
    },
    {
-      accessorKey: 'type',
-      header: 'Section Type',
+      accessorKey: 'trackingNumber',
+      header: 'Tracking Number',
       cell: ({ row }) => (
          <div className="w-32">
             <Badge variant="outline" className="text-muted-foreground px-1.5">
-               {row.original.type}
+               {row.original.trackingNumber.substring(0, 6)}
             </Badge>
+         </div>
+      ),
+   },
+   {
+      id: 'route',
+      header: 'From / To',
+      cell: ({ row }) => (
+         <div className="text-sm">
+            <div className="font-medium">{row.original.pickupAddress.city}</div>
+            <div className="text-muted-foreground">
+               ↓ {row.original.deliveryAddress.city}
+            </div>
          </div>
       ),
    },
@@ -189,7 +182,7 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
       header: 'Status',
       cell: ({ row }) => (
          <Badge variant="outline" className="text-muted-foreground px-1.5">
-            {row.original.status === 'Done' ? (
+            {row.original.status === 'DELIVERED' ? (
                <IconCircleCheckFilled className="fill-green-500 dark:fill-green-400" />
             ) : (
                <IconLoader />
@@ -199,95 +192,102 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
       ),
    },
    {
-      accessorKey: 'target',
-      header: () => <div className="w-full text-right">Target</div>,
+      accessorKey: 'sender',
+      header: () => <div className="w-full text-right">Sender</div>,
       cell: ({ row }) => (
-         <form
-            onSubmit={(e) => {
-               e.preventDefault();
-               toast.promise(
-                  new Promise((resolve) => setTimeout(resolve, 1000)),
-                  {
-                     loading: `Saving ${row.original.header}`,
-                     success: 'Done',
-                     error: 'Error',
-                  },
-               );
-            }}
-         >
-            <Label htmlFor={`${row.original.id}-target`} className="sr-only">
-               Target
-            </Label>
-            <Input
-               className="hover:bg-input/30 focus-visible:bg-background dark:hover:bg-input/30 dark:focus-visible:bg-input/30 h-8 w-16 border-transparent bg-transparent text-right shadow-none focus-visible:border dark:bg-transparent"
-               defaultValue={row.original.target}
-               id={`${row.original.id}-target`}
-            />
-         </form>
+         <div className="text-right">
+            <div className="font-medium">{row.original.sender.name}</div>
+            <div className="text-muted-foreground text-sm">
+               {row.original.sender.phone}
+            </div>
+         </div>
       ),
    },
    {
-      accessorKey: 'limit',
-      header: () => <div className="w-full text-right">Limit</div>,
+      accessorKey: 'recipient',
+      header: () => <div className="w-full text-right">Recipient</div>,
       cell: ({ row }) => (
-         <form
-            onSubmit={(e) => {
-               e.preventDefault();
-               toast.promise(
-                  new Promise((resolve) => setTimeout(resolve, 1000)),
-                  {
-                     loading: `Saving ${row.original.header}`,
-                     success: 'Done',
-                     error: 'Error',
-                  },
-               );
-            }}
-         >
-            <Label htmlFor={`${row.original.id}-limit`} className="sr-only">
-               Limit
-            </Label>
-            <Input
-               className="hover:bg-input/30 focus-visible:bg-background dark:hover:bg-input/30 dark:focus-visible:bg-input/30 h-8 w-16 border-transparent bg-transparent text-right shadow-none focus-visible:border dark:bg-transparent"
-               defaultValue={row.original.limit}
-               id={`${row.original.id}-limit`}
-            />
-         </form>
+         <div className="text-right">
+            <div className="font-medium">{row.original.recipient.name}</div>
+            <div className="text-muted-foreground text-sm">
+               {row.original.recipient.phone}
+            </div>
+         </div>
       ),
    },
    {
-      accessorKey: 'reviewer',
-      header: 'Reviewer',
+      accessorKey: 'estimatedDelivery',
+      header: 'Est. Delivery',
       cell: ({ row }) => {
-         const isAssigned = row.original.reviewer !== 'Assign reviewer';
+         const deliveryDate = row.original?.estimatedDelivery;
 
-         if (isAssigned) {
-            return row.original.reviewer;
+         if (!deliveryDate) {
+            return (
+               <div className="text-muted-foreground text-sm">
+                  <div className="flex items-center gap-1">
+                     <div className="h-2 w-2 rounded-full bg-gray-400"></div>
+                     <span>Not set</span>
+                  </div>
+               </div>
+            );
+         }
+
+         const date = new Date(deliveryDate);
+         const now = new Date();
+         const diffTime = date.getTime() - now.getTime();
+         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+         // Format the date
+         const formattedDate = date.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year:
+               date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
+         });
+
+         const formattedTime = date.toLocaleTimeString('en-US', {
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true,
+         });
+
+         // Determine status and color
+         let statusColor = 'bg-green-500';
+         let statusText = '';
+         let textColor = 'text-green-700 dark:text-green-400';
+
+         if (diffDays < 0) {
+            statusColor = 'bg-red-500';
+            statusText = `${Math.abs(diffDays)} days overdue`;
+            textColor = 'text-red-700 dark:text-red-400';
+         } else if (diffDays === 0) {
+            statusColor = 'bg-orange-500';
+            statusText = 'Today';
+            textColor = 'text-orange-700 dark:text-orange-400';
+         } else if (diffDays === 1) {
+            statusColor = 'bg-yellow-500';
+            statusText = 'Tomorrow';
+            textColor = 'text-yellow-700 dark:text-yellow-400';
+         } else if (diffDays <= 3) {
+            statusColor = 'bg-blue-500';
+            statusText = `In ${diffDays} days`;
+            textColor = 'text-blue-700 dark:text-blue-400';
+         } else {
+            statusText = `In ${diffDays} days`;
          }
 
          return (
-            <>
-               <Label
-                  htmlFor={`${row.original.id}-reviewer`}
-                  className="sr-only"
-               >
-                  Reviewer
-               </Label>
-               <Select>
-                  <SelectTrigger
-                     className="w-38 **:data-[slot=select-value]:block **:data-[slot=select-value]:truncate"
-                     size="sm"
-                     id={`${row.original.id}-reviewer`}
-                  >
-                     <SelectValue placeholder="Assign reviewer" />
-                  </SelectTrigger>
-                  <SelectContent align="end">
-                     <SelectItem value="Eddie Lake">Eddie Lake</SelectItem>
-                     <SelectItem value="Jamik Tashpulatov">
-                        Jamik Tashpulatov
-                     </SelectItem>
-                  </SelectContent>
-               </Select>
-            </>
+            <div className="text-sm">
+               <div className={`flex items-center gap-2 ${textColor}`}>
+                  <div className={`h-2 w-2 rounded-full ${statusColor}`}></div>
+                  <div className="flex flex-col">
+                     <span className="font-medium">{formattedDate}</span>
+                     <span className="text-muted-foreground text-xs">
+                        {formattedTime} • {statusText}
+                     </span>
+                  </div>
+               </div>
+            </div>
          );
       },
    },
@@ -307,17 +307,14 @@ const columns: ColumnDef<z.infer<typeof schema>>[] = [
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-32">
                <DropdownMenuItem>Edit</DropdownMenuItem>
-               <DropdownMenuItem>Make a copy</DropdownMenuItem>
-               <DropdownMenuItem>Favorite</DropdownMenuItem>
-               <DropdownMenuSeparator />
-               <DropdownMenuItem variant="destructive">Delete</DropdownMenuItem>
+               <DropdownMenuItem variant="destructive">Cancel</DropdownMenuItem>
             </DropdownMenuContent>
          </DropdownMenu>
       ),
    },
 ];
 
-function DraggableRow({ row }: { row: Row<z.infer<typeof schema>> }) {
+function DraggableRow({ row }: { row: Row<ParcelData> }) {
    const { transform, transition, setNodeRef, isDragging } = useSortable({
       id: row.original.id,
    });
@@ -342,11 +339,7 @@ function DraggableRow({ row }: { row: Row<z.infer<typeof schema>> }) {
    );
 }
 
-export function DataTable({
-   data: initialData,
-}: {
-   data: z.infer<typeof schema>[];
-}) {
+export function DataTable({ data: initialData }: { data: ParcelData[] }) {
    const [data, setData] = React.useState(() => initialData);
    const [rowSelection, setRowSelection] = React.useState({});
    const [columnVisibility, setColumnVisibility] =
@@ -381,7 +374,7 @@ export function DataTable({
          columnFilters,
          pagination,
       },
-      getRowId: (row) => row.id.toString(),
+      getRowId: (row) => row.id,
       enableRowSelection: true,
       onRowSelectionChange: setRowSelection,
       onSortingChange: setSorting,
@@ -676,7 +669,7 @@ const chartConfig = {
    },
 } satisfies ChartConfig;
 
-function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
+function TableCellViewer({ item }: { item: ParcelData }) {
    const isMobile = useIsMobile();
 
    return (
@@ -686,14 +679,14 @@ function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
                variant="link"
                className="text-foreground w-fit px-0 text-left"
             >
-               {item.header}
+               {item.parcelType}
             </Button>
          </DrawerTrigger>
          <DrawerContent>
             <DrawerHeader className="gap-1">
-               <DrawerTitle>{item.header}</DrawerTitle>
+               <DrawerTitle>{item.parcelType}</DrawerTitle>
                <DrawerDescription>
-                  Showing total visitors for the last 6 months
+                  Parcel details and tracking information
                </DrawerDescription>
             </DrawerHeader>
             <div className="flex flex-col gap-4 overflow-y-auto px-4 text-sm">
@@ -746,9 +739,7 @@ function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
                            <IconTrendingUp className="size-4" />
                         </div>
                         <div className="text-muted-foreground">
-                           Showing total visitors for the last 6 months. This is
-                           just some random text to test the layout. It spans
-                           multiple lines and should wrap around.
+                           Showing delivery performance for the last 6 months.
                         </div>
                      </div>
                      <Separator />
@@ -756,95 +747,90 @@ function TableCellViewer({ item }: { item: z.infer<typeof schema> }) {
                )}
                <form className="flex flex-col gap-4">
                   <div className="flex flex-col gap-3">
-                     <Label htmlFor="header">Header</Label>
-                     <Input id="header" defaultValue={item.header} />
+                     <Label htmlFor="parcelType">Parcel Type</Label>
+                     <Input id="parcelType" defaultValue={item.parcelType} />
+                  </div>
+                  <div className="flex flex-col gap-3">
+                     <Label htmlFor="trackingNumber">Tracking Number</Label>
+                     <Input
+                        id="trackingNumber"
+                        defaultValue={item.trackingNumber}
+                     />
+                  </div>
+                  <div className="flex flex-col gap-3">
+                     <Label htmlFor="status">Status</Label>
+                     <Select defaultValue={item.status}>
+                        <SelectTrigger id="status" className="w-full">
+                           <SelectValue placeholder="Select a status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                           <SelectItem value="PENDING">Pending</SelectItem>
+                           <SelectItem value="PICKED_UP">Picked Up</SelectItem>
+                           <SelectItem value="IN_TRANSIT">
+                              In Transit
+                           </SelectItem>
+                           <SelectItem value="DELIVERING">
+                              Delivering
+                           </SelectItem>
+                           <SelectItem value="DELIVERED">Delivered</SelectItem>
+                           <SelectItem value="CANCELLED">Cancelled</SelectItem>
+                        </SelectContent>
+                     </Select>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                      <div className="flex flex-col gap-3">
-                        <Label htmlFor="type">Type</Label>
-                        <Select defaultValue={item.type}>
-                           <SelectTrigger id="type" className="w-full">
-                              <SelectValue placeholder="Select a type" />
-                           </SelectTrigger>
-                           <SelectContent>
-                              <SelectItem value="Table of Contents">
-                                 Table of Contents
-                              </SelectItem>
-                              <SelectItem value="Executive Summary">
-                                 Executive Summary
-                              </SelectItem>
-                              <SelectItem value="Technical Approach">
-                                 Technical Approach
-                              </SelectItem>
-                              <SelectItem value="Design">Design</SelectItem>
-                              <SelectItem value="Capabilities">
-                                 Capabilities
-                              </SelectItem>
-                              <SelectItem value="Focus Documents">
-                                 Focus Documents
-                              </SelectItem>
-                              <SelectItem value="Narrative">
-                                 Narrative
-                              </SelectItem>
-                              <SelectItem value="Cover Page">
-                                 Cover Page
-                              </SelectItem>
-                           </SelectContent>
-                        </Select>
+                        <Label htmlFor="senderName">Sender Name</Label>
+                        <Input
+                           id="senderName"
+                           defaultValue={item.sender.name}
+                        />
                      </div>
                      <div className="flex flex-col gap-3">
-                        <Label htmlFor="status">Status</Label>
-                        <Select defaultValue={item.status}>
-                           <SelectTrigger id="status" className="w-full">
-                              <SelectValue placeholder="Select a status" />
-                           </SelectTrigger>
-                           <SelectContent>
-                              <SelectItem value="Done">Done</SelectItem>
-                              <SelectItem value="In Progress">
-                                 In Progress
-                              </SelectItem>
-                              <SelectItem value="Not Started">
-                                 Not Started
-                              </SelectItem>
-                           </SelectContent>
-                        </Select>
+                        <Label htmlFor="senderPhone">Sender Phone</Label>
+                        <Input
+                           id="senderPhone"
+                           defaultValue={item.sender.phone}
+                        />
                      </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                      <div className="flex flex-col gap-3">
-                        <Label htmlFor="target">Target</Label>
-                        <Input id="target" defaultValue={item.target} />
+                        <Label htmlFor="recipientName">Recipient Name</Label>
+                        <Input
+                           id="recipientName"
+                           defaultValue={item.recipient.name}
+                        />
                      </div>
                      <div className="flex flex-col gap-3">
-                        <Label htmlFor="limit">Limit</Label>
-                        <Input id="limit" defaultValue={item.limit} />
+                        <Label htmlFor="recipientPhone">Recipient Phone</Label>
+                        <Input
+                           id="recipientPhone"
+                           defaultValue={item.recipient.phone}
+                        />
                      </div>
                   </div>
                   <div className="flex flex-col gap-3">
-                     <Label htmlFor="reviewer">Reviewer</Label>
-                     <Select defaultValue={item.reviewer}>
-                        <SelectTrigger id="reviewer" className="w-full">
-                           <SelectValue placeholder="Select a reviewer" />
-                        </SelectTrigger>
-                        <SelectContent>
-                           <SelectItem value="Eddie Lake">
-                              Eddie Lake
-                           </SelectItem>
-                           <SelectItem value="Jamik Tashpulatov">
-                              Jamik Tashpulatov
-                           </SelectItem>
-                           <SelectItem value="Emily Whalen">
-                              Emily Whalen
-                           </SelectItem>
-                        </SelectContent>
-                     </Select>
+                     <Label htmlFor="estimatedDelivery">
+                        Estimated Delivery
+                     </Label>
+                     <Input
+                        id="estimatedDelivery"
+                        type="datetime-local"
+                        defaultValue={
+                           item?.estimatedDelivery
+                              ? new Date(item.estimatedDelivery)
+                                   .toISOString()
+                                   .slice(0, 16)
+                              : ''
+                        }
+                     />
                   </div>
                </form>
             </div>
             <DrawerFooter>
-               <Button>Submit</Button>
+               <Button>Update</Button>
                <DrawerClose asChild>
-                  <Button variant="outline">Done</Button>
+                  <Button variant="outline">Close</Button>
                </DrawerClose>
             </DrawerFooter>
          </DrawerContent>

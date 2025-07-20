@@ -7,9 +7,12 @@ const client = new PrismaClient();
 
 async function main() {
    const seedCount = 5000;
+   const parcel = false;
 
    log('Seeding parcels...');
    for (let i = 0; i < seedCount; i++) {
+      if (!parcel) break;
+
       await client.parcel.create({
          data: {
             creatorId: '687916eb6a5be35de22a11a2',
@@ -57,6 +60,13 @@ async function main() {
          },
       });
    }
+
+   log('Updating parcel');
+   await client.parcel.updateMany({
+      data: {
+         estimatedDelivery: faker.date.soon({ days: 90 }),
+      },
+   });
 }
 
 main().catch(log);

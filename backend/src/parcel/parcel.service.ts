@@ -129,6 +129,36 @@ export class ParcelService {
          skip: (page - 1) * limit,
          take: limit,
          orderBy: { createdAt: 'desc' },
+         select: {
+            id: true,
+            parcelType: true,
+            trackingNumber: true,
+            status: true,
+            estimatedDelivery: true,
+            createdAt: true,
+            pickupAddress: {
+               select: {
+                  city: true,
+               },
+            },
+            deliveryAddress: {
+               select: {
+                  city: true,
+               },
+            },
+            recipient: {
+               select: {
+                  name: true,
+                  phone: true,
+               },
+            },
+            sender: {
+               select: {
+                  name: true,
+                  phone: true,
+               },
+            },
+         },
       });
 
       const total = await this.prisma.parcel.count();

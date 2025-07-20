@@ -22,23 +22,11 @@ import { PaginationPipe } from './pipes/pagination.pipe';
 export class ParcelController {
    constructor(private readonly parcelService: ParcelService) {}
 
-   @HttpCode(HttpStatus.CREATED)
-   @Roles('USER')
-   @UseGuards(RolesGuard)
-   @UseGuards(JwtGuard)
-   @Post('/booking')
-   async bookParcel(
-      @Body() bookingParcelDto: BookingParcelDto,
-      @DAuthUser() user: AuthUser,
-   ) {
-      return this.parcelService.bookParcel(user.id, bookingParcelDto);
-   }
-
    @HttpCode(HttpStatus.OK)
    @Roles(Role.ADMIN, Role.USER, Role.DELIVERY_AGENT)
    @UseGuards(RolesGuard)
    @UseGuards(JwtGuard)
-   @Get('summary')
+   @Get('/')
    async getBookings(
       @DAuthUser() user: AuthUser,
       @Query() pagination: PaginationPipe,
@@ -49,5 +37,17 @@ export class ParcelController {
          pagination.page,
          pagination.limit,
       );
+   }
+
+   @HttpCode(HttpStatus.CREATED)
+   @Roles('USER')
+   @UseGuards(RolesGuard)
+   @UseGuards(JwtGuard)
+   @Post('/booking')
+   async bookParcel(
+      @Body() bookingParcelDto: BookingParcelDto,
+      @DAuthUser() user: AuthUser,
+   ) {
+      return this.parcelService.bookParcel(user.id, bookingParcelDto);
    }
 }
