@@ -1,8 +1,6 @@
 'use client';
-
 import * as React from 'react';
 import { Area, AreaChart, CartesianGrid, XAxis } from 'recharts';
-
 import { useIsMobile } from '@/hooks/use-mobile';
 import {
    Card,
@@ -27,119 +25,124 @@ import {
 } from '@/components/ui/select';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 
-export const description = 'An interactive area chart';
+export const description =
+   'This chart displays the total bookings over a specified time range, with options to filter by the last 3 months, 30 days, or 7 days.';
 
 const chartData = [
-   { date: '2024-04-01', desktop: 222, mobile: 150 },
-   { date: '2024-04-02', desktop: 97, mobile: 180 },
-   { date: '2024-04-03', desktop: 167, mobile: 120 },
-   { date: '2024-04-04', desktop: 242, mobile: 260 },
-   { date: '2024-04-05', desktop: 373, mobile: 290 },
-   { date: '2024-04-06', desktop: 301, mobile: 340 },
-   { date: '2024-04-07', desktop: 245, mobile: 180 },
-   { date: '2024-04-08', desktop: 409, mobile: 320 },
-   { date: '2024-04-09', desktop: 59, mobile: 110 },
-   { date: '2024-04-10', desktop: 261, mobile: 190 },
-   { date: '2024-04-11', desktop: 327, mobile: 350 },
-   { date: '2024-04-12', desktop: 292, mobile: 210 },
-   { date: '2024-04-13', desktop: 342, mobile: 380 },
-   { date: '2024-04-14', desktop: 137, mobile: 220 },
-   { date: '2024-04-15', desktop: 120, mobile: 170 },
-   { date: '2024-04-16', desktop: 138, mobile: 190 },
-   { date: '2024-04-17', desktop: 446, mobile: 360 },
-   { date: '2024-04-18', desktop: 364, mobile: 410 },
-   { date: '2024-04-19', desktop: 243, mobile: 180 },
-   { date: '2024-04-20', desktop: 89, mobile: 150 },
-   { date: '2024-04-21', desktop: 137, mobile: 200 },
-   { date: '2024-04-22', desktop: 224, mobile: 170 },
-   { date: '2024-04-23', desktop: 138, mobile: 230 },
-   { date: '2024-04-24', desktop: 387, mobile: 290 },
-   { date: '2024-04-25', desktop: 215, mobile: 250 },
-   { date: '2024-04-26', desktop: 75, mobile: 130 },
-   { date: '2024-04-27', desktop: 383, mobile: 420 },
-   { date: '2024-04-28', desktop: 122, mobile: 180 },
-   { date: '2024-04-29', desktop: 315, mobile: 240 },
-   { date: '2024-04-30', desktop: 454, mobile: 380 },
-   { date: '2024-05-01', desktop: 165, mobile: 220 },
-   { date: '2024-05-02', desktop: 293, mobile: 310 },
-   { date: '2024-05-03', desktop: 247, mobile: 190 },
-   { date: '2024-05-04', desktop: 385, mobile: 420 },
-   { date: '2024-05-05', desktop: 481, mobile: 390 },
-   { date: '2024-05-06', desktop: 498, mobile: 520 },
-   { date: '2024-05-07', desktop: 388, mobile: 300 },
-   { date: '2024-05-08', desktop: 149, mobile: 210 },
-   { date: '2024-05-09', desktop: 227, mobile: 180 },
-   { date: '2024-05-10', desktop: 293, mobile: 330 },
-   { date: '2024-05-11', desktop: 335, mobile: 270 },
-   { date: '2024-05-12', desktop: 197, mobile: 240 },
-   { date: '2024-05-13', desktop: 197, mobile: 160 },
-   { date: '2024-05-14', desktop: 448, mobile: 490 },
-   { date: '2024-05-15', desktop: 473, mobile: 380 },
-   { date: '2024-05-16', desktop: 338, mobile: 400 },
-   { date: '2024-05-17', desktop: 499, mobile: 420 },
-   { date: '2024-05-18', desktop: 315, mobile: 350 },
-   { date: '2024-05-19', desktop: 235, mobile: 180 },
-   { date: '2024-05-20', desktop: 177, mobile: 230 },
-   { date: '2024-05-21', desktop: 82, mobile: 140 },
-   { date: '2024-05-22', desktop: 81, mobile: 120 },
-   { date: '2024-05-23', desktop: 252, mobile: 290 },
-   { date: '2024-05-24', desktop: 294, mobile: 220 },
-   { date: '2024-05-25', desktop: 201, mobile: 250 },
-   { date: '2024-05-26', desktop: 213, mobile: 170 },
-   { date: '2024-05-27', desktop: 420, mobile: 460 },
-   { date: '2024-05-28', desktop: 233, mobile: 190 },
-   { date: '2024-05-29', desktop: 78, mobile: 130 },
-   { date: '2024-05-30', desktop: 340, mobile: 280 },
-   { date: '2024-05-31', desktop: 178, mobile: 230 },
-   { date: '2024-06-01', desktop: 178, mobile: 200 },
-   { date: '2024-06-02', desktop: 470, mobile: 410 },
-   { date: '2024-06-03', desktop: 103, mobile: 160 },
-   { date: '2024-06-04', desktop: 439, mobile: 380 },
-   { date: '2024-06-05', desktop: 88, mobile: 140 },
-   { date: '2024-06-06', desktop: 294, mobile: 250 },
-   { date: '2024-06-07', desktop: 323, mobile: 370 },
-   { date: '2024-06-08', desktop: 385, mobile: 320 },
-   { date: '2024-06-09', desktop: 438, mobile: 480 },
-   { date: '2024-06-10', desktop: 155, mobile: 200 },
-   { date: '2024-06-11', desktop: 92, mobile: 150 },
-   { date: '2024-06-12', desktop: 492, mobile: 420 },
-   { date: '2024-06-13', desktop: 81, mobile: 130 },
-   { date: '2024-06-14', desktop: 426, mobile: 380 },
-   { date: '2024-06-15', desktop: 307, mobile: 350 },
-   { date: '2024-06-16', desktop: 371, mobile: 310 },
-   { date: '2024-06-17', desktop: 475, mobile: 520 },
-   { date: '2024-06-18', desktop: 107, mobile: 170 },
-   { date: '2024-06-19', desktop: 341, mobile: 290 },
-   { date: '2024-06-20', desktop: 408, mobile: 450 },
-   { date: '2024-06-21', desktop: 169, mobile: 210 },
-   { date: '2024-06-22', desktop: 317, mobile: 270 },
-   { date: '2024-06-23', desktop: 480, mobile: 530 },
-   { date: '2024-06-24', desktop: 132, mobile: 180 },
-   { date: '2024-06-25', desktop: 141, mobile: 190 },
-   { date: '2024-06-26', desktop: 434, mobile: 380 },
-   { date: '2024-06-27', desktop: 448, mobile: 490 },
-   { date: '2024-06-28', desktop: 149, mobile: 200 },
-   { date: '2024-06-29', desktop: 103, mobile: 160 },
-   { date: '2024-06-30', desktop: 446, mobile: 400 },
+   { date: '2024-04-01', delivered: 222, canceled: 150 },
+   { date: '2024-04-02', delivered: 97, canceled: 180 },
+   { date: '2024-04-03', delivered: 167, canceled: 120 },
+   { date: '2024-04-04', delivered: 242, canceled: 260 },
+   { date: '2024-04-05', delivered: 373, canceled: 290 },
+   { date: '2024-04-06', delivered: 301, canceled: 340 },
+   { date: '2024-04-07', delivered: 245, canceled: 180 },
+   { date: '2024-04-08', delivered: 409, canceled: 320 },
+   { date: '2024-04-09', delivered: 59, canceled: 110 },
+   { date: '2024-04-10', delivered: 261, canceled: 190 },
+   { date: '2024-04-11', delivered: 327, canceled: 350 },
+   { date: '2024-04-12', delivered: 292, canceled: 210 },
+   { date: '2024-04-13', delivered: 342, canceled: 380 },
+   { date: '2024-04-14', delivered: 137, canceled: 220 },
+   { date: '2024-04-15', delivered: 120, canceled: 170 },
+   { date: '2024-04-16', delivered: 138, canceled: 190 },
+   { date: '2024-04-17', delivered: 446, canceled: 360 },
+   { date: '2024-04-18', delivered: 364, canceled: 410 },
+   { date: '2024-04-19', delivered: 243, canceled: 180 },
+   { date: '2024-04-20', delivered: 89, canceled: 150 },
+   { date: '2024-04-21', delivered: 137, canceled: 200 },
+   { date: '2024-04-22', delivered: 224, canceled: 170 },
+   { date: '2024-04-23', delivered: 138, canceled: 230 },
+   { date: '2024-04-24', delivered: 387, canceled: 290 },
+   { date: '2024-04-25', delivered: 215, canceled: 250 },
+   { date: '2024-04-26', delivered: 75, canceled: 130 },
+   { date: '2024-04-27', delivered: 383, canceled: 420 },
+   { date: '2024-04-28', delivered: 122, canceled: 180 },
+   { date: '2024-04-29', delivered: 315, canceled: 240 },
+   { date: '2024-04-30', delivered: 454, canceled: 380 },
+   { date: '2024-05-01', delivered: 165, canceled: 220 },
+   { date: '2024-05-02', delivered: 293, canceled: 310 },
+   { date: '2024-05-03', delivered: 247, canceled: 190 },
+   { date: '2024-05-04', delivered: 385, canceled: 420 },
+   { date: '2024-05-05', delivered: 481, canceled: 390 },
+   { date: '2024-05-06', delivered: 498, canceled: 520 },
+   { date: '2024-05-07', delivered: 388, canceled: 300 },
+   { date: '2024-05-08', delivered: 149, canceled: 210 },
+   { date: '2024-05-09', delivered: 227, canceled: 180 },
+   { date: '2024-05-10', delivered: 293, canceled: 330 },
+   { date: '2024-05-11', delivered: 335, canceled: 270 },
+   { date: '2024-05-12', delivered: 197, canceled: 240 },
+   { date: '2024-05-13', delivered: 197, canceled: 160 },
+   { date: '2024-05-14', delivered: 448, canceled: 490 },
+   { date: '2024-05-15', delivered: 473, canceled: 380 },
+   { date: '2024-05-16', delivered: 338, canceled: 400 },
+   { date: '2024-05-17', delivered: 499, canceled: 420 },
+   { date: '2024-05-18', delivered: 315, canceled: 350 },
+   { date: '2024-05-19', delivered: 235, canceled: 180 },
+   { date: '2024-05-20', delivered: 177, canceled: 230 },
+   { date: '2024-05-21', delivered: 82, canceled: 140 },
+   { date: '2024-05-22', delivered: 81, canceled: 120 },
+   { date: '2024-05-23', delivered: 252, canceled: 290 },
+   { date: '2024-05-24', delivered: 294, canceled: 220 },
+   { date: '2024-05-25', delivered: 201, canceled: 250 },
+   { date: '2024-05-26', delivered: 213, canceled: 170 },
+   { date: '2024-05-27', delivered: 420, canceled: 460 },
+   { date: '2024-05-28', delivered: 233, canceled: 190 },
+   { date: '2024-05-29', delivered: 78, canceled: 130 },
+   { date: '2024-05-30', delivered: 340, canceled: 280 },
+   { date: '2024-05-31', delivered: 178, canceled: 230 },
+   { date: '2024-06-01', delivered: 178, canceled: 200 },
+   { date: '2024-06-02', delivered: 470, canceled: 410 },
+   { date: '2024-06-03', delivered: 103, canceled: 160 },
+   { date: '2024-06-04', delivered: 439, canceled: 380 },
+   { date: '2024-06-05', delivered: 88, canceled: 140 },
+   { date: '2024-06-06', delivered: 294, canceled: 250 },
+   { date: '2024-06-07', delivered: 323, canceled: 370 },
+   { date: '2024-06-08', delivered: 385, canceled: 320 },
+   { date: '2024-06-09', delivered: 438, canceled: 480 },
+   { date: '2024-06-10', delivered: 155, canceled: 200 },
+   { date: '2024-06-11', delivered: 92, canceled: 150 },
+   { date: '2024-06-12', delivered: 492, canceled: 420 },
+   { date: '2024-06-13', delivered: 81, canceled: 130 },
+   { date: '2024-06-14', delivered: 426, canceled: 380 },
+   { date: '2024-06-15', delivered: 307, canceled: 350 },
+   { date: '2024-06-16', delivered: 371, canceled: 310 },
+   { date: '2024-06-17', delivered: 475, canceled: 520 },
+   { date: '2024-06-18', delivered: 107, canceled: 170 },
+   { date: '2024-06-19', delivered: 341, canceled: 290 },
+   { date: '2024-06-20', delivered: 408, canceled: 450 },
+   { date: '2024-06-21', delivered: 169, canceled: 210 },
+   { date: '2024-06-22', delivered: 317, canceled: 270 },
+   { date: '2024-06-23', delivered: 480, canceled: 530 },
+   { date: '2024-06-24', delivered: 132, canceled: 180 },
+   { date: '2024-06-25', delivered: 141, canceled: 190 },
+   { date: '2024-06-26', delivered: 434, canceled: 380 },
+   { date: '2024-06-27', delivered: 448, canceled: 490 },
+   { date: '2024-06-28', delivered: 149, canceled: 200 },
+   { date: '2024-06-29', delivered: 103, canceled: 160 },
+   { date: '2024-06-30', delivered: 446, canceled: 400 },
 ];
 
-const chartConfig = {
-   visitors: {
-      label: 'Visitors',
-   },
-   desktop: {
-      label: 'Desktop',
-      color: 'var(--primary)',
-   },
-   mobile: {
-      label: 'Mobile',
-      color: 'var(--primary)',
-   },
-} satisfies ChartConfig;
+interface ChartAreaProps {
+   data?: unknown;
+}
 
-export function ChartAreaInteractive() {
+export function BookingsAreaChart() {
    const isMobile = useIsMobile();
    const [timeRange, setTimeRange] = React.useState('90d');
+
+   const chartConfig = {
+      visitors: {
+         label: 'Bookings',
+      },
+      delivered: {
+         label: 'Delivery',
+         color: 'var(--primary)',
+      },
+      canceled: {
+         label: 'Canceled',
+         color: 'var(--primary)',
+      },
+   } satisfies ChartConfig;
 
    React.useEffect(() => {
       if (isMobile) {
@@ -164,7 +167,7 @@ export function ChartAreaInteractive() {
    return (
       <Card className="@container/card">
          <CardHeader>
-            <CardTitle>Total Visitors</CardTitle>
+            <CardTitle>Total Bookings</CardTitle>
             <CardDescription>
                <span className="hidden @[540px]/card:block">
                   Total for the last 3 months
@@ -283,14 +286,14 @@ export function ChartAreaInteractive() {
                      }
                   />
                   <Area
-                     dataKey="mobile"
+                     dataKey="delivered"
                      type="natural"
                      fill="url(#fillMobile)"
                      stroke="var(--color-mobile)"
                      stackId="a"
                   />
                   <Area
-                     dataKey="desktop"
+                     dataKey="canceled"
                      type="natural"
                      fill="url(#fillDesktop)"
                      stroke="var(--color-desktop)"
