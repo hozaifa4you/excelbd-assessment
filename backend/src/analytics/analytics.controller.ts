@@ -9,7 +9,7 @@ import { AnalyticsService } from './analytics.service';
 import { JwtGuard } from 'src/auth/guards/jwt.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { Roles } from 'src/auth/decorators/roles.decorator';
-import { Role } from '../../generated/prisma';
+import { Role } from 'generated/prisma';
 import { AuthUser as DAuthUser } from 'src/auth/decorators/auth-user.decorator';
 import { AuthUser } from 'src/auth/types/auth-user';
 
@@ -21,7 +21,7 @@ export class AnalyticsController {
    @Roles(Role.ADMIN, Role.USER, Role.DELIVERY_AGENT)
    @UseGuards(RolesGuard)
    @UseGuards(JwtGuard)
-   @Get('bookings')
+   @Get('bookings-3-months')
    async bookingsAnalytics(@DAuthUser() user: AuthUser) {
       return this.analyticsService.getBookingsAnalytics(user.role, user.id);
    }
