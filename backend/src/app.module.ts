@@ -7,6 +7,7 @@ import { UserModule } from './user/user.module';
 import { ParcelModule } from './parcel/parcel.module';
 import { ConfigModule } from '@nestjs/config';
 import { UploaderModule } from './uploader/uploader.module';
+import { AnalyticsModule } from './analytics/analytics.module';
 import appConfig from './config/app.config';
 
 @Module({
@@ -21,6 +22,7 @@ import appConfig from './config/app.config';
       UserModule,
       ParcelModule,
       UploaderModule,
+      AnalyticsModule,
    ],
    controllers: [AppController],
    providers: [AppService],
