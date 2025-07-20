@@ -2,35 +2,18 @@
 import * as React from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
-   closestCenter,
-   DndContext,
-   KeyboardSensor,
-   MouseSensor,
-   TouchSensor,
-   useSensor,
-   useSensors,
-   type DragEndEvent,
-   type UniqueIdentifier,
-} from '@dnd-kit/core';
-import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
-import {
-   arrayMove,
-   SortableContext,
-   useSortable,
-   verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
-import {
    IconChevronDown,
    IconChevronLeft,
    IconChevronRight,
    IconChevronsLeft,
    IconChevronsRight,
    IconCircleCheckFilled,
+   IconCircleX,
    IconDotsVertical,
    IconLayoutColumns,
    IconLoader,
    IconPlus,
+   IconTransfer,
    IconTrendingUp,
 } from '@tabler/icons-react';
 import {
@@ -42,7 +25,6 @@ import {
    getFacetedUniqueValues,
    getFilteredRowModel,
    getSortedRowModel,
-   Row,
    SortingState,
    useReactTable,
    VisibilityState,
@@ -51,8 +33,8 @@ import { Area, AreaChart, CartesianGrid, XAxis } from 'recharts';
 import { z } from 'zod';
 
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { Badge, badgeVariants } from '@/components/ui/badge';
+import { Button, buttonVariants } from '@/components/ui/button';
 import {
    ChartConfig,
    ChartContainer,
@@ -101,6 +83,9 @@ import {
    TooltipContent,
    TooltipTrigger,
 } from '@/components/ui/tooltip';
+import Link from 'next/link';
+import { route } from '@/lib/routes';
+import { cn } from '@/lib/utils';
 
 export const schema = z.object({
    id: z.string(),
@@ -168,12 +153,20 @@ const columns: ColumnDef<ParcelData>[] = [
    },
    {
       accessorKey: 'trackingNumber',
-      header: 'Tracking Number',
+      header: 'Track. Number',
       cell: ({ row }) => (
          <div className="w-32">
-            <Badge variant="outline" className="text-muted-foreground px-1.5">
-               {row.original.trackingNumber.substring(0, 6)}
-            </Badge>
+            <Link
+               href={`/parcels/tracking?id=${row.original.trackingNumber}`}
+               target="_blank"
+               className={badgeVariants({
+                  class: 'text-muted-foreground px-1.5 font-sans',
+                  variant: 'outline',
+               })}
+            >
+               <IconTransfer className="mr-1" />{' '}
+               {row.original.trackingNumber.substring(0, 6) + '...'}
+            </Link>
          </div>
       ),
    },
@@ -196,8 +189,14 @@ const columns: ColumnDef<ParcelData>[] = [
          <Badge variant="outline" className="text-muted-foreground px-1.5">
             {row.original.status === 'DELIVERED' ? (
                <IconCircleCheckFilled className="fill-green-500 dark:fill-green-400" />
+            ) : row.original.status === 'CANCELLED' ? (
+               <IconCircleX className="text-red-500" />
             ) : (
-               <IconLoader />
+               <IconLoader
+                  className={cn({
+                     'text-amber-500': row.original.status === 'DELIVERING',
+                  })}
+               />
             )}
             {row.original.status}
          </Badge>
@@ -209,7 +208,7 @@ const columns: ColumnDef<ParcelData>[] = [
       cell: ({ row }) => (
          <div className="text-right">
             <div className="font-medium">{row.original.sender.name}</div>
-            <div className="text-muted-foreground text-sm">
+            <div className="text-muted-foreground font-sans text-sm">
                {row.original.sender.phone}
             </div>
          </div>
@@ -221,7 +220,7 @@ const columns: ColumnDef<ParcelData>[] = [
       cell: ({ row }) => (
          <div className="text-right">
             <div className="font-medium">{row.original.recipient.name}</div>
-            <div className="text-muted-foreground text-sm">
+            <div className="text-muted-foreground font-sans text-sm">
                {row.original.recipient.phone}
             </div>
          </div>
@@ -326,9 +325,9 @@ const columns: ColumnDef<ParcelData>[] = [
             <div className="text-sm">
                <Tooltip>
                   <TooltipTrigger asChild>
-                     <div className="cursor-help">
+                     <div className="cursor-help font-sans">
                         <div className="font-medium">
-                           ${totalFees.toFixed(2)}
+                           {totalFees.toFixed(2)}Tk
                         </div>
                         <div className="text-muted-foreground text-xs">
                            {feeCount} fee{feeCount !== 1 ? 's' : ''}
@@ -346,15 +345,17 @@ const columns: ColumnDef<ParcelData>[] = [
                               className="flex justify-between text-xs"
                            >
                               <span>{item.label}:</span>
-                              <span className="font-medium">
-                                 ${(item.value || 0).toFixed(2)}
+                              <span className="font-sans font-medium">
+                                 {(item.value || 0).toFixed(2)}Tk
                               </span>
                            </div>
                         ))}
                         <div className="mt-2 border-t pt-1">
                            <div className="flex justify-between text-xs font-medium">
                               <span>Total:</span>
-                              <span>${totalFees.toFixed(2)}</span>
+                              <span className="font-sans">
+                                 {totalFees.toFixed(2)}Tk
+                              </span>
                            </div>
                         </div>
                      </div>
@@ -386,31 +387,6 @@ const columns: ColumnDef<ParcelData>[] = [
       ),
    },
 ];
-
-function DraggableRow({ row }: { row: Row<ParcelData> }) {
-   const { transform, transition, setNodeRef, isDragging } = useSortable({
-      id: row.original.id,
-   });
-
-   return (
-      <TableRow
-         data-state={row.getIsSelected() && 'selected'}
-         data-dragging={isDragging}
-         ref={setNodeRef}
-         className="relative z-0 data-[dragging=true]:z-10 data-[dragging=true]:opacity-80"
-         style={{
-            transform: CSS.Transform.toString(transform),
-            transition: transition,
-         }}
-      >
-         {row.getVisibleCells().map((cell) => (
-            <TableCell key={cell.id}>
-               {flexRender(cell.column.columnDef.cell, cell.getContext())}
-            </TableCell>
-         ))}
-      </TableRow>
-   );
-}
 
 export function DataTable({
    data: initialData,
@@ -449,13 +425,6 @@ export function DataTable({
       setData(initialData);
    }, [initialData]);
 
-   const sortableId = React.useId();
-   const sensors = useSensors(
-      useSensor(MouseSensor, {}),
-      useSensor(TouchSensor, {}),
-      useSensor(KeyboardSensor, {}),
-   );
-
    // Update URL parameters when pagination changes
    const updateURL = React.useCallback(
       (page: number, limit: number) => {
@@ -492,11 +461,6 @@ export function DataTable({
       [updateURL, pagination.pageSize],
    );
 
-   const dataIds = React.useMemo<UniqueIdentifier[]>(
-      () => data?.map(({ id }) => id) || [],
-      [data],
-   );
-
    const table = useReactTable({
       data,
       columns,
@@ -523,17 +487,6 @@ export function DataTable({
       manualPagination: true,
       pageCount: paginationInfo.pages,
    });
-
-   function handleDragEnd(event: DragEndEvent) {
-      const { active, over } = event;
-      if (active && over && active.id !== over.id) {
-         setData((data) => {
-            const oldIndex = dataIds.indexOf(active.id);
-            const newIndex = dataIds.indexOf(over.id);
-            return arrayMove(data, oldIndex, newIndex);
-         });
-      }
-   }
 
    return (
       <Tabs
@@ -611,24 +564,22 @@ export function DataTable({
                         })}
                   </DropdownMenuContent>
                </DropdownMenu>
-               <Button variant="outline" size="sm">
+               <Link
+                  href={route('parcels.booking')}
+                  className={buttonVariants({ variant: 'outline', size: 'sm' })}
+               >
                   <IconPlus />
-                  <span className="hidden lg:inline">Add Section</span>
-               </Button>
+                  <span className="hidden lg:inline">New Booking</span>
+               </Link>
             </div>
          </div>
          <TabsContent
             value="outline"
-            className="relative flex flex-col gap-4 overflow-auto px-4 lg:px-6"
+            className="scrollbar-thin relative flex flex-col gap-4 overflow-auto px-4 lg:px-6"
          >
+            {' '}
             <div className="overflow-hidden rounded-lg border">
-               <DndContext
-                  collisionDetection={closestCenter}
-                  modifiers={[restrictToVerticalAxis]}
-                  onDragEnd={handleDragEnd}
-                  sensors={sensors}
-                  id={sortableId}
-               >
+               <div className="scrollbar-thin max-h-[600px] overflow-auto">
                   <Table>
                      <TableHeader className="bg-muted sticky top-0 z-10">
                         {table.getHeaderGroups().map((headerGroup) => (
@@ -653,14 +604,21 @@ export function DataTable({
                      </TableHeader>
                      <TableBody className="**:data-[slot=table-cell]:first:w-8">
                         {table.getRowModel().rows?.length ? (
-                           <SortableContext
-                              items={dataIds}
-                              strategy={verticalListSortingStrategy}
-                           >
-                              {table.getRowModel().rows.map((row) => (
-                                 <DraggableRow key={row.id} row={row} />
-                              ))}
-                           </SortableContext>
+                           table.getRowModel().rows.map((row) => (
+                              <TableRow
+                                 key={row.id}
+                                 data-state={row.getIsSelected() && 'selected'}
+                              >
+                                 {row.getVisibleCells().map((cell) => (
+                                    <TableCell key={cell.id}>
+                                       {flexRender(
+                                          cell.column.columnDef.cell,
+                                          cell.getContext(),
+                                       )}
+                                    </TableCell>
+                                 ))}
+                              </TableRow>
+                           ))
                         ) : (
                            <TableRow>
                               <TableCell
@@ -673,7 +631,7 @@ export function DataTable({
                         )}
                      </TableBody>
                   </Table>
-               </DndContext>
+               </div>
             </div>
             <div className="flex items-center justify-between px-4">
                <div className="text-muted-foreground hidden flex-1 text-sm lg:flex">
