@@ -57,16 +57,10 @@ async function main() {
             trackingNumber: faker.string.ulid(),
             status: faker.helpers.arrayElement(['CANCELLED', 'DELIVERED']),
             createdAt: faker.date.recent({ days: 90 }),
+            estimatedDelivery: faker.date.soon({ days: 5 }),
          },
       });
    }
-
-   log('Updating parcel');
-   await client.parcel.updateMany({
-      data: {
-         estimatedDelivery: faker.date.soon({ days: 90 }),
-      },
-   });
 }
 
 main().catch(log);
