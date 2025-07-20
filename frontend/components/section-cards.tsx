@@ -10,95 +10,160 @@ import {
    CardTitle,
 } from '@/components/ui/card';
 
-export function SectionCards() {
+interface SummaryCardsProps {
+   summary: {
+      total: { total: number; totalGrowth: number };
+      delivery: { delivered: number; deliveryGrowth: number };
+      cancel: { canceled: number; canceledGrowth: number };
+      pending: number;
+   };
+}
+
+export function SectionCards({ summary }: SummaryCardsProps) {
    return (
       <div className="*:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card dark:*:data-[slot=card]:bg-card grid grid-cols-1 gap-4 px-4 *:data-[slot=card]:bg-gradient-to-t *:data-[slot=card]:shadow-xs lg:px-6 @xl/main:grid-cols-2 @5xl/main:grid-cols-4">
          <Card className="@container/card">
             <CardHeader>
-               <CardDescription>Total Revenue</CardDescription>
+               <CardDescription>Total Bookings</CardDescription>
                <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-                  $1,250.00
+                  {summary.total.total}
                </CardTitle>
                <CardAction>
                   <Badge variant="outline">
-                     <IconTrendingUp />
-                     +12.5%
+                     {summary.total.totalGrowth > 0 ? (
+                        <IconTrendingUp />
+                     ) : (
+                        <IconTrendingDown />
+                     )}
+                     {summary.total.totalGrowth > 0
+                        ? `+${summary.total.totalGrowth.toFixed(2)}`
+                        : summary.total.totalGrowth.toFixed()}
+                     %
                   </Badge>
                </CardAction>
             </CardHeader>
             <CardFooter className="flex-col items-start gap-1.5 text-sm">
                <div className="line-clamp-1 flex gap-2 font-medium">
-                  Trending up this month <IconTrendingUp className="size-4" />
+                  {summary.total.totalGrowth > 0
+                     ? 'Growing steadily'
+                     : summary.total.totalGrowth < 0
+                       ? 'Declining this month'
+                       : 'Stable performance'}{' '}
+                  {summary.total.totalGrowth > 0 ? (
+                     <IconTrendingUp className="size-4" />
+                  ) : (
+                     <IconTrendingDown className="size-4" />
+                  )}
                </div>
                <div className="text-muted-foreground">
-                  Visitors for the last 6 months
+                  Total bookings for the month
                </div>
             </CardFooter>
          </Card>
          <Card className="@container/card">
             <CardHeader>
-               <CardDescription>New Customers</CardDescription>
+               <CardDescription>Delivered Parcels</CardDescription>
                <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-                  1,234
+                  {summary.delivery.delivered}
                </CardTitle>
                <CardAction>
                   <Badge variant="outline">
-                     <IconTrendingDown />
-                     -20%
+                     {summary.delivery.deliveryGrowth > 0 ? (
+                        <IconTrendingUp />
+                     ) : (
+                        <IconTrendingDown />
+                     )}
+                     {summary.delivery.deliveryGrowth > 0
+                        ? `+${summary.delivery.deliveryGrowth.toFixed(2)}`
+                        : summary.delivery.deliveryGrowth.toFixed(2)}
+                     %
                   </Badge>
                </CardAction>
             </CardHeader>
             <CardFooter className="flex-col items-start gap-1.5 text-sm">
                <div className="line-clamp-1 flex gap-2 font-medium">
-                  Down 20% this period <IconTrendingDown className="size-4" />
+                  {summary.delivery.deliveryGrowth > 0
+                     ? 'Trending up'
+                     : 'Trending down'}{' '}
+                  this month{' '}
+                  {summary.delivery.deliveryGrowth > 0 ? (
+                     <IconTrendingUp className="size-4" />
+                  ) : (
+                     <IconTrendingDown className="size-4" />
+                  )}
                </div>
                <div className="text-muted-foreground">
-                  Acquisition needs attention
+                  Successfully delivered parcels
                </div>
             </CardFooter>
          </Card>
          <Card className="@container/card">
             <CardHeader>
-               <CardDescription>Active Accounts</CardDescription>
+               <CardDescription>Cancelled Parcels</CardDescription>
                <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-                  45,678
+                  {summary.cancel.canceled}
                </CardTitle>
                <CardAction>
                   <Badge variant="outline">
-                     <IconTrendingUp />
-                     +12.5%
+                     {summary.cancel.canceledGrowth > 0 ? (
+                        <IconTrendingUp />
+                     ) : (
+                        <IconTrendingDown />
+                     )}
+                     {summary.cancel.canceledGrowth > 0
+                        ? `+${summary.cancel.canceledGrowth.toFixed(2)}`
+                        : summary.cancel.canceledGrowth.toFixed(2)}
+                     %
                   </Badge>
                </CardAction>
             </CardHeader>
             <CardFooter className="flex-col items-start gap-1.5 text-sm">
                <div className="line-clamp-1 flex gap-2 font-medium">
-                  Strong user retention <IconTrendingUp className="size-4" />
+                  {summary.cancel.canceledGrowth > 0
+                     ? 'Trending up'
+                     : 'Trending down'}{' '}
+                  this month{' '}
+                  {summary.cancel.canceledGrowth > 0 ? (
+                     <IconTrendingUp className="size-4" />
+                  ) : (
+                     <IconTrendingDown className="size-4" />
+                  )}
                </div>
                <div className="text-muted-foreground">
-                  Engagement exceed targets
+                  {summary.cancel.canceledGrowth <= 0
+                     ? 'Good performance'
+                     : 'Needs attention'}
                </div>
             </CardFooter>
          </Card>
          <Card className="@container/card">
             <CardHeader>
-               <CardDescription>Growth Rate</CardDescription>
+               <CardDescription>Pending Parcels</CardDescription>
                <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-                  4.5%
+                  {summary.pending}
                </CardTitle>
                <CardAction>
                   <Badge variant="outline">
-                     <IconTrendingUp />
-                     +4.5%
+                     {summary.pending > 0 ? (
+                        <IconTrendingUp />
+                     ) : (
+                        <IconTrendingDown />
+                     )}
+                     {summary.pending > 0 ? 'Active' : 'None'}
                   </Badge>
                </CardAction>
             </CardHeader>
             <CardFooter className="flex-col items-start gap-1.5 text-sm">
                <div className="line-clamp-1 flex gap-2 font-medium">
-                  Steady performance increase{' '}
-                  <IconTrendingUp className="size-4" />
+                  {summary.pending > 0 ? 'Requires attention' : 'All clear'}{' '}
+                  {summary.pending > 0 ? (
+                     <IconTrendingUp className="size-4" />
+                  ) : (
+                     <IconTrendingDown className="size-4" />
+                  )}
                </div>
                <div className="text-muted-foreground">
-                  Meets growth projections
+                  Parcels awaiting processing
                </div>
             </CardFooter>
          </Card>
