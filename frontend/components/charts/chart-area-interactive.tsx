@@ -136,7 +136,7 @@ export function BookingsAreaChart() {
       },
       delivered: {
          label: 'Delivery',
-         color: 'var(--primary)',
+         color: 'var(--chart-2)',
       },
       canceled: {
          label: 'Canceled',
@@ -224,12 +224,12 @@ export function BookingsAreaChart() {
                      >
                         <stop
                            offset="5%"
-                           stopColor="var(--color-desktop)"
+                           stopColor="var(--color-delivered)"
                            stopOpacity={1.0}
                         />
                         <stop
                            offset="95%"
-                           stopColor="var(--color-desktop)"
+                           stopColor="var(--color-delivered)"
                            stopOpacity={0.1}
                         />
                      </linearGradient>
@@ -242,12 +242,12 @@ export function BookingsAreaChart() {
                      >
                         <stop
                            offset="5%"
-                           stopColor="var(--color-mobile)"
+                           stopColor="var(--color-canceled)"
                            stopOpacity={0.8}
                         />
                         <stop
                            offset="95%"
-                           stopColor="var(--color-mobile)"
+                           stopColor="var(--color-canceled)"
                            stopOpacity={0.1}
                         />
                      </linearGradient>
@@ -289,14 +289,14 @@ export function BookingsAreaChart() {
                      dataKey="delivered"
                      type="natural"
                      fill="url(#fillMobile)"
-                     stroke="var(--color-mobile)"
+                     stroke="var(--color-canceled)"
                      stackId="a"
                   />
                   <Area
                      dataKey="canceled"
                      type="natural"
                      fill="url(#fillDesktop)"
-                     stroke="var(--color-desktop)"
+                     stroke="var(--color-delivered)"
                      stackId="a"
                   />
                </AreaChart>
