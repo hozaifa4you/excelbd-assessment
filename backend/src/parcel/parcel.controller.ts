@@ -4,6 +4,7 @@ import {
    Get,
    HttpCode,
    HttpStatus,
+   Param,
    Post,
    Query,
    UseGuards,
@@ -17,6 +18,8 @@ import { AuthUser as DAuthUser } from 'src/auth/decorators/auth-user.decorator';
 import { AuthUser } from 'src/auth/types/auth-user';
 import { Role } from 'generated/prisma';
 import { PaginationPipe } from './pipes/pagination.pipe';
+import { AccessGuard } from 'src/auth/guards/access.guard';
+import { MongoIdValidationPipe } from './pipes/mongo-id-validation.pipe';
 
 @Controller('parcels')
 export class ParcelController {
@@ -49,5 +52,15 @@ export class ParcelController {
       @DAuthUser() user: AuthUser,
    ) {
       return this.parcelService.bookParcel(user.id, bookingParcelDto);
+   }
+
+   @HttpCode(HttpStatus.OK)
+   @UseGuards(AccessGuard)
+   @UseGuards(JwtGuard)
+   @Get('/:parcelId')
+   async parcelDetails(
+      @Param('parcelId', MongoIdValidationPipe) parcelId: string,
+   ) {
+      return this.parcelService.bookingDetails(parcelId);
    }
 }

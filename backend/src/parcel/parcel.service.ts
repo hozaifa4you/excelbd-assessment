@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+   BadRequestException,
+   Injectable,
+   NotFoundException,
+} from '@nestjs/common';
 import { BookingParcelDto } from './dto/booking-parcel.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { DeliveryType, PaymentMethod, Role } from 'generated/prisma';
@@ -11,7 +15,7 @@ export class ParcelService {
       private readonly uploaderService: UploaderService,
    ) {}
 
-   async bookParcel(userId: string, bookingParcelDto: BookingParcelDto) {
+   public async bookParcel(userId: string, bookingParcelDto: BookingParcelDto) {
       const {
          deliveryAddress,
          pickupAddress,
@@ -81,13 +85,44 @@ export class ParcelService {
       }
    }
 
+   public async bookingDetails(parcelId: string) {
+      const parcel = await this.prisma.parcel.findUnique({
+         where: { id: parcelId },
+         include: {
+            creator: {
+               select: {
+                  avatar: true,
+                  firstName: true,
+                  lastName: true,
+                  email: true,
+                  phone: true,
+               },
+            },
+            deliveryAgent: {
+               select: {
+                  avatar: true,
+                  firstName: true,
+                  lastName: true,
+                  email: true,
+                  phone: true,
+               },
+            },
+         },
+      });
+
+      if (!parcel)
+         throw new NotFoundException(`Parcel with ID ${parcelId} not found`);
+
+      return parcel;
+   }
+
    private trackingNumberGenerator() {
       const trackingNumber = Math.random().toString(36).substring(2, 15);
 
       return trackingNumber;
    }
 
-   public deliveryTimeGenerator(deliveryType: DeliveryType) {
+   private deliveryTimeGenerator(deliveryType: DeliveryType) {
       const now = new Date();
 
       switch (deliveryType) {
