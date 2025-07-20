@@ -1,5 +1,6 @@
 'use client';
 import * as React from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
    closestCenter,
    DndContext,
@@ -40,7 +41,6 @@ import {
    getFacetedRowModel,
    getFacetedUniqueValues,
    getFilteredRowModel,
-   getPaginationRowModel,
    getSortedRowModel,
    Row,
    SortingState,
@@ -339,7 +339,15 @@ function DraggableRow({ row }: { row: Row<ParcelData> }) {
    );
 }
 
-export function DataTable({ data: initialData }: { data: ParcelData[] }) {
+export function DataTable({
+   data: initialData,
+   paginationInfo,
+}: {
+   data: ParcelData[];
+   paginationInfo: { page: number; total: number; pages: number };
+}) {
+   const router = useRouter();
+   const searchParams = useSearchParams();
    const [data, setData] = React.useState(() => initialData);
    const [rowSelection, setRowSelection] = React.useState({});
    const [columnVisibility, setColumnVisibility] =
@@ -348,15 +356,67 @@ export function DataTable({ data: initialData }: { data: ParcelData[] }) {
       [],
    );
    const [sorting, setSorting] = React.useState<SortingState>([]);
+
+   // Initialize pagination state from paginationInfo
    const [pagination, setPagination] = React.useState({
-      pageIndex: 0,
-      pageSize: 10,
+      pageIndex: paginationInfo.page - 1, // Convert to 0-based index
+      pageSize: Number(searchParams.get('limit')) || 10,
    });
+
+   // Sync pagination state when paginationInfo changes
+   React.useEffect(() => {
+      setPagination((prev) => ({
+         ...prev,
+         pageIndex: paginationInfo.page - 1,
+      }));
+   }, [paginationInfo.page]);
+
+   // Update data when initialData changes
+   React.useEffect(() => {
+      setData(initialData);
+   }, [initialData]);
+
    const sortableId = React.useId();
    const sensors = useSensors(
       useSensor(MouseSensor, {}),
       useSensor(TouchSensor, {}),
       useSensor(KeyboardSensor, {}),
+   );
+
+   // Update URL parameters when pagination changes
+   const updateURL = React.useCallback(
+      (page: number, limit: number) => {
+         const params = new URLSearchParams(searchParams.toString());
+         params.set('page', page.toString());
+         params.set('limit', limit.toString());
+         router.push(`?${params.toString()}`);
+      },
+      [router, searchParams],
+   );
+
+   // Handle page size change
+   const handlePageSizeChange = React.useCallback(
+      (newPageSize: number) => {
+         const newPageIndex = 0; // Reset to first page when changing page size
+         setPagination({
+            pageIndex: newPageIndex,
+            pageSize: newPageSize,
+         });
+         updateURL(1, newPageSize); // Convert back to 1-based for URL
+      },
+      [updateURL],
+   );
+
+   // Handle page navigation
+   const handlePageChange = React.useCallback(
+      (newPageIndex: number) => {
+         setPagination((prev) => ({
+            ...prev,
+            pageIndex: newPageIndex,
+         }));
+         updateURL(newPageIndex + 1, pagination.pageSize); // Convert to 1-based for URL
+      },
+      [updateURL, pagination.pageSize],
    );
 
    const dataIds = React.useMemo<UniqueIdentifier[]>(
@@ -383,10 +443,12 @@ export function DataTable({ data: initialData }: { data: ParcelData[] }) {
       onPaginationChange: setPagination,
       getCoreRowModel: getCoreRowModel(),
       getFilteredRowModel: getFilteredRowModel(),
-      getPaginationRowModel: getPaginationRowModel(),
       getSortedRowModel: getSortedRowModel(),
       getFacetedRowModel: getFacetedRowModel(),
       getFacetedUniqueValues: getFacetedUniqueValues(),
+      // Disable built-in pagination since we're handling it server-side
+      manualPagination: true,
+      pageCount: paginationInfo.pages,
    });
 
    function handleDragEnd(event: DragEndEvent) {
@@ -543,7 +605,8 @@ export function DataTable({ data: initialData }: { data: ParcelData[] }) {
             <div className="flex items-center justify-between px-4">
                <div className="text-muted-foreground hidden flex-1 text-sm lg:flex">
                   {table.getFilteredSelectedRowModel().rows.length} of{' '}
-                  {table.getFilteredRowModel().rows.length} row(s) selected.
+                  {paginationInfo.total} row(s) selected. Showing {data.length}{' '}
+                  of {paginationInfo.total} total records.
                </div>
                <div className="flex w-full items-center gap-8 lg:w-fit">
                   <div className="hidden items-center gap-2 lg:flex">
@@ -554,9 +617,9 @@ export function DataTable({ data: initialData }: { data: ParcelData[] }) {
                         Rows per page
                      </Label>
                      <Select
-                        value={`${table.getState().pagination.pageSize}`}
+                        value={`${pagination.pageSize}`}
                         onValueChange={(value) => {
-                           table.setPageSize(Number(value));
+                           handlePageSizeChange(Number(value));
                         }}
                      >
                         <SelectTrigger
@@ -564,9 +627,7 @@ export function DataTable({ data: initialData }: { data: ParcelData[] }) {
                            className="w-20"
                            id="rows-per-page"
                         >
-                           <SelectValue
-                              placeholder={table.getState().pagination.pageSize}
-                           />
+                           <SelectValue placeholder={pagination.pageSize} />
                         </SelectTrigger>
                         <SelectContent side="top">
                            {[10, 20, 30, 40, 50].map((pageSize) => (
@@ -578,15 +639,14 @@ export function DataTable({ data: initialData }: { data: ParcelData[] }) {
                      </Select>
                   </div>
                   <div className="flex w-fit items-center justify-center text-sm font-medium">
-                     Page {table.getState().pagination.pageIndex + 1} of{' '}
-                     {table.getPageCount()}
+                     Page {paginationInfo.page} of {paginationInfo.pages}
                   </div>
                   <div className="ml-auto flex items-center gap-2 lg:ml-0">
                      <Button
                         variant="outline"
                         className="hidden h-8 w-8 p-0 lg:flex"
-                        onClick={() => table.setPageIndex(0)}
-                        disabled={!table.getCanPreviousPage()}
+                        onClick={() => handlePageChange(0)}
+                        disabled={paginationInfo.page === 1}
                      >
                         <span className="sr-only">Go to first page</span>
                         <IconChevronsLeft />
@@ -595,8 +655,10 @@ export function DataTable({ data: initialData }: { data: ParcelData[] }) {
                         variant="outline"
                         className="size-8"
                         size="icon"
-                        onClick={() => table.previousPage()}
-                        disabled={!table.getCanPreviousPage()}
+                        onClick={() =>
+                           handlePageChange(pagination.pageIndex - 1)
+                        }
+                        disabled={paginationInfo.page === 1}
                      >
                         <span className="sr-only">Go to previous page</span>
                         <IconChevronLeft />
@@ -605,8 +667,10 @@ export function DataTable({ data: initialData }: { data: ParcelData[] }) {
                         variant="outline"
                         className="size-8"
                         size="icon"
-                        onClick={() => table.nextPage()}
-                        disabled={!table.getCanNextPage()}
+                        onClick={() =>
+                           handlePageChange(pagination.pageIndex + 1)
+                        }
+                        disabled={paginationInfo.page === paginationInfo.pages}
                      >
                         <span className="sr-only">Go to next page</span>
                         <IconChevronRight />
@@ -616,9 +680,9 @@ export function DataTable({ data: initialData }: { data: ParcelData[] }) {
                         className="hidden size-8 lg:flex"
                         size="icon"
                         onClick={() =>
-                           table.setPageIndex(table.getPageCount() - 1)
+                           handlePageChange(paginationInfo.pages - 1)
                         }
-                        disabled={!table.getCanNextPage()}
+                        disabled={paginationInfo.page === paginationInfo.pages}
                      >
                         <span className="sr-only">Go to last page</span>
                         <IconChevronsRight />

@@ -1,21 +1,30 @@
 import { DataTable } from '@/components/data-table';
 import { authFetch } from '@/lib/authFetch';
-import data from '@/lib/data.json';
 
-const UserBookings = async () => {
-   const response = await authFetch('/parcels');
-   if (!response.ok) {
-      throw new Error('Failed to fetch bookings');
-   }
+const UserBookingsPage = async ({
+   searchParams,
+}: {
+   searchParams: Promise<{ page?: string; limit?: string }>;
+}) => {
+   const { page, limit } = await searchParams;
 
+   const pageNumber = Math.max(1, parseInt(page || '1', 10) || 1);
+   const limitNumber = Math.max(1, parseInt(limit || '10', 10) || 10);
+
+   const response = await authFetch(
+      `/parcels?page=${pageNumber}&limit=${limitNumber}`,
+   );
    const data = await response.json();
-   console.log(data);
+
+   if (!response.ok) {
+      throw new Error(data.message);
+   }
 
    return (
       <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-         <DataTable data={data.bookings} />
+         <DataTable data={data.bookings} paginationInfo={data.meta} />
       </div>
    );
 };
 
-export default UserBookings;
+export default UserBookingsPage;
