@@ -28,19 +28,6 @@ export class AnalyticsService {
       }
    }
 
-   public async getBookings(role: Role, userId: string, page = 1, limit = 10) {
-      switch (role) {
-         case Role.ADMIN:
-            return this.getAdminBookings(page, limit);
-         case Role.USER:
-            return this.getUserBookings(userId, page, limit);
-         case Role.DELIVERY_AGENT:
-            return this.getAgentBookings(userId, page, limit);
-         default:
-            throw new BadRequestException();
-      }
-   }
-
    private async getAdminBookingsAnalytics() {
       return this.getBookingsByRole('admin');
    }
@@ -229,64 +216,6 @@ export class AnalyticsService {
          delivery: { delivered, deliveryGrowth },
          cancel: { canceled, canceledGrowth },
          pending,
-      };
-   }
-
-   private async getAdminBookings(page = 1, limit = 10) {
-      const bookings = await this.prisma.parcel.findMany({
-         skip: (page - 1) * limit,
-         take: limit,
-         orderBy: { createdAt: 'desc' },
-      });
-
-      const total = await this.prisma.parcel.count();
-
-      return {
-         bookings,
-         meta: {
-            page,
-            total,
-            pages: Math.ceil(total / limit),
-         },
-      };
-   }
-
-   private async getUserBookings(userId: string, page = 1, limit = 10) {
-      const bookings = await this.prisma.parcel.findMany({
-         where: { creatorId: userId },
-         skip: (page - 1) * limit,
-         take: limit,
-         orderBy: { createdAt: 'desc' },
-      });
-
-      const total = await this.prisma.parcel.count();
-
-      return {
-         bookings,
-         meta: {
-            page,
-            total,
-            pages: Math.ceil(total / limit),
-         },
-      };
-   }
-
-   private async getAgentBookings(userId: string, page = 1, limit = 10) {
-      const bookings = await this.prisma.parcel.findMany({
-         skip: (page - 1) * limit,
-         take: limit,
-         orderBy: { createdAt: 'desc' },
-      });
-
-      const total = await this.prisma.parcel.count();
-
-      return {
-         bookings,
-         meta: {
-            page,
-            total,
-            pages: Math.ceil(total / limit),
-         },
       };
    }
 }
