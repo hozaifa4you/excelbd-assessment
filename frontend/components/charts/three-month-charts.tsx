@@ -42,11 +42,11 @@ export function BookingsAreaChart({ data }: ChartAreaProps) {
       },
       delivered: {
          label: 'Delivered',
-         color: 'var(--chart-2)',
+         color: 'var(--chart-1)',
       },
       canceled: {
          label: 'Canceled',
-         color: 'var(--primary)',
+         color: 'var(--chart-2)',
       },
    } satisfies ChartConfig;
 
@@ -58,16 +58,16 @@ export function BookingsAreaChart({ data }: ChartAreaProps) {
 
    const filteredData = data.filter((item) => {
       const date = new Date(item.date);
-      const referenceDate = new Date('2024-06-30');
+      const now = new Date();
       let daysToSubtract = 90;
       if (timeRange === '30d') {
          daysToSubtract = 30;
       } else if (timeRange === '7d') {
          daysToSubtract = 7;
       }
-      const startDate = new Date(referenceDate);
+      const startDate = new Date(now);
       startDate.setDate(startDate.getDate() - daysToSubtract);
-      return date >= startDate;
+      return date >= startDate && date <= now;
    });
 
    return (
@@ -122,7 +122,7 @@ export function BookingsAreaChart({ data }: ChartAreaProps) {
                <AreaChart data={filteredData}>
                   <defs>
                      <linearGradient
-                        id="fillDesktop"
+                        id="fillDelivered"
                         x1="0"
                         y1="0"
                         x2="0"
@@ -131,7 +131,7 @@ export function BookingsAreaChart({ data }: ChartAreaProps) {
                         <stop
                            offset="5%"
                            stopColor="var(--color-delivered)"
-                           stopOpacity={1.0}
+                           stopOpacity={0.8}
                         />
                         <stop
                            offset="95%"
@@ -140,7 +140,7 @@ export function BookingsAreaChart({ data }: ChartAreaProps) {
                         />
                      </linearGradient>
                      <linearGradient
-                        id="fillMobile"
+                        id="fillCanceled"
                         x1="0"
                         y1="0"
                         x2="0"
@@ -194,15 +194,15 @@ export function BookingsAreaChart({ data }: ChartAreaProps) {
                   <Area
                      dataKey="delivered"
                      type="natural"
-                     fill="url(#fillMobile)"
-                     stroke="var(--color-canceled)"
+                     fill="url(#fillDelivered)"
+                     stroke="var(--color-delivered)"
                      stackId="a"
                   />
                   <Area
                      dataKey="canceled"
                      type="natural"
-                     fill="url(#fillDesktop)"
-                     stroke="var(--color-delivered)"
+                     fill="url(#fillCanceled)"
+                     stroke="var(--color-canceled)"
                      stackId="a"
                   />
                </AreaChart>
