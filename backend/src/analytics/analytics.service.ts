@@ -12,15 +12,15 @@ export class AnalyticsService {
 
       switch (role) {
          case Role.ADMIN: {
-            const bookings = await this.getAdminBookings();
+            const bookings = await this.getAdminBookingsAnalytics();
             return { bookings, summary };
          }
          case Role.USER: {
-            const bookings = await this.getUserBookings(userId);
+            const bookings = await this.getUserBookingsAnalytics(userId);
             return { bookings, summary };
          }
          case Role.DELIVERY_AGENT: {
-            const bookings = this.getAgentBookings(userId);
+            const bookings = await this.getAgentBookingsAnalytics(userId);
             return { bookings, summary };
          }
          default:
@@ -28,84 +28,77 @@ export class AnalyticsService {
       }
    }
 
-   private async getAdminBookings() {
-      const threeMonthsAgo = subMonths(new Date(Date.now()), 3);
-
-      const bookings = await this.prisma.parcel.findMany({
-         where: {
-            status: {
-               in: ['DELIVERED', 'CANCELLED'],
-            },
-            createdAt: { gte: threeMonthsAgo },
-         },
-         select: { createdAt: true, status: true },
-      });
-
-      return await this.formatBookings(bookings);
+   public async getBookings(role: Role, userId: string, page = 1, limit = 10) {
+      switch (role) {
+         case Role.ADMIN:
+            return this.getAdminBookings(page, limit);
+         case Role.USER:
+            return this.getUserBookings(userId, page, limit);
+         case Role.DELIVERY_AGENT:
+            return this.getAgentBookings(userId, page, limit);
+         default:
+            throw new BadRequestException();
+      }
    }
 
-   private async getUserBookings(userId: string) {
-      const threeMonthsAgo = subMonths(new Date(Date.now()), 3);
-
-      const bookings = await this.prisma.parcel.findMany({
-         where: {
-            creatorId: userId,
-            status: {
-               in: ['DELIVERED', 'CANCELLED'],
-            },
-            createdAt: { gte: threeMonthsAgo },
-         },
-         select: { createdAt: true, status: true },
-      });
-
-      return await this.formatBookings(bookings);
+   private async getAdminBookingsAnalytics() {
+      return this.getBookingsByRole('admin');
    }
 
-   private async getAgentBookings(userId: string) {
-      const threeMonthsAgo = subMonths(new Date(Date.now()), 3);
-
-      const bookings = await this.prisma.parcel.findMany({
-         where: {
-            deliveryAgentId: userId,
-            status: {
-               in: ['DELIVERED', 'CANCELLED'],
-            },
-            createdAt: { gte: threeMonthsAgo },
-         },
-         select: { createdAt: true, status: true },
-      });
-
-      return await this.formatBookings(bookings);
+   private async getUserBookingsAnalytics(userId: string) {
+      return this.getBookingsByRole('user', userId);
    }
 
-   private async formatBookings(bookings: Record<string, string | Date>[]) {
+   private async getAgentBookingsAnalytics(userId: string) {
+      return this.getBookingsByRole('agent', userId);
+   }
+
+   private async getBookingsByRole(
+      role: 'admin' | 'user' | 'agent',
+      userId?: string,
+   ) {
+      const threeMonthsAgo = subMonths(new Date(), 3);
+      const baseWhere = {
+         status: { in: ['DELIVERED', 'CANCELLED'] as const },
+         createdAt: { gte: threeMonthsAgo },
+      };
+
+      let where: any = baseWhere;
+      if (role === 'user') {
+         where = { ...baseWhere, creatorId: userId };
+      } else if (role === 'agent') {
+         where = { ...baseWhere, deliveryAgentId: userId };
+      }
+
+      const bookings = await this.prisma.parcel.findMany({
+         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+         where,
+         select: { createdAt: true, status: true },
+      });
+      return this.formatBookings(bookings);
+   }
+
+   private formatBookings(bookings: { createdAt: Date; status: string }[]) {
       const grouped: Record<string, { delivered: number; canceled: number }> =
          {};
 
-      await Promise.all(
-         bookings.map((parcel) => {
-            const dateKey = format(new Date(parcel.createdAt), 'yyyy-MM-dd');
+      bookings.forEach((parcel) => {
+         const dateKey = format(parcel.createdAt, 'yyyy-MM-dd');
 
-            if (!grouped[dateKey]) {
-               grouped[dateKey] = { delivered: 0, canceled: 0 };
-            }
+         if (!grouped[dateKey]) {
+            grouped[dateKey] = { delivered: 0, canceled: 0 };
+         }
 
-            if (parcel.status === 'DELIVERED') {
-               grouped[dateKey].delivered += 1;
-            } else if (parcel.status === 'CANCELLED') {
-               grouped[dateKey].canceled += 1;
-            }
-         }),
-      );
+         if (parcel.status === 'DELIVERED') {
+            grouped[dateKey].delivered += 1;
+         } else if (parcel.status === 'CANCELLED') {
+            grouped[dateKey].canceled += 1;
+         }
+      });
 
-      const data = Object.entries(grouped)
-         .map(([date, counts]) => ({
-            date,
-            ...counts,
-         }))
+      return Object.entries(grouped)
+         .map(([date, counts]) => ({ date, ...counts }))
          .sort((a, b) => a.date.localeCompare(b.date));
-
-      return data;
    }
 
    private async summaryData(role: Role, userId?: string) {
@@ -116,199 +109,184 @@ export class AnalyticsService {
          1,
       );
       const endOfLastMonth = new Date(date.getFullYear(), date.getMonth(), 1);
+      const dateFilter = { gte: startOfLastMonth, lt: endOfLastMonth };
 
       switch (role) {
-         case Role.ADMIN: {
-            const total = await this.prisma.parcel.count();
-            const totalPrev = await this.prisma.parcel.count({
-               where: {
-                  createdAt: {
-                     gte: startOfLastMonth,
-                     lt: endOfLastMonth,
-                  },
-               },
-            });
-            const totalGrowth = ((total - totalPrev) / total) * 100;
-
-            const delivered = await this.prisma.parcel.count({
-               where: { status: 'DELIVERED' },
-            });
-
-            const deliPrev = await this.prisma.parcel.count({
-               where: {
-                  status: 'DELIVERED',
-                  createdAt: {
-                     gte: startOfLastMonth,
-                     lt: endOfLastMonth,
-                  },
-               },
-            });
-            const deliveryGrowth = ((delivered - deliPrev) / deliPrev) * 100;
-
-            const canceled = await this.prisma.parcel.count({
-               where: { status: 'CANCELLED' },
-            });
-            const canceledPrev = await this.prisma.parcel.count({
-               where: {
-                  status: 'CANCELLED',
-                  createdAt: {
-                     gte: startOfLastMonth,
-                     lt: endOfLastMonth,
-                  },
-               },
-            });
-            const canceledGrowth =
-               ((canceled - canceledPrev) / canceledPrev) * 100;
-
-            const pending = await this.prisma.parcel.count({
-               where: { status: { notIn: ['DELIVERED', 'CANCELLED'] } },
-            });
-
-            return {
-               total: { total, totalGrowth },
-               delivery: { delivered, deliveryGrowth },
-               cancel: { canceled, canceledGrowth },
-               pending,
-            };
-         }
-         case Role.DELIVERY_AGENT: {
-            if (!userId) {
+         case Role.ADMIN:
+            return this.getAdminSummary(dateFilter);
+         case Role.DELIVERY_AGENT:
+            if (!userId)
                throw new BadRequestException(
                   'User ID is required for delivery agents',
                );
-            }
-            const total = await this.prisma.parcel.count({
-               where: { deliveryAgentId: userId },
-            });
-            const totalPrev = await this.prisma.parcel.count({
-               where: {
-                  deliveryAgentId: userId,
-                  createdAt: {
-                     gte: startOfLastMonth,
-                     lt: endOfLastMonth,
-                  },
-               },
-            });
-            const totalGrowth =
-               totalPrev > 0 ? ((total - totalPrev) / totalPrev) * 100 : 0;
-
-            const delivered = await this.prisma.parcel.count({
-               where: { deliveryAgentId: userId, status: 'DELIVERED' },
-            });
-            const deliPrev = await this.prisma.parcel.count({
-               where: {
-                  deliveryAgentId: userId,
-                  status: 'DELIVERED',
-                  createdAt: {
-                     gte: startOfLastMonth,
-                     lt: endOfLastMonth,
-                  },
-               },
-            });
-            const deliveryGrowth =
-               deliPrev > 0 ? ((delivered - deliPrev) / deliPrev) * 100 : 0;
-
-            const canceled = await this.prisma.parcel.count({
-               where: { deliveryAgentId: userId, status: 'CANCELLED' },
-            });
-            const canceledPrev = await this.prisma.parcel.count({
-               where: {
-                  deliveryAgentId: userId,
-                  status: 'CANCELLED',
-                  createdAt: {
-                     gte: startOfLastMonth,
-                     lt: endOfLastMonth,
-                  },
-               },
-            });
-            const canceledGrowth =
-               canceledPrev > 0
-                  ? ((canceled - canceledPrev) / canceledPrev) * 100
-                  : 0;
-
-            const pending = await this.prisma.parcel.count({
-               where: {
-                  deliveryAgentId: userId,
-                  status: { notIn: ['DELIVERED', 'CANCELLED'] },
-               },
-            });
-
-            return {
-               total: { total, totalGrowth },
-               delivery: { delivered, deliveryGrowth },
-               cancel: { canceled, canceledGrowth },
-               pending,
-            };
-         }
-         case Role.USER: {
-            if (!userId) {
+            return this.getRoleSummary({ deliveryAgentId: userId }, dateFilter);
+         case Role.USER:
+            if (!userId)
                throw new BadRequestException('User ID is required for users');
-            }
-            const total = await this.prisma.parcel.count({
-               where: { creatorId: userId },
-            });
-            const totalPrev = await this.prisma.parcel.count({
-               where: {
-                  creatorId: userId,
-                  createdAt: {
-                     gte: startOfLastMonth,
-                     lt: endOfLastMonth,
-                  },
-               },
-            });
-            const totalGrowth =
-               totalPrev > 0 ? ((total - totalPrev) / totalPrev) * 100 : 0;
-
-            const delivered = await this.prisma.parcel.count({
-               where: { creatorId: userId, status: 'DELIVERED' },
-            });
-            const deliPrev = await this.prisma.parcel.count({
-               where: {
-                  creatorId: userId,
-                  status: 'DELIVERED',
-                  createdAt: {
-                     gte: startOfLastMonth,
-                     lt: endOfLastMonth,
-                  },
-               },
-            });
-            const deliveryGrowth =
-               deliPrev > 0 ? ((delivered - deliPrev) / deliPrev) * 100 : 0;
-
-            const canceled = await this.prisma.parcel.count({
-               where: { creatorId: userId, status: 'CANCELLED' },
-            });
-            const canceledPrev = await this.prisma.parcel.count({
-               where: {
-                  creatorId: userId,
-                  status: 'CANCELLED',
-                  createdAt: {
-                     gte: startOfLastMonth,
-                     lt: endOfLastMonth,
-                  },
-               },
-            });
-            const canceledGrowth =
-               canceledPrev > 0
-                  ? ((canceled - canceledPrev) / canceledPrev) * 100
-                  : 0;
-
-            const pending = await this.prisma.parcel.count({
-               where: {
-                  creatorId: userId,
-                  status: { notIn: ['DELIVERED', 'CANCELLED'] },
-               },
-            });
-
-            return {
-               total: { total, totalGrowth },
-               delivery: { delivered, deliveryGrowth },
-               cancel: { canceled, canceledGrowth },
-               pending,
-            };
-         }
+            return this.getRoleSummary({ creatorId: userId }, dateFilter);
          default:
             throw new BadRequestException('Invalid role');
       }
+   }
+
+   private async getAdminSummary(dateFilter: { gte: Date; lt: Date }) {
+      const [
+         total,
+         totalPrev,
+         delivered,
+         deliPrev,
+         canceled,
+         canceledPrev,
+         pending,
+      ] = await Promise.all([
+         this.prisma.parcel.count(),
+         this.prisma.parcel.count({ where: { createdAt: dateFilter } }),
+         this.prisma.parcel.count({ where: { status: 'DELIVERED' } }),
+         this.prisma.parcel.count({
+            where: { status: 'DELIVERED', createdAt: dateFilter },
+         }),
+         this.prisma.parcel.count({ where: { status: 'CANCELLED' } }),
+         this.prisma.parcel.count({
+            where: { status: 'CANCELLED', createdAt: dateFilter },
+         }),
+         this.prisma.parcel.count({
+            where: { status: { notIn: ['DELIVERED', 'CANCELLED'] } },
+         }),
+      ]);
+
+      const totalGrowth = ((total - totalPrev) / total) * 100;
+      const deliveryGrowth =
+         deliPrev > 0 ? ((delivered - deliPrev) / deliPrev) * 100 : 0;
+      const canceledGrowth =
+         canceledPrev > 0
+            ? ((canceled - canceledPrev) / canceledPrev) * 100
+            : 0;
+
+      return {
+         total: { total, totalGrowth },
+         delivery: { delivered, deliveryGrowth },
+         cancel: { canceled, canceledGrowth },
+         pending,
+      };
+   }
+
+   private async getRoleSummary(
+      roleFilter: { deliveryAgentId: string } | { creatorId: string },
+      dateFilter: { gte: Date; lt: Date },
+   ) {
+      const [
+         total,
+         totalPrev,
+         delivered,
+         deliPrev,
+         canceled,
+         canceledPrev,
+         pending,
+      ] = await Promise.all([
+         this.prisma.parcel.count({ where: roleFilter }),
+         this.prisma.parcel.count({
+            where: { ...roleFilter, createdAt: dateFilter },
+         }),
+         this.prisma.parcel.count({
+            where: { ...roleFilter, status: 'DELIVERED' },
+         }),
+         this.prisma.parcel.count({
+            where: {
+               ...roleFilter,
+               status: 'DELIVERED',
+               createdAt: dateFilter,
+            },
+         }),
+         this.prisma.parcel.count({
+            where: { ...roleFilter, status: 'CANCELLED' },
+         }),
+         this.prisma.parcel.count({
+            where: {
+               ...roleFilter,
+               status: 'CANCELLED',
+               createdAt: dateFilter,
+            },
+         }),
+         this.prisma.parcel.count({
+            where: {
+               ...roleFilter,
+               status: { notIn: ['DELIVERED', 'CANCELLED'] },
+            },
+         }),
+      ]);
+
+      const totalGrowth =
+         totalPrev > 0 ? ((total - totalPrev) / totalPrev) * 100 : 0;
+      const deliveryGrowth =
+         deliPrev > 0 ? ((delivered - deliPrev) / deliPrev) * 100 : 0;
+      const canceledGrowth =
+         canceledPrev > 0
+            ? ((canceled - canceledPrev) / canceledPrev) * 100
+            : 0;
+
+      return {
+         total: { total, totalGrowth },
+         delivery: { delivered, deliveryGrowth },
+         cancel: { canceled, canceledGrowth },
+         pending,
+      };
+   }
+
+   private async getAdminBookings(page = 1, limit = 10) {
+      const bookings = await this.prisma.parcel.findMany({
+         skip: (page - 1) * limit,
+         take: limit,
+         orderBy: { createdAt: 'desc' },
+      });
+
+      const total = await this.prisma.parcel.count();
+
+      return {
+         bookings,
+         meta: {
+            page,
+            total,
+            pages: Math.ceil(total / limit),
+         },
+      };
+   }
+
+   private async getUserBookings(userId: string, page = 1, limit = 10) {
+      const bookings = await this.prisma.parcel.findMany({
+         where: { creatorId: userId },
+         skip: (page - 1) * limit,
+         take: limit,
+         orderBy: { createdAt: 'desc' },
+      });
+
+      const total = await this.prisma.parcel.count();
+
+      return {
+         bookings,
+         meta: {
+            page,
+            total,
+            pages: Math.ceil(total / limit),
+         },
+      };
+   }
+
+   private async getAgentBookings(userId: string, page = 1, limit = 10) {
+      const bookings = await this.prisma.parcel.findMany({
+         skip: (page - 1) * limit,
+         take: limit,
+         orderBy: { createdAt: 'desc' },
+      });
+
+      const total = await this.prisma.parcel.count();
+
+      return {
+         bookings,
+         meta: {
+            page,
+            total,
+            pages: Math.ceil(total / limit),
+         },
+      };
    }
 }
