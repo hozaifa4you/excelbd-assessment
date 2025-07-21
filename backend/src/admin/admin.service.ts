@@ -57,6 +57,64 @@ export class AdminService {
       };
    }
 
+   public async getAgents(page = 1, limit = 10) {
+      const skip = (page - 1) * limit;
+
+      const agents = await this.prisma.user.findMany({
+         where: { role: 'DELIVERY_AGENT' },
+         omit: {
+            password: true,
+            updatedAt: true,
+            rememberToken: true,
+            Address: true,
+         },
+         skip,
+         take: limit,
+         orderBy: { createdAt: 'desc' },
+      });
+
+      for (const agent of agents) {
+         const parcelCount = await this.prisma.parcel.count({
+            where: { deliveryAgentId: agent.id },
+         });
+
+         const success = await this.prisma.parcel.count({
+            where: {
+               deliveryAgentId: agent.id,
+               status: 'DELIVERED',
+            },
+         });
+
+         const failed = await this.prisma.parcel.count({
+            where: {
+               deliveryAgentId: agent.id,
+               status: 'CANCELLED',
+            },
+         });
+
+         const pending = await this.prisma.parcel.count({
+            where: {
+               deliveryAgentId: agent.id,
+               status: { notIn: ['DELIVERED', 'CANCELLED'] },
+            },
+         });
+
+         agent['parcelCount'] = parcelCount;
+         agent['delivered'] = success;
+         agent['deliveryFailed'] = failed;
+         agent['deliveryPending'] = pending;
+      }
+
+      const total = await this.prisma.user.count({
+         where: { role: 'DELIVERY_AGENT' },
+      });
+
+      return {
+         agents,
+         meta: { page, pages: Math.ceil(total / limit), total },
+      };
+   }
+
    public async getAssignableParcels(page = 1, limit = 10) {
       const skip = (page - 1) * limit;
 

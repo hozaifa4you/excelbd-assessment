@@ -38,6 +38,12 @@ export class AdminController {
    }
 
    @HttpCode(HttpStatus.OK)
+   @Get('agents')
+   async getAgents(@Query() pagination: PaginationPipe) {
+      return this.adminService.getAgents(pagination.page, pagination.limit);
+   }
+
+   @HttpCode(HttpStatus.OK)
    @Get('assignable-parcels')
    async getAssignableParcels(@Query() pagination: PaginationPipe) {
       return this.adminService.getAssignableParcels(
