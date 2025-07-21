@@ -12,7 +12,7 @@ import {
    SelectValue,
 } from '@/components/ui/select';
 import { Package, Search, UserPlus, CheckCircle, Loader2 } from 'lucide-react';
-import { DbHeader } from '@/components/dashboard/admin/db-header';
+import { DbHeader } from '@/components/dashboard/db-header';
 import { DBAvailableAgents } from '@/components/dashboard/admin/db-available-agents';
 import { ParcelCard } from '@/components/dashboard/admin/parcel-card';
 import { AssignmentLoader } from '@/components/dashboard/admin/assignment-loader';

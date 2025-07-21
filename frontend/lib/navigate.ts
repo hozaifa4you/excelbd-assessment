@@ -2,7 +2,9 @@ import {
    Icon,
    IconDashboard,
    IconPackage,
+   IconScooter,
    IconTruckDelivery,
+   IconUsersGroup,
 } from '@tabler/icons-react';
 import { route } from './routes';
 
@@ -53,6 +55,16 @@ export const dashboardMenuItems: MenuItemType = {
          title: 'Bookings',
          url: route('admin.bookings'),
          Icon: IconPackage,
+      },
+      {
+         title: 'Customers',
+         url: route('admin.customers'),
+         Icon: IconUsersGroup,
+      },
+      {
+         title: 'Agents',
+         url: route('admin.agents'),
+         Icon: IconScooter,
       },
       {
          title: 'Assign Agent',
