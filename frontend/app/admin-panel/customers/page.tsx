@@ -1,5 +1,4 @@
 import { DataTableCustomers } from '@/components/dashboard/data-table-customers';
-import { DataTable } from '@/components/data-table';
 import { authFetch } from '@/lib/authFetch';
 
 const CustomersPage = async ({
@@ -23,7 +22,7 @@ const CustomersPage = async ({
 
    return (
       <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-         <DataTableCustomers data={data.bookings} paginationInfo={data.meta} />
+         <DataTableCustomers data={data.customers} paginationInfo={data.meta} />
       </div>
    );
 };

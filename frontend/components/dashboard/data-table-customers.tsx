@@ -7,14 +7,17 @@ import {
    IconChevronRight,
    IconChevronsLeft,
    IconChevronsRight,
-   IconCircleCheckFilled,
-   IconCircleX,
    IconDotsVertical,
    IconLayoutColumns,
-   IconLoader,
    IconPlus,
-   IconTransfer,
-   IconTrendingUp,
+   IconUser,
+   IconMail,
+   IconPhone,
+   IconCalendar,
+   IconPackage,
+   IconCircleCheck,
+   IconCircleX,
+   IconAlertTriangle,
 } from '@tabler/icons-react';
 import {
    ColumnDef,
@@ -29,29 +32,11 @@ import {
    useReactTable,
    VisibilityState,
 } from '@tanstack/react-table';
-import { Area, AreaChart, CartesianGrid, XAxis } from 'recharts';
 import { z } from 'zod';
 
-import { useIsMobile } from '@/hooks/use-mobile';
-import { Badge, badgeVariants } from '@/components/ui/badge';
-import { Button, buttonVariants } from '@/components/ui/button';
-import {
-   ChartConfig,
-   ChartContainer,
-   ChartTooltip,
-   ChartTooltipContent,
-} from '@/components/ui/chart';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
-import {
-   Drawer,
-   DrawerClose,
-   DrawerContent,
-   DrawerDescription,
-   DrawerFooter,
-   DrawerHeader,
-   DrawerTitle,
-   DrawerTrigger,
-} from '@/components/ui/drawer';
 import {
    DropdownMenu,
    DropdownMenuCheckboxItem,
@@ -68,7 +53,6 @@ import {
    SelectTrigger,
    SelectValue,
 } from '@/components/ui/select';
-import { Separator } from '@/components/ui/separator';
 import {
    Table,
    TableBody,
@@ -77,44 +61,24 @@ import {
    TableHeader,
    TableRow,
 } from '@/components/ui/table';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-   Tooltip,
-   TooltipContent,
-   TooltipTrigger,
-} from '@/components/ui/tooltip';
-import Link from 'next/link';
-import { route } from '@/lib/routes';
-import { cn } from '@/lib/utils';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 export const schema = z.object({
    id: z.string(),
-   parcelType: z.string(),
-   trackingNumber: z.string(),
+   firstName: z.string(),
+   lastName: z.string(),
+   avatar: z.string().optional(),
+   username: z.string(),
+   email: z.string(),
+   phone: z.string(),
    status: z.string(),
-   estimatedDelivery: z.string().nullable(),
-   recipient: z.object({
-      name: z.string(),
-      phone: z.string(),
-   }),
-   sender: z.object({
-      name: z.string(),
-      phone: z.string(),
-   }),
-   pickupAddress: z.object({ city: z.string() }),
-   deliveryAddress: z.object({ city: z.string() }),
-   fees: z.object({
-      deliveryFee: z.number().nullable(),
-      handlingFee: z.number().nullable(),
-      insuranceFee: z.number().nullable(),
-      price: z.number(),
-      signatureFee: z.number().nullable(),
-   }),
+   createdAt: z.string(),
+   bookingCount: z.number(),
 });
 
-type ParcelData = z.infer<typeof schema>;
+type CustomerData = z.infer<typeof schema>;
 
-const columns: ColumnDef<ParcelData>[] = [
+const columns: ColumnDef<CustomerData>[] = [
    {
       id: 'select',
       header: ({ table }) => (
@@ -144,247 +108,173 @@ const columns: ColumnDef<ParcelData>[] = [
       enableHiding: false,
    },
    {
-      accessorKey: 'parcelType',
-      header: 'Parcel Type',
+      accessorKey: 'customer',
+      header: 'Customer',
       cell: ({ row }) => {
-         return <TableCellViewer item={row.original} />;
+         const customer = row.original;
+         return (
+            <div className="flex items-center gap-3">
+               <Avatar className="h-8 w-8">
+                  <AvatarImage src={customer.avatar} alt={customer.firstName} />
+                  <AvatarFallback>
+                     {customer.firstName.charAt(0)}
+                     {customer.lastName.charAt(0)}
+                  </AvatarFallback>
+               </Avatar>
+               <div>
+                  <div className="font-medium">
+                     {customer.firstName} {customer.lastName}
+                  </div>
+                  <div className="text-muted-foreground text-sm">
+                     @{customer.username}
+                  </div>
+               </div>
+            </div>
+         );
       },
       enableHiding: false,
    },
    {
-      accessorKey: 'trackingNumber',
-      header: 'Track. Number',
+      accessorKey: 'email',
+      header: 'Email',
       cell: ({ row }) => (
-         <div className="w-32">
-            <Link
-               href={`/parcels/tracking?id=${row.original.trackingNumber}`}
-               target="_blank"
-               className={badgeVariants({
-                  class: 'text-muted-foreground px-1.5 font-sans',
-                  variant: 'outline',
-               })}
-            >
-               <IconTransfer className="mr-1" />{' '}
-               {row.original.trackingNumber.substring(0, 6) + '...'}
-            </Link>
+         <div className="flex items-center gap-2">
+            <IconMail className="text-muted-foreground h-4 w-4" />
+            <span className="font-mono text-sm">{row.original.email}</span>
          </div>
       ),
    },
    {
-      id: 'route',
-      header: 'From / To',
+      accessorKey: 'phone',
+      header: 'Phone',
       cell: ({ row }) => (
-         <div className="text-sm">
-            <div className="font-medium">{row.original.pickupAddress.city}</div>
-            <div className="text-muted-foreground">
-               ↓ {row.original.deliveryAddress.city}
-            </div>
+         <div className="flex items-center gap-2">
+            <IconPhone className="text-muted-foreground h-4 w-4" />
+            <span className="font-mono text-sm">{row.original.phone}</span>
          </div>
       ),
    },
    {
       accessorKey: 'status',
       header: 'Status',
-      cell: ({ row }) => (
-         <Badge variant="outline" className="text-muted-foreground px-1.5">
-            {row.original.status === 'DELIVERED' ? (
-               <IconCircleCheckFilled className="fill-green-500 dark:fill-green-400" />
-            ) : row.original.status === 'CANCELLED' ? (
-               <IconCircleX className="text-red-500" />
-            ) : (
-               <IconLoader
-                  className={cn({
-                     'text-amber-500': row.original.status === 'DELIVERING',
-                  })}
-               />
-            )}
-            {row.original.status}
-         </Badge>
-      ),
-   },
-   {
-      accessorKey: 'sender',
-      header: () => <div className="w-full text-right">Sender</div>,
-      cell: ({ row }) => (
-         <div className="text-right">
-            <div className="font-medium">{row.original.sender.name}</div>
-            <div className="text-muted-foreground font-sans text-sm">
-               {row.original.sender.phone}
-            </div>
-         </div>
-      ),
-   },
-   {
-      accessorKey: 'recipient',
-      header: () => <div className="w-full text-right">Recipient</div>,
-      cell: ({ row }) => (
-         <div className="text-right">
-            <div className="font-medium">{row.original.recipient.name}</div>
-            <div className="text-muted-foreground font-sans text-sm">
-               {row.original.recipient.phone}
-            </div>
-         </div>
-      ),
-   },
-   {
-      accessorKey: 'estimatedDelivery',
-      header: 'Est. Delivery',
       cell: ({ row }) => {
-         const deliveryDate = row.original?.estimatedDelivery;
+         const status = row.original.status;
+         let statusConfig = {
+            color: 'text-gray-600',
+            bgColor: 'bg-gray-100',
+            icon: IconUser,
+            label: status,
+         };
 
-         if (!deliveryDate) {
-            return (
-               <div className="text-muted-foreground text-sm">
-                  <div className="flex items-center gap-1">
-                     <div className="h-2 w-2 rounded-full bg-gray-400"></div>
-                     <span>Not set</span>
-                  </div>
-               </div>
-            );
+         switch (status) {
+            case 'ACTIVE':
+               statusConfig = {
+                  color: 'text-green-700',
+                  bgColor: 'bg-green-100',
+                  icon: IconCircleCheck,
+                  label: 'Active',
+               };
+               break;
+            case 'DEACTIVATED':
+               statusConfig = {
+                  color: 'text-red-700',
+                  bgColor: 'bg-red-100',
+                  icon: IconCircleX,
+                  label: 'Deactivated',
+               };
+               break;
+            case 'SUSPENDED':
+               statusConfig = {
+                  color: 'text-yellow-700',
+                  bgColor: 'bg-yellow-100',
+                  icon: IconAlertTriangle,
+                  label: 'Suspended',
+               };
+               break;
          }
 
-         const date = new Date(deliveryDate);
-         const now = new Date();
-         const diffTime = date.getTime() - now.getTime();
-         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-         // Format the date
-         const formattedDate = date.toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            year:
-               date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
-         });
-
-         const formattedTime = date.toLocaleTimeString('en-US', {
-            hour: 'numeric',
-            minute: '2-digit',
-            hour12: true,
-         });
-
-         // Determine status and color
-         let statusColor = 'bg-green-500';
-         let statusText = '';
-         let textColor = 'text-green-700 dark:text-green-400';
-
-         if (diffDays < 0) {
-            statusColor = 'bg-red-500';
-            statusText = `${Math.abs(diffDays)} days overdue`;
-            textColor = 'text-red-700 dark:text-red-400';
-         } else if (diffDays === 0) {
-            statusColor = 'bg-orange-500';
-            statusText = 'Today';
-            textColor = 'text-orange-700 dark:text-orange-400';
-         } else if (diffDays === 1) {
-            statusColor = 'bg-yellow-500';
-            statusText = 'Tomorrow';
-            textColor = 'text-yellow-700 dark:text-yellow-400';
-         } else if (diffDays <= 3) {
-            statusColor = 'bg-blue-500';
-            statusText = `In ${diffDays} days`;
-            textColor = 'text-blue-700 dark:text-blue-400';
-         } else {
-            statusText = `In ${diffDays} days`;
-         }
+         const IconComponent = statusConfig.icon;
 
          return (
-            <div className="text-sm">
-               <div className={`flex items-center gap-2 ${textColor}`}>
-                  <div className={`h-2 w-2 rounded-full ${statusColor}`}></div>
-                  <div className="flex flex-col">
-                     <span className="font-medium">{formattedDate}</span>
-                     <span className="text-muted-foreground text-xs">
-                        {formattedTime} • {statusText}
-                     </span>
-                  </div>
-               </div>
-            </div>
+            <Badge
+               variant="outline"
+               className={`${statusConfig.color} ${statusConfig.bgColor} border-0 px-2 py-1`}
+            >
+               <IconComponent className="mr-1 h-3 w-3" />
+               {statusConfig.label}
+            </Badge>
          );
       },
    },
    {
-      accessorKey: 'fees',
-      header: 'Fees',
+      accessorKey: 'bookingCount',
+      header: 'Bookings',
+      cell: ({ row }) => (
+         <div className="flex items-center gap-2">
+            <IconPackage className="text-muted-foreground h-4 w-4" />
+            <span className="font-medium">{row.original.bookingCount}</span>
+         </div>
+      ),
+   },
+   {
+      accessorKey: 'createdAt',
+      header: 'Joined',
       cell: ({ row }) => {
-         const fees = row.original.fees;
-         const feeItems = [
-            { label: 'Delivery Fee', value: fees.deliveryFee },
-            { label: 'Handling Fee', value: fees.handlingFee },
-            { label: 'Insurance Fee', value: fees.insuranceFee },
-            { label: 'Signature Fee', value: fees.signatureFee },
-            { label: 'Base Price', value: fees.price },
-         ].filter((item) => item.value !== null && item.value !== undefined);
-
-         const totalFees = feeItems.reduce(
-            (sum, item) => sum + (item.value || 0),
-            0,
-         );
-         const feeCount = feeItems.length;
+         const date = new Date(row.original.createdAt);
+         const formattedDate = date.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+         });
 
          return (
-            <div className="text-sm">
-               <Tooltip>
-                  <TooltipTrigger asChild>
-                     <div className="cursor-help font-sans">
-                        <div className="font-medium">
-                           {totalFees.toFixed(2)}Tk
-                        </div>
-                        <div className="text-muted-foreground text-xs">
-                           {feeCount} fee{feeCount !== 1 ? 's' : ''}
-                        </div>
-                     </div>
-                  </TooltipTrigger>
-                  <TooltipContent side="left" className="max-w-48">
-                     <div className="space-y-1">
-                        <div className="mb-2 text-xs font-medium">
-                           Fee Breakdown:
-                        </div>
-                        {feeItems.map((item, index) => (
-                           <div
-                              key={index}
-                              className="flex justify-between text-xs"
-                           >
-                              <span>{item.label}:</span>
-                              <span className="font-sans font-medium">
-                                 {(item.value || 0).toFixed(2)}Tk
-                              </span>
-                           </div>
-                        ))}
-                        <div className="mt-2 border-t pt-1">
-                           <div className="flex justify-between text-xs font-medium">
-                              <span>Total:</span>
-                              <span className="font-sans">
-                                 {totalFees.toFixed(2)}Tk
-                              </span>
-                           </div>
-                        </div>
-                     </div>
-                  </TooltipContent>
-               </Tooltip>
+            <div className="flex items-center gap-2 text-sm">
+               <IconCalendar className="text-muted-foreground h-4 w-4" />
+               <span>{formattedDate}</span>
             </div>
          );
       },
    },
    {
       id: 'actions',
-      cell: () => (
-         <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-               <Button
-                  variant="ghost"
-                  className="data-[state=open]:bg-muted text-muted-foreground flex size-8"
-                  size="icon"
-               >
-                  <IconDotsVertical />
-                  <span className="sr-only">Open menu</span>
-               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-32">
-               <DropdownMenuItem>Edit</DropdownMenuItem>
-               <DropdownMenuItem variant="destructive">Cancel</DropdownMenuItem>
-            </DropdownMenuContent>
-         </DropdownMenu>
-      ),
+      cell: ({ row }) => {
+         const customer = row.original;
+         const isActive = customer.status === 'ACTIVE';
+         const isSuspended = customer.status === 'SUSPENDED';
+
+         return (
+            <DropdownMenu>
+               <DropdownMenuTrigger asChild>
+                  <Button
+                     variant="ghost"
+                     className="data-[state=open]:bg-muted text-muted-foreground flex size-8"
+                     size="icon"
+                  >
+                     <IconDotsVertical />
+                     <span className="sr-only">Open menu</span>
+                  </Button>
+               </DropdownMenuTrigger>
+               <DropdownMenuContent align="end" className="w-40">
+                  <DropdownMenuItem>View Profile</DropdownMenuItem>
+                  <DropdownMenuItem>Edit Customer</DropdownMenuItem>
+                  {isActive && (
+                     <>
+                        <DropdownMenuItem variant="destructive">
+                           Suspend
+                        </DropdownMenuItem>
+                        <DropdownMenuItem variant="destructive">
+                           Deactivate
+                        </DropdownMenuItem>
+                     </>
+                  )}
+                  {isSuspended && <DropdownMenuItem>Activate</DropdownMenuItem>}
+                  {customer.status === 'DEACTIVATED' && (
+                     <DropdownMenuItem>Reactivate</DropdownMenuItem>
+                  )}
+               </DropdownMenuContent>
+            </DropdownMenu>
+         );
+      },
    },
 ];
 
@@ -392,7 +282,7 @@ export function DataTableCustomers({
    data: initialData,
    paginationInfo,
 }: {
-   data: ParcelData[];
+   data: CustomerData[];
    paginationInfo: { page: number; total: number; pages: number };
 }) {
    const router = useRouter();
@@ -489,46 +379,29 @@ export function DataTableCustomers({
    });
 
    return (
-      <Tabs
-         defaultValue="outline"
-         className="w-full flex-col justify-start gap-6"
-      >
-         <div className="flex items-center justify-between px-4 lg:px-6">
-            <Label htmlFor="view-selector" className="sr-only">
-               View
-            </Label>
-            <Select defaultValue="outline">
-               <SelectTrigger
-                  className="flex w-fit @4xl/main:hidden"
-                  size="sm"
-                  id="view-selector"
-               >
-                  <SelectValue placeholder="Select a view" />
-               </SelectTrigger>
-               <SelectContent>
-                  <SelectItem value="outline">Outline</SelectItem>
-                  <SelectItem value="past-performance">
-                     Past Performance
-                  </SelectItem>
-                  <SelectItem value="key-personnel">Key Personnel</SelectItem>
-                  <SelectItem value="focus-documents">
-                     Focus Documents
-                  </SelectItem>
-               </SelectContent>
-            </Select>
-            <TabsList className="**:data-[slot=badge]:bg-muted-foreground/30 hidden **:data-[slot=badge]:size-5 **:data-[slot=badge]:rounded-full **:data-[slot=badge]:px-1 @4xl/main:flex">
-               <TabsTrigger value="outline">Outline</TabsTrigger>
-               <TabsTrigger value="past-performance">
-                  Past Performance <Badge variant="secondary">3</Badge>
-               </TabsTrigger>
-               <TabsTrigger value="key-personnel">
-                  Key Personnel <Badge variant="secondary">2</Badge>
-               </TabsTrigger>
-               <TabsTrigger value="focus-documents">
-                  Focus Documents
-               </TabsTrigger>
-            </TabsList>
+      <div className="w-full flex-col justify-start gap-6">
+         <div className="mb-4 flex items-center justify-between px-4 lg:px-6">
+            <div className="flex items-center gap-4">
+               <h2 className="text-2xl font-bold">Customers</h2>
+               <Badge variant="secondary" className="font-mono">
+                  {paginationInfo.total} total
+               </Badge>
+            </div>
             <div className="flex items-center gap-2">
+               <Input
+                  placeholder="Search customers..."
+                  value={
+                     (table
+                        .getColumn('customer')
+                        ?.getFilterValue() as string) ?? ''
+                  }
+                  onChange={(event) =>
+                     table
+                        .getColumn('customer')
+                        ?.setFilterValue(event.target.value)
+                  }
+                  className="max-w-sm"
+               />
                <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                      <Button variant="outline" size="sm">
@@ -564,20 +437,14 @@ export function DataTableCustomers({
                         })}
                   </DropdownMenuContent>
                </DropdownMenu>
-               <Link
-                  href={route('parcels.booking')}
-                  className={buttonVariants({ variant: 'outline', size: 'sm' })}
-               >
+               <Button variant="outline" size="sm">
                   <IconPlus />
-                  <span className="hidden lg:inline">New Booking</span>
-               </Link>
+                  <span className="hidden lg:inline">New Customer</span>
+               </Button>
             </div>
          </div>
-         <TabsContent
-            value="outline"
-            className="scrollbar-thin relative flex flex-col gap-4 overflow-auto px-4 lg:px-6"
-         >
-            {' '}
+
+         <div className="scrollbar-thin relative flex flex-col gap-4 overflow-auto px-4 lg:px-6">
             <div className="overflow-hidden rounded-lg border">
                <div className="scrollbar-thin max-h-[600px] overflow-auto">
                   <Table>
@@ -625,7 +492,7 @@ export function DataTableCustomers({
                                  colSpan={columns.length}
                                  className="h-24 text-center"
                               >
-                                 No results.
+                                 No customers found.
                               </TableCell>
                            </TableRow>
                         )}
@@ -637,7 +504,7 @@ export function DataTableCustomers({
                <div className="text-muted-foreground hidden flex-1 text-sm lg:flex">
                   {table.getFilteredSelectedRowModel().rows.length} of{' '}
                   {paginationInfo.total} row(s) selected. Showing {data.length}{' '}
-                  of {paginationInfo.total} total records.
+                  of {paginationInfo.total} total customers.
                </div>
                <div className="flex w-full items-center gap-8 lg:w-fit">
                   <div className="hidden items-center gap-2 lg:flex">
@@ -721,214 +588,7 @@ export function DataTableCustomers({
                   </div>
                </div>
             </div>
-         </TabsContent>
-         <TabsContent
-            value="past-performance"
-            className="flex flex-col px-4 lg:px-6"
-         >
-            <div className="aspect-video w-full flex-1 rounded-lg border border-dashed"></div>
-         </TabsContent>
-         <TabsContent
-            value="key-personnel"
-            className="flex flex-col px-4 lg:px-6"
-         >
-            <div className="aspect-video w-full flex-1 rounded-lg border border-dashed"></div>
-         </TabsContent>
-         <TabsContent
-            value="focus-documents"
-            className="flex flex-col px-4 lg:px-6"
-         >
-            <div className="aspect-video w-full flex-1 rounded-lg border border-dashed"></div>
-         </TabsContent>
-      </Tabs>
-   );
-}
-
-const chartData = [
-   { month: 'January', desktop: 186, mobile: 80 },
-   { month: 'February', desktop: 305, mobile: 200 },
-   { month: 'March', desktop: 237, mobile: 120 },
-   { month: 'April', desktop: 73, mobile: 190 },
-   { month: 'May', desktop: 209, mobile: 130 },
-   { month: 'June', desktop: 214, mobile: 140 },
-];
-
-const chartConfig = {
-   desktop: {
-      label: 'Desktop',
-      color: 'var(--primary)',
-   },
-   mobile: {
-      label: 'Mobile',
-      color: 'var(--primary)',
-   },
-} satisfies ChartConfig;
-
-function TableCellViewer({ item }: { item: ParcelData }) {
-   const isMobile = useIsMobile();
-
-   return (
-      <Drawer direction={isMobile ? 'bottom' : 'right'}>
-         <DrawerTrigger asChild>
-            <Button
-               variant="link"
-               className="text-foreground w-fit px-0 text-left"
-            >
-               {item.parcelType}
-            </Button>
-         </DrawerTrigger>
-         <DrawerContent>
-            <DrawerHeader className="gap-1">
-               <DrawerTitle>{item.parcelType}</DrawerTitle>
-               <DrawerDescription>
-                  Parcel details and tracking information
-               </DrawerDescription>
-            </DrawerHeader>
-            <div className="flex flex-col gap-4 overflow-y-auto px-4 text-sm">
-               {!isMobile && (
-                  <>
-                     <ChartContainer config={chartConfig}>
-                        <AreaChart
-                           accessibilityLayer
-                           data={chartData}
-                           margin={{
-                              left: 0,
-                              right: 10,
-                           }}
-                        >
-                           <CartesianGrid vertical={false} />
-                           <XAxis
-                              dataKey="month"
-                              tickLine={false}
-                              axisLine={false}
-                              tickMargin={8}
-                              tickFormatter={(value) => value.slice(0, 3)}
-                              hide
-                           />
-                           <ChartTooltip
-                              cursor={false}
-                              content={<ChartTooltipContent indicator="dot" />}
-                           />
-                           <Area
-                              dataKey="mobile"
-                              type="natural"
-                              fill="var(--color-mobile)"
-                              fillOpacity={0.6}
-                              stroke="var(--color-mobile)"
-                              stackId="a"
-                           />
-                           <Area
-                              dataKey="desktop"
-                              type="natural"
-                              fill="var(--color-desktop)"
-                              fillOpacity={0.4}
-                              stroke="var(--color-desktop)"
-                              stackId="a"
-                           />
-                        </AreaChart>
-                     </ChartContainer>
-                     <Separator />
-                     <div className="grid gap-2">
-                        <div className="flex gap-2 leading-none font-medium">
-                           Trending up by 5.2% this month{' '}
-                           <IconTrendingUp className="size-4" />
-                        </div>
-                        <div className="text-muted-foreground">
-                           Showing delivery performance for the last 6 months.
-                        </div>
-                     </div>
-                     <Separator />
-                  </>
-               )}
-               <form className="flex flex-col gap-4">
-                  <div className="flex flex-col gap-3">
-                     <Label htmlFor="parcelType">Parcel Type</Label>
-                     <Input id="parcelType" defaultValue={item.parcelType} />
-                  </div>
-                  <div className="flex flex-col gap-3">
-                     <Label htmlFor="trackingNumber">Tracking Number</Label>
-                     <Input
-                        id="trackingNumber"
-                        defaultValue={item.trackingNumber}
-                     />
-                  </div>
-                  <div className="flex flex-col gap-3">
-                     <Label htmlFor="status">Status</Label>
-                     <Select defaultValue={item.status}>
-                        <SelectTrigger id="status" className="w-full">
-                           <SelectValue placeholder="Select a status" />
-                        </SelectTrigger>
-                        <SelectContent>
-                           <SelectItem value="PENDING">Pending</SelectItem>
-                           <SelectItem value="PICKED_UP">Picked Up</SelectItem>
-                           <SelectItem value="IN_TRANSIT">
-                              In Transit
-                           </SelectItem>
-                           <SelectItem value="DELIVERING">
-                              Delivering
-                           </SelectItem>
-                           <SelectItem value="DELIVERED">Delivered</SelectItem>
-                           <SelectItem value="CANCELLED">Cancelled</SelectItem>
-                        </SelectContent>
-                     </Select>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                     <div className="flex flex-col gap-3">
-                        <Label htmlFor="senderName">Sender Name</Label>
-                        <Input
-                           id="senderName"
-                           defaultValue={item.sender.name}
-                        />
-                     </div>
-                     <div className="flex flex-col gap-3">
-                        <Label htmlFor="senderPhone">Sender Phone</Label>
-                        <Input
-                           id="senderPhone"
-                           defaultValue={item.sender.phone}
-                        />
-                     </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                     <div className="flex flex-col gap-3">
-                        <Label htmlFor="recipientName">Recipient Name</Label>
-                        <Input
-                           id="recipientName"
-                           defaultValue={item.recipient.name}
-                        />
-                     </div>
-                     <div className="flex flex-col gap-3">
-                        <Label htmlFor="recipientPhone">Recipient Phone</Label>
-                        <Input
-                           id="recipientPhone"
-                           defaultValue={item.recipient.phone}
-                        />
-                     </div>
-                  </div>
-                  <div className="flex flex-col gap-3">
-                     <Label htmlFor="estimatedDelivery">
-                        Estimated Delivery
-                     </Label>
-                     <Input
-                        id="estimatedDelivery"
-                        type="datetime-local"
-                        defaultValue={
-                           item?.estimatedDelivery
-                              ? new Date(item.estimatedDelivery)
-                                   .toISOString()
-                                   .slice(0, 16)
-                              : ''
-                        }
-                     />
-                  </div>
-               </form>
-            </div>
-            <DrawerFooter>
-               <Button>Update</Button>
-               <DrawerClose asChild>
-                  <Button variant="outline">Close</Button>
-               </DrawerClose>
-            </DrawerFooter>
-         </DrawerContent>
-      </Drawer>
+         </div>
+      </div>
    );
 }
