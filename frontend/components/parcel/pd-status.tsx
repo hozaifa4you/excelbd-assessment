@@ -20,7 +20,7 @@ const statusSteps = [
    { key: 'DELIVERED', label: 'Delivered', icon: CheckCircle },
 ];
 
-const getStatusColor = (status: string) => {
+export const getStatusColor = (status: string) => {
    switch (status) {
       case 'PENDING':
          return 'text-yellow-600 bg-yellow-50 border-yellow-200';

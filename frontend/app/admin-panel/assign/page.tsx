@@ -1,7 +1,6 @@
 'use client';
 import React, { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -12,22 +11,10 @@ import {
    SelectTrigger,
    SelectValue,
 } from '@/components/ui/select';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import {
-   User,
-   Package,
-   MapPin,
-   Phone,
-   Search,
-   Filter,
-   UserPlus,
-   Truck,
-   CheckCircle,
-   Users,
-   Calendar,
-   Star,
-   Activity,
-} from 'lucide-react';
+import { Package, Search, UserPlus, CheckCircle } from 'lucide-react';
+import { DbHeader } from '@/components/dashboard/admin/db-header';
+import { DBAvailableAgents } from '@/components/dashboard/admin/db-available-agents';
+import { ParcelCard } from '@/components/dashboard/admin/parcel-card';
 
 // Mock data for delivery agents
 const mockAgents = [
@@ -84,6 +71,9 @@ const mockAgents = [
       vehicleType: 'Van',
    },
 ];
+
+export type AgentType = (typeof mockAgents)[number];
+export type ParcelType = (typeof mockParcels)[number];
 
 // Mock data for unassigned parcels
 const mockParcels = [
@@ -179,58 +169,12 @@ const mockParcels = [
    },
 ];
 
-const getStatusColor = (status: string) => {
-   switch (status) {
-      case 'ACTIVE':
-         return 'text-green-600 bg-green-50 border-green-200';
-      case 'BUSY':
-         return 'text-orange-600 bg-orange-50 border-orange-200';
-      case 'OFFLINE':
-         return 'text-gray-600 bg-gray-50 border-gray-200';
-      default:
-         return 'text-gray-600 bg-gray-50 border-gray-200';
-   }
-};
-
-const getPriorityColor = (priority: string) => {
-   switch (priority) {
-      case 'URGENT':
-         return 'text-red-600 bg-red-50 border-red-200';
-      case 'HIGH':
-         return 'text-orange-600 bg-orange-50 border-orange-200';
-      case 'MEDIUM':
-         return 'text-blue-600 bg-blue-50 border-blue-200';
-      case 'LOW':
-         return 'text-gray-600 bg-gray-50 border-gray-200';
-      default:
-         return 'text-gray-600 bg-gray-50 border-gray-200';
-   }
-};
-
-const formatDate = (dateString: string) => {
-   return new Intl.DateTimeFormat('en-US', {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-   }).format(new Date(dateString));
-};
-
-const getInitials = (name: string) => {
-   return name
-      .split(' ')
-      .map((n) => n[0])
-      .join('')
-      .toUpperCase();
-};
-
 export default function DeliveryAgentAssignment() {
    const [selectedAgent, setSelectedAgent] = useState<string>('');
    const [selectedParcels, setSelectedParcels] = useState<string[]>([]);
    const [searchTerm, setSearchTerm] = useState('');
    const [statusFilter, setStatusFilter] = useState('ALL');
    const [priorityFilter, setPriorityFilter] = useState('ALL');
-   const [agentFilter, setAgentFilter] = useState('ALL');
 
    // Filter parcels based on search and filters
    const filteredParcels = useMemo(() => {
@@ -252,13 +196,6 @@ export default function DeliveryAgentAssignment() {
          return matchesSearch && matchesStatus && matchesPriority;
       });
    }, [searchTerm, statusFilter, priorityFilter]);
-
-   // Filter agents based on status
-   const filteredAgents = useMemo(() => {
-      return mockAgents.filter((agent) => {
-         return agentFilter === 'ALL' || agent.status === agentFilter;
-      });
-   }, [agentFilter]);
 
    const handleParcelSelect = (parcelId: string) => {
       setSelectedParcels((prev) =>
@@ -297,165 +234,16 @@ export default function DeliveryAgentAssignment() {
    return (
       <div className="bg-background min-h-screen">
          {/* Header */}
-         <div className="bg-card border-b">
-            <div className="container mx-auto px-4 py-6">
-               <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                     <div className="bg-primary/10 rounded-xl p-3">
-                        <Users className="text-primary h-8 w-8" />
-                     </div>
-                     <div>
-                        <h1 className="text-3xl font-bold tracking-tight">
-                           Delivery Agent Assignment
-                        </h1>
-                        <p className="text-muted-foreground">
-                           Assign parcels to delivery agents efficiently
-                        </p>
-                     </div>
-                  </div>
-                  <div className="flex gap-3">
-                     <Button variant="outline" size="sm">
-                        <UserPlus className="mr-2 h-4 w-4" />
-                        Add Agent
-                     </Button>
-                     <Button size="sm">
-                        <Activity className="mr-2 h-4 w-4" />
-                        View Analytics
-                     </Button>
-                  </div>
-               </div>
-            </div>
-         </div>
+         <DbHeader />
 
          <div className="container mx-auto px-4 py-8">
             <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
                {/* Left Column - Agent Selection */}
-               <div className="space-y-6">
-                  {/* Agent Filter */}
-                  <Card className="animate-fade-in-up">
-                     <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                           <Filter className="h-5 w-5" />
-                           Filter Agents
-                        </CardTitle>
-                     </CardHeader>
-                     <CardContent>
-                        <Select
-                           value={agentFilter}
-                           onValueChange={setAgentFilter}
-                        >
-                           <SelectTrigger>
-                              <SelectValue placeholder="Filter by status" />
-                           </SelectTrigger>
-                           <SelectContent>
-                              <SelectItem value="ALL">All Agents</SelectItem>
-                              <SelectItem value="ACTIVE">Active</SelectItem>
-                              <SelectItem value="BUSY">Busy</SelectItem>
-                              <SelectItem value="OFFLINE">Offline</SelectItem>
-                           </SelectContent>
-                        </Select>
-                     </CardContent>
-                  </Card>
-
-                  {/* Available Agents */}
-                  <Card className="animate-fade-in-up">
-                     <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                           <User className="h-5 w-5" />
-                           Available Agents ({filteredAgents.length})
-                        </CardTitle>
-                     </CardHeader>
-                     <CardContent className="space-y-4">
-                        {filteredAgents.map((agent) => (
-                           <div
-                              key={agent.id}
-                              className={`cursor-pointer rounded-lg border-2 p-4 transition-all duration-200 hover:shadow-md ${
-                                 selectedAgent === agent.id
-                                    ? 'border-primary bg-primary/5'
-                                    : 'border-border hover:border-primary/50'
-                              }`}
-                              onClick={() => setSelectedAgent(agent.id)}
-                           >
-                              <div className="flex items-start gap-3">
-                                 <Avatar className="h-12 w-12">
-                                    <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-                                       {getInitials(agent.name)}
-                                    </AvatarFallback>
-                                 </Avatar>
-                                 <div className="min-w-0 flex-1">
-                                    <div className="mb-1 flex items-center justify-between">
-                                       <h3 className="truncate text-sm font-semibold">
-                                          {agent.name}
-                                       </h3>
-                                       <Badge
-                                          className={`text-xs ${getStatusColor(agent.status)}`}
-                                       >
-                                          {agent.status}
-                                       </Badge>
-                                    </div>
-
-                                    <div className="text-muted-foreground space-y-1 text-xs">
-                                       <div className="flex items-center gap-1">
-                                          <Phone className="h-3 w-3" />
-                                          <span className="truncate">
-                                             {agent.phone}
-                                          </span>
-                                       </div>
-                                       <div className="flex items-center gap-1">
-                                          <MapPin className="h-3 w-3" />
-                                          <span>{agent.zone}</span>
-                                       </div>
-                                       <div className="flex items-center gap-1">
-                                          <Truck className="h-3 w-3" />
-                                          <span>{agent.vehicleType}</span>
-                                       </div>
-                                    </div>
-
-                                    <div className="mt-3 space-y-2">
-                                       <div className="flex justify-between text-xs">
-                                          <span>Capacity</span>
-                                          <span className="font-medium">
-                                             {agent.currentParcels}/
-                                             {agent.maxCapacity}
-                                          </span>
-                                       </div>
-                                       <div className="bg-muted h-1.5 w-full rounded-full">
-                                          <div
-                                             className={`h-1.5 rounded-full transition-all duration-300 ${
-                                                agent.currentParcels >=
-                                                agent.maxCapacity
-                                                   ? 'bg-red-500'
-                                                   : agent.currentParcels /
-                                                          agent.maxCapacity >
-                                                       0.8
-                                                     ? 'bg-orange-500'
-                                                     : 'bg-primary'
-                                             }`}
-                                             style={{
-                                                width: `${(agent.currentParcels / agent.maxCapacity) * 100}%`,
-                                             }}
-                                          />
-                                       </div>
-                                    </div>
-
-                                    <div className="mt-3 flex items-center justify-between border-t pt-2">
-                                       <div className="flex items-center gap-1 text-xs">
-                                          <Star className="h-3 w-3 fill-current text-yellow-500" />
-                                          <span className="font-medium">
-                                             {agent.rating}
-                                          </span>
-                                       </div>
-                                       <span className="text-muted-foreground text-xs">
-                                          {agent.completedDeliveries} deliveries
-                                       </span>
-                                    </div>
-                                 </div>
-                              </div>
-                           </div>
-                        ))}
-                     </CardContent>
-                  </Card>
-               </div>
+               <DBAvailableAgents
+                  agents={mockAgents}
+                  selectedAgent={selectedAgent}
+                  setSelectedAgent={setSelectedAgent}
+               />
 
                {/* Right Column - Parcel Selection */}
                <div className="space-y-6 lg:col-span-2">
@@ -581,93 +369,12 @@ export default function DeliveryAgentAssignment() {
                      </CardHeader>
                      <CardContent className="space-y-4">
                         {filteredParcels.map((parcel) => (
-                           <div
+                           <ParcelCard
                               key={parcel.id}
-                              className={`rounded-lg border-2 p-4 transition-all duration-200 hover:shadow-sm ${
-                                 selectedParcels.includes(parcel.id)
-                                    ? 'border-primary bg-primary/5'
-                                    : 'border-border hover:border-primary/30'
-                              }`}
-                           >
-                              <div className="flex items-start gap-4">
-                                 <Checkbox
-                                    checked={selectedParcels.includes(
-                                       parcel.id,
-                                    )}
-                                    onCheckedChange={() =>
-                                       handleParcelSelect(parcel.id)
-                                    }
-                                    className="mt-1"
-                                 />
-
-                                 <div className="min-w-0 flex-1">
-                                    <div className="mb-2 flex items-center justify-between">
-                                       <div className="flex items-center gap-3">
-                                          <code className="bg-muted rounded px-2 py-1 font-mono text-sm font-semibold">
-                                             {parcel.trackingNumber}
-                                          </code>
-                                          <Badge
-                                             className={`text-xs ${getPriorityColor(parcel.priority)}`}
-                                          >
-                                             {parcel.priority}
-                                          </Badge>
-                                       </div>
-                                       <Badge
-                                          variant="outline"
-                                          className="text-xs"
-                                       >
-                                          {parcel.deliveryType}
-                                       </Badge>
-                                    </div>
-
-                                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                       <div className="space-y-2">
-                                          <div>
-                                             <p className="text-sm font-medium">
-                                                {parcel.parcelType}
-                                             </p>
-                                             <p className="text-muted-foreground text-xs">
-                                                Weight: {parcel.weight} kg
-                                             </p>
-                                          </div>
-                                          <div>
-                                             <p className="text-sm font-medium">
-                                                {parcel.recipient.name}
-                                             </p>
-                                             <p className="text-muted-foreground flex items-center gap-1 text-xs">
-                                                <Phone className="h-3 w-3" />
-                                                {parcel.recipient.phone}
-                                             </p>
-                                          </div>
-                                       </div>
-
-                                       <div className="space-y-2">
-                                          <div>
-                                             <p className="text-muted-foreground flex items-center gap-1 text-xs">
-                                                <MapPin className="h-3 w-3" />
-                                                Delivery Address
-                                             </p>
-                                             <p className="text-sm">
-                                                {parcel.deliveryAddress.street},{' '}
-                                                {parcel.deliveryAddress.city}
-                                             </p>
-                                          </div>
-                                          <div>
-                                             <p className="text-muted-foreground flex items-center gap-1 text-xs">
-                                                <Calendar className="h-3 w-3" />
-                                                Est. Delivery
-                                             </p>
-                                             <p className="text-sm font-medium">
-                                                {formatDate(
-                                                   parcel.estimatedDelivery,
-                                                )}
-                                             </p>
-                                          </div>
-                                       </div>
-                                    </div>
-                                 </div>
-                              </div>
-                           </div>
+                              parcel={parcel}
+                              handleSelectedParcel={handleParcelSelect}
+                              selectedParcels={selectedParcels}
+                           />
                         ))}
 
                         {filteredParcels.length === 0 && (

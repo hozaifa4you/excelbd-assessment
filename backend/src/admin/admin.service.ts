@@ -41,6 +41,7 @@ export class AdminService {
             status: {
                notIn: ['CANCELLED', 'DELIVERED', 'DELIVERING'],
             },
+            deliveryAgentId: null,
          },
          select: {
             trackingNumber: true,

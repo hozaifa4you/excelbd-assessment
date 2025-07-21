@@ -22,3 +22,16 @@ export function zodErrorFormat(errors: z.ZodError<Record<string, string>>) {
 
    return properties;
 }
+
+export const getStatusColor = (status: string) => {
+   switch (status) {
+      case 'ACTIVE':
+         return 'text-green-600 bg-green-50 border-green-200';
+      case 'BUSY':
+         return 'text-orange-600 bg-orange-50 border-orange-200';
+      case 'OFFLINE':
+         return 'text-gray-600 bg-gray-50 border-gray-200';
+      default:
+         return 'text-gray-600 bg-gray-50 border-gray-200';
+   }
+};
