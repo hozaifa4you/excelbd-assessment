@@ -15,12 +15,15 @@ import { Package, Search, UserPlus, CheckCircle, Loader2 } from 'lucide-react';
 import { DbHeader } from '@/components/dashboard/admin/db-header';
 import { DBAvailableAgents } from '@/components/dashboard/admin/db-available-agents';
 import { ParcelCard } from '@/components/dashboard/admin/parcel-card';
+import { AssignmentLoader } from '@/components/dashboard/admin/assignment-loader';
 import { useAppDispatch, useAppSelector } from '@/redux/hooks';
 import {
    fetchAssignableAgents,
    fetchAssignableParcels,
    selectAssignableAgents,
    selectAssignableParcels,
+   selectStatus,
+   selectStatusAssign,
    selectStatusParcel,
    setAssignParcel,
 } from '@/redux/reducers/adminSlice';
@@ -37,7 +40,9 @@ export default function DeliveryAgentAssignment() {
    const dispatch = useAppDispatch();
    const assignableParcels = useAppSelector(selectAssignableParcels);
    const assignableAgents = useAppSelector(selectAssignableAgents);
-   const assignmentStatus = useAppSelector(selectStatusParcel);
+   const parcelStatus = useAppSelector(selectStatusParcel);
+   const agentStatus = useAppSelector(selectStatus);
+   const assignStatus = useAppSelector(selectStatusAssign);
    const { session } = useSession();
 
    const filteredParcels = useMemo(() => {
@@ -68,9 +73,9 @@ export default function DeliveryAgentAssignment() {
          Boolean(
             selectedAgent &&
                selectedParcels.length > 0 &&
-               assignmentStatus !== 'loading',
+               assignStatus !== 'loading',
          ),
-      [selectedAgent, selectedParcels.length, assignmentStatus],
+      [selectedAgent, selectedParcels.length, assignStatus],
    );
 
    const agentsCount = useMemo(
@@ -89,6 +94,18 @@ export default function DeliveryAgentAssignment() {
       }),
       [selectedParcels.length, filteredParcels.length],
    );
+
+   const isInitialLoading = useMemo(() => {
+      return (
+         (agentStatus === 'loading' && assignableAgents.length === 0) ||
+         (parcelStatus === 'loading' && assignableParcels.length === 0)
+      );
+   }, [
+      agentStatus,
+      parcelStatus,
+      assignableAgents.length,
+      assignableParcels.length,
+   ]);
 
    const handleParcelSelect = useCallback((parcelId: string) => {
       setSelectedParcels((prev) =>
@@ -115,7 +132,7 @@ export default function DeliveryAgentAssignment() {
          return;
 
       try {
-         await dispatch(
+         dispatch(
             setAssignParcel(
                session.accessToken,
                selectedAgent,
@@ -158,6 +175,19 @@ export default function DeliveryAgentAssignment() {
          dispatch(fetchAssignableParcels(session.accessToken));
       }
    }, [dispatch, session?.accessToken]);
+
+   // Show initial loader when either agents or parcels are loading
+   if (isInitialLoading) {
+      return (
+         <>
+            <DbHeader />
+            <AssignmentLoader
+               isLoadingAgents={agentStatus === 'loading'}
+               isLoadingParcels={parcelStatus === 'loading'}
+            />
+         </>
+      );
+   }
 
    return (
       <div className="bg-background min-h-screen">
@@ -263,12 +293,12 @@ export default function DeliveryAgentAssignment() {
                                  disabled={!canAssign}
                                  className="min-w-32"
                               >
-                                 {assignmentStatus === 'loading' ? (
+                                 {assignStatus === 'loading' ? (
                                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                  ) : (
                                     <UserPlus className="mr-2 h-4 w-4" />
                                  )}
-                                 {assignmentStatus === 'loading'
+                                 {assignStatus === 'loading'
                                     ? 'Assigning...'
                                     : 'Assign Parcels'}
                               </Button>

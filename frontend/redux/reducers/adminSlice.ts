@@ -4,15 +4,17 @@ import { AssignableAgent } from '@/types/user';
 import { AppThunk } from '../store';
 import { StoreStatus } from '@/types/redux';
 import { appEnv } from '@/config/env.config';
+import { setStatus } from './parcelBookingSlice';
 
 interface ParcelBookingSliceType {
    assignableParcels: AssignableParcel[];
    assignableAgents: AssignableAgent[];
    selectedAgentFroAssignParcel: string | null;
    selectedParcelsFroAssign: string[];
-   status: StoreStatus;
    error?: string;
+   status: StoreStatus;
    statusParcel: StoreStatus;
+   statusAssign: StoreStatus;
 }
 
 const initialState: ParcelBookingSliceType = {
@@ -22,6 +24,7 @@ const initialState: ParcelBookingSliceType = {
    selectedParcelsFroAssign: [],
    status: 'loading',
    statusParcel: 'loading',
+   statusAssign: 'idle',
    error: undefined,
 };
 
@@ -60,6 +63,10 @@ export const adminSlice = createAppSlice({
       setStatusParcel: create.reducer<StoreStatus>((state, action) => {
          state.statusParcel = action.payload;
       }),
+      setStatusAssign: create.reducer<StoreStatus>((state, action) => {
+         state.statusAssign = action.payload;
+         setStatus(action.payload);
+      }),
    }),
    selectors: {
       selectAssignableParcels: (state) => state.assignableParcels,
@@ -70,6 +77,7 @@ export const adminSlice = createAppSlice({
       selectStatus: (state) => state.status,
       selectError: (state) => state.error,
       selectStatusParcel: (state) => state.statusParcel,
+      selectStatusAssign: (state) => state.statusAssign,
    },
 });
 
@@ -132,7 +140,7 @@ export const fetchAssignableParcels =
 export const setAssignParcel =
    (token: string, agentId: string, parcelIds: string[]): AppThunk =>
    async (dispatch) => {
-      dispatch(adminSlice.actions.setStatusParcel('loading'));
+      dispatch(adminSlice.actions.setStatusAssign('loading'));
 
       try {
          const response = await fetch(
@@ -159,9 +167,13 @@ export const setAssignParcel =
             throw new Error(data.message || 'Failed to assign parcels');
          }
 
-         dispatch(adminSlice.actions.setStatusParcel('success'));
-         // Refresh the assignable parcels list to reflect the changes
-         await dispatch(fetchAssignableParcels(token));
+         dispatch(adminSlice.actions.setStatusAssign('success'));
+         dispatch(fetchAssignableParcels(token));
+
+         // Reset status to idle after a brief moment
+         setTimeout(() => {
+            dispatch(adminSlice.actions.setStatusAssign('idle'));
+         }, 1000);
 
          return data;
       } catch (error) {
@@ -170,8 +182,14 @@ export const setAssignParcel =
                ? error.message
                : 'An unexpected error occurred';
          dispatch(adminSlice.actions.setError(errorMessage));
-         dispatch(adminSlice.actions.setStatusParcel('error'));
-         throw error; // Re-throw to allow component-level error handling
+         dispatch(adminSlice.actions.setStatusAssign('error'));
+
+         // Reset status to idle after showing error
+         setTimeout(() => {
+            dispatch(adminSlice.actions.setStatusAssign('idle'));
+         }, 3000);
+
+         throw error;
       }
    };
 
@@ -183,6 +201,7 @@ export const {
    selectStatus,
    selectError,
    selectStatusParcel,
+   selectStatusAssign,
 } = adminSlice.selectors;
 export const {
    resetAdminState,
