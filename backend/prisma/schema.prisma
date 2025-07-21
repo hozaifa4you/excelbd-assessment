@@ -27,6 +27,7 @@ model User {
   rememberToken String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+  Address       Address?
   Parcel        Parcel[]
   DeliveryAgent Parcel[] @relation("ParcelDeliveryAgent")
 

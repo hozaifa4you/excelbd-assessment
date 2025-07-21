@@ -17,7 +17,7 @@ import { BookingParcelDto } from './dto/booking-parcel.dto';
 import { AuthUser as DAuthUser } from 'src/auth/decorators/auth-user.decorator';
 import { AuthUser } from 'src/auth/types/auth-user';
 import { Role } from 'generated/prisma';
-import { PaginationPipe } from './pipes/pagination.pipe';
+import { PaginationPipe } from '../pipes/pagination.pipe';
 import { AccessGuard } from 'src/auth/guards/access.guard';
 import { MongoIdValidationPipe } from './pipes/mongo-id-validation.pipe';
 
