@@ -26,7 +26,7 @@ export class ParcelController {
    constructor(private readonly parcelService: ParcelService) {}
 
    @HttpCode(HttpStatus.OK)
-   @Roles(Role.ADMIN, Role.USER, Role.DELIVERY_AGENT)
+   @Roles(Role.ADMIN, Role.CUSTOMER, Role.DELIVERY_AGENT)
    @UseGuards(RolesGuard)
    @UseGuards(JwtGuard)
    @Get('/')
@@ -43,7 +43,7 @@ export class ParcelController {
    }
 
    @HttpCode(HttpStatus.CREATED)
-   @Roles('USER')
+   @Roles(Role.CUSTOMER)
    @UseGuards(RolesGuard)
    @UseGuards(JwtGuard)
    @Post('/booking')

@@ -24,7 +24,7 @@ export class AdminService {
       const skip = (page - 1) * limit;
 
       const customers = await this.prisma.user.findMany({
-         where: { role: 'USER' },
+         where: { role: 'CUSTOMER' },
          omit: { password: true, updatedAt: true, rememberToken: true },
          skip,
          take: limit,

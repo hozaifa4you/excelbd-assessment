@@ -15,7 +15,7 @@ export class AnalyticsService {
             const bookings = await this.getAdminBookingsAnalytics();
             return { bookings, summary };
          }
-         case Role.USER: {
+         case Role.CUSTOMER: {
             const bookings = await this.getUserBookingsAnalytics(userId);
             return { bookings, summary };
          }
@@ -107,7 +107,7 @@ export class AnalyticsService {
                   'User ID is required for delivery agents',
                );
             return this.getRoleSummary({ deliveryAgentId: userId }, dateFilter);
-         case Role.USER:
+         case Role.CUSTOMER:
             if (!userId)
                throw new BadRequestException('User ID is required for users');
             return this.getRoleSummary({ creatorId: userId }, dateFilter);

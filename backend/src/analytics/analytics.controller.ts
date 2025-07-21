@@ -18,7 +18,7 @@ export class AnalyticsController {
    constructor(private readonly analyticsService: AnalyticsService) {}
 
    @HttpCode(HttpStatus.OK)
-   @Roles(Role.ADMIN, Role.USER, Role.DELIVERY_AGENT)
+   @Roles(Role.ADMIN, Role.CUSTOMER, Role.DELIVERY_AGENT)
    @UseGuards(RolesGuard)
    @UseGuards(JwtGuard)
    @Get('bookings-3-months')

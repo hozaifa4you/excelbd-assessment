@@ -81,7 +81,7 @@ export class ParcelService {
       switch (role) {
          case Role.ADMIN:
             return this.getAdminBookings(page, limit);
-         case Role.USER:
+         case Role.CUSTOMER:
             return this.getUserBookings(userId, page, limit);
          case Role.DELIVERY_AGENT:
             return this.getAgentBookings(userId, page, limit);
