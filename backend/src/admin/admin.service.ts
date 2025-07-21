@@ -23,15 +23,38 @@ export class AdminService {
    public async getCustomers(page = 1, limit = 10) {
       const skip = (page - 1) * limit;
 
-      const customers = await this.prisma.user.findMany({
+      const customers: unknown[] = [];
+
+      const users = await this.prisma.user.findMany({
          where: { role: 'CUSTOMER' },
-         omit: { password: true, updatedAt: true, rememberToken: true },
+         omit: {
+            password: true,
+            updatedAt: true,
+            rememberToken: true,
+            Address: true,
+         },
          skip,
          take: limit,
          orderBy: { createdAt: 'desc' },
       });
 
-      return customers;
+      for (const user of users) {
+         const bookingCount = await this.prisma.parcel.count({
+            where: { creatorId: user.id },
+         });
+
+         customers.push({
+            ...user,
+            bookingCount,
+         });
+      }
+
+      const total = await this.prisma.user.count({});
+
+      return {
+         customers,
+         meta: { page, pages: Math.ceil(total / limit), total },
+      };
    }
 
    public async getAssignableParcels(page = 1, limit = 10) {

@@ -11,7 +11,8 @@ async function main() {
    const parcelCount = 500;
    const agentCount = 50;
    const parcel = false;
-   const agent = true;
+   const agent = false;
+   const customer = true;
 
    if (parcel) {
       log('Deleting existing parcels...');
@@ -122,6 +123,26 @@ async function main() {
                   street: faker.location.street(),
                   zip: faker.location.zipCode(),
                },
+            },
+         });
+      }
+   }
+
+   if (customer) {
+      log('Deleting existing customers...');
+      await client.user.deleteMany({ where: { role: 'CUSTOMER' } });
+      log('Seeding customers...');
+      for (let i = 0; i < agentCount; i++) {
+         await client.user.create({
+            data: {
+               email: faker.internet.email(),
+               firstName: faker.person.firstName(),
+               lastName: faker.person.lastName(),
+               phone: faker.phone.number(),
+               password: faker.internet.password(),
+               role: 'CUSTOMER',
+               username: faker.internet.username(),
+               avatar: faker.image.avatar(),
             },
          });
       }
