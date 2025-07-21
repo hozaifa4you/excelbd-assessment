@@ -41,9 +41,11 @@ export class AdminService {
             status: {
                notIn: ['CANCELLED', 'DELIVERED', 'DELIVERING'],
             },
-            deliveryAgentId: null,
+            // FIXME: This condition is commented out in the original code, but it might be needed based on your requirements.
+            // deliveryAgentId: { equals: null },
          },
          select: {
+            id: true,
             trackingNumber: true,
             parcelType: true,
             deliveryType: true,

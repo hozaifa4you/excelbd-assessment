@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,6 +15,15 @@ import { Package, Search, UserPlus, CheckCircle } from 'lucide-react';
 import { DbHeader } from '@/components/dashboard/admin/db-header';
 import { DBAvailableAgents } from '@/components/dashboard/admin/db-available-agents';
 import { ParcelCard } from '@/components/dashboard/admin/parcel-card';
+import { useAppDispatch, useAppSelector } from '@/redux/hooks';
+import {
+   fetchAssignableAgents,
+   fetchAssignableParcels,
+   selectAssignableAgents,
+   selectAssignableParcels,
+   selectStatus,
+} from '@/redux/reducers/adminSlice';
+import { useSession } from '@/hooks/use-session';
 
 // Mock data for delivery agents
 const mockAgents = [
@@ -71,10 +80,6 @@ const mockAgents = [
       vehicleType: 'Van',
    },
 ];
-
-export type AgentType = (typeof mockAgents)[number];
-export type ParcelType = (typeof mockParcels)[number];
-
 // Mock data for unassigned parcels
 const mockParcels = [
    {
@@ -169,12 +174,22 @@ const mockParcels = [
    },
 ];
 
+export type AgentType = (typeof mockAgents)[number];
+export type ParcelType = (typeof mockParcels)[number];
+
 export default function DeliveryAgentAssignment() {
    const [selectedAgent, setSelectedAgent] = useState<string>('');
    const [selectedParcels, setSelectedParcels] = useState<string[]>([]);
    const [searchTerm, setSearchTerm] = useState('');
    const [statusFilter, setStatusFilter] = useState('ALL');
    const [priorityFilter, setPriorityFilter] = useState('ALL');
+   const dispatch = useAppDispatch();
+   const assignableParcels = useAppSelector(selectAssignableParcels);
+   const assignableAgents = useAppSelector(selectAssignableAgents);
+   const { session } = useSession();
+   const status = useAppSelector(selectStatus);
+
+   console.log({ status }, assignableParcels, assignableAgents);
 
    // Filter parcels based on search and filters
    const filteredParcels = useMemo(() => {
@@ -230,6 +245,18 @@ export default function DeliveryAgentAssignment() {
 
    const selectedAgentData = mockAgents.find((a) => a.id === selectedAgent);
    const canAssign = selectedAgent && selectedParcels.length > 0;
+
+   useEffect(() => {
+      if (session) {
+         dispatch(fetchAssignableAgents(session.accessToken));
+      }
+   }, [dispatch, session]);
+
+   useEffect(() => {
+      if (session) {
+         dispatch(fetchAssignableParcels(session.accessToken));
+      }
+   }, [dispatch, session]);
 
    return (
       <div className="bg-background min-h-screen">

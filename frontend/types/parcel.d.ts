@@ -8,6 +8,7 @@ export type Status =
 
 export type PaymentStatus = 'PAID' | 'COD';
 export type PaymentMethod = 'CARD' | 'CASH' | 'ONLINE';
+export type DeliveryType = 'STANDARD' | 'EXPRESS' | 'SAME_DAY' | 'OVERNIGHT';
 
 export type Address = {
    street: string;
@@ -30,3 +31,13 @@ export type Fees = {
    insuranceFee: number | null;
    signatureFee: number | null;
 };
+
+export interface AssignableParcel {
+   id: string;
+   trackingNumber: string;
+   parcelType: string;
+   deliveryType: DeliveryType;
+   deliveryAddress: Address;
+   recipient: Person;
+   weight: number;
+}

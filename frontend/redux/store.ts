@@ -1,8 +1,9 @@
 import type { Action, ThunkAction } from '@reduxjs/toolkit';
 import { combineSlices, configureStore } from '@reduxjs/toolkit';
 import { parcelBookingSlice } from './reducers/parcelBookingSlice';
+import { adminSlice } from '@/redux/reducers/adminSlice';
 
-const rootReducer = combineSlices(parcelBookingSlice);
+const rootReducer = combineSlices(parcelBookingSlice, adminSlice);
 export type RootState = ReturnType<typeof rootReducer>;
 
 export const makeStore = () => {

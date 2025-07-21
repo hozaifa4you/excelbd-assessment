@@ -12,7 +12,7 @@ import { PaginationPipe } from 'src/pipes/pagination.pipe';
 export class AdminController {
    constructor(private readonly adminService: AdminService) {}
 
-   @Get('agents')
+   @Get('available-agents')
    async getAgents(@Query() pagination: PaginationPipe) {
       return this.adminService.getAgents(pagination.page, pagination.limit);
    }
@@ -22,7 +22,7 @@ export class AdminController {
       return this.adminService.getCustomers(pagination.page, pagination.limit);
    }
 
-   @Get('non-delivery-parcels')
+   @Get('assignable-parcels')
    async getNonDeliveryParcels(@Query() pagination: PaginationPipe) {
       return this.adminService.getNonDeliveryParcels(
          pagination.page,

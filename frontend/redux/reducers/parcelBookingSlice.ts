@@ -2,6 +2,7 @@ import type { Dispatch, PayloadAction } from '@reduxjs/toolkit';
 import { createAppSlice } from '../createAppSlice';
 import { AppThunk } from '../store';
 import { toast } from 'sonner';
+import { StoreStatus } from '@/types/redux';
 
 export interface Person {
    name?: string;
@@ -36,7 +37,7 @@ type PaymentStatus = 'COD' | 'PAID';
 type PaymentMethod = 'CASH' | 'CARD' | 'ONLINE';
 
 export interface ParcelBookingSliceType {
-   status: 'idle' | 'loading' | 'success' | 'error';
+   status: StoreStatus;
    error?: string;
    parcelType?: string;
    weight?: number;
