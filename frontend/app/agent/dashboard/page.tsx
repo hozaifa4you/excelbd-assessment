@@ -1,17 +1,20 @@
 import { BookingsAreaChart } from '@/components/charts/three-month-charts';
-import { DataTable } from '@/components/data-table';
 import { SectionCards } from '@/components/section-cards';
+import { authFetch } from '@/lib/authFetch';
 
-import data from '@/lib/data.json';
+export default async function Page() {
+   const response = await authFetch('/analytics/bookings-3-months');
+   const data = await response.json();
+   if (!response.ok) {
+      throw new Error(data.message);
+   }
 
-export default function Page() {
    return (
       <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
-         <SectionCards />
+         <SectionCards summary={data.summary} />
          <div className="px-4 lg:px-6">
-            <BookingsAreaChart data={[]} />
+            <BookingsAreaChart data={data.bookings} />
          </div>
-         <DataTable data={data} />
       </div>
    );
 }

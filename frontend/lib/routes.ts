@@ -3,6 +3,7 @@ export type RouteType =
    | 'signin'
    | 'signup'
    | 'dashboard'
+   | 'profile'
    | 'admin.dashboard'
    | 'admin.bookings'
    | 'admin.assign'
@@ -16,6 +17,7 @@ type RouteParamsMap = {
    signin: undefined;
    signup: undefined;
    dashboard: undefined;
+   profile: { username: string };
    'admin.dashboard': undefined;
    'admin.bookings': undefined;
    'admin.assign': undefined;
@@ -30,6 +32,7 @@ type RouteQueryMap = {
    signin: Record<string, string>;
    signup: Record<string, string>;
    dashboard: Record<string, string>;
+   profile: Record<string, string>;
    'admin.dashboard': Record<string, string>;
    'admin.bookings': Record<string, string>;
    'admin.assign': Record<string, string>;
@@ -56,6 +59,11 @@ export const route = <T extends RouteType>(
          return '/signin' + queryString;
       case 'signup':
          return '/signup' + queryString;
+      case 'profile':
+         return (
+            `/profile/${(params as { username: string }).username}` +
+            queryString
+         );
       case 'admin.dashboard':
          return '/admin-panel/dashboard' + queryString;
       case 'admin.bookings':
