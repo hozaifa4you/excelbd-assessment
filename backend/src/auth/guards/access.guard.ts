@@ -1,4 +1,9 @@
-import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+import {
+   CanActivate,
+   ExecutionContext,
+   Injectable,
+   NotFoundException,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { AuthRequest } from '../types/auth-user';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -19,8 +24,10 @@ export class AccessGuard implements CanActivate {
       if (user.role === 'ADMIN' || user.role === 'DELIVERY_AGENT') return true;
       const parcel = await this.prisma.parcel.findUnique({
          where: { id: parcelId },
+         select: { creatorId: true, id: true },
       });
-      if (!parcel) return false;
+      if (!parcel)
+         throw new NotFoundException(`Parcel with ID ${parcelId} not found`);
       if (parcel.creatorId === user.id) return true;
       return false;
    }

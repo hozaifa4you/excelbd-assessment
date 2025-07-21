@@ -11,17 +11,20 @@ async function main() {
    const seedCount = 500;
    const parcel = true;
 
+   log('Deleting existing parcels...');
+   await client.parcel.deleteMany();
    log('Seeding parcels...');
    for (let i = 0; i < seedCount; i++) {
       if (!parcel) break;
-      await client.parcel.deleteMany();
-
       const trackingNumber = Math.random().toString(36).substring(2, 15);
 
       const qrCode = await uploadService.qrCodeUploader(
          trackingNumber,
          trackingNumber,
       );
+
+      const paymentStatus = faker.helpers.arrayElement(['PAID', 'COD']);
+      const paymentMethod = paymentStatus === 'PAID' ? 'ONLINE' : null;
 
       await client.parcel.create({
          data: {
@@ -46,7 +49,7 @@ async function main() {
                'LARGE_PACKAGE',
             ]),
             weight: faker.number.int({ min: 1, max: 50 }),
-            paymentStatus: faker.helpers.arrayElement(['PAID', 'COD']),
+            paymentStatus,
             pickupAddress: {
                city: faker.location.city(),
                country: faker.location.country(),
@@ -65,10 +68,31 @@ async function main() {
                phone: faker.phone.number(),
             },
             trackingNumber: trackingNumber,
-            status: faker.helpers.arrayElement(['CANCELLED', 'DELIVERED']),
+            status: faker.helpers.arrayElement([
+               'PENDING',
+               'PICKED_UP',
+               'IN_TRANSIT',
+               'DELIVERING',
+               'DELIVERED',
+               'CANCELLED',
+            ]),
             createdAt: faker.date.recent({ days: 90 }),
             estimatedDelivery: faker.date.soon({ days: 5 }),
             trackingQrCode: qrCode,
+            dimensions:
+               faker.commerce.productAdjective() +
+               ' ' +
+               faker.number.int({ min: 10, max: 100 }) +
+               'cm',
+            deliveryType: faker.helpers.arrayElement([
+               'STANDARD',
+               'EXPRESS',
+               'OVERNIGHT',
+               'SAME_DAY',
+            ]),
+            notes: faker.lorem.sentence(),
+            deliveryAgentId: '687a1ecf8f2e3894f2dec0f5',
+            paymentMethod: paymentMethod,
          },
       });
    }

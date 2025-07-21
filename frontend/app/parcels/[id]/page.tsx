@@ -8,60 +8,7 @@ import { PDParcelInfo } from '@/components/parcel/pd-parcel-info';
 import { PDTransitInfo } from '@/components/parcel/pd-transit-info';
 import { PDPaymentInfo } from '@/components/parcel/pd-payment-info';
 import { PDDeliveryAgent } from '@/components/parcel/pd-delivery-agent';
-
-// Mock data based on the Prisma schema
-const mockParcelData = {
-   id: '652f4e5a8b123456789abcde',
-   trackingNumber: 'PX24567890123',
-   parcelType: 'Electronics',
-   weight: 2.5,
-   dimensions: '30cm x 20cm x 15cm',
-   status: 'IN_TRANSIT',
-   paymentStatus: 'PAID',
-   paymentMethod: 'CARD',
-   estimatedDelivery: '2024-01-25T14:30:00Z',
-   deliveryType: 'EXPRESS',
-   deliveredAt: null,
-   notes: 'Handle with care - fragile electronics inside. Signature required upon delivery.',
-   sender: {
-      name: 'Sarah Johnson',
-      phone: '+1 (555) 123-4567',
-      email: 'sarah.johnson@email.com',
-   },
-   recipient: {
-      name: 'Michael Chen',
-      phone: '+1 (555) 987-6543',
-      email: 'michael.chen@email.com',
-   },
-   pickupAddress: {
-      street: '1234 Tech Valley Drive',
-      city: 'San Francisco',
-      state: 'CA',
-      country: 'United States',
-      zip: '94105',
-   },
-   deliveryAddress: {
-      street: '5678 Innovation Boulevard, Apt 15B',
-      city: 'Austin',
-      state: 'TX',
-      country: 'United States',
-      zip: '73301',
-   },
-   fees: {
-      price: 299.99,
-      deliveryFee: 15.5,
-      handlingFee: 5.0,
-      insuranceFee: 12.0,
-      signatureFee: 3.5,
-   },
-   createdAt: '2024-01-20T10:15:00Z',
-   updatedAt: '2024-01-23T16:45:00Z',
-   deliveryAgent: {
-      firstName: 'David',
-      lastName: 'Rodriguez',
-      phone: '+1 (555) 456-7890',
-   },
-};
+import { authFetch } from '@/lib/authFetch';
 
 const formatDate = (dateString: string) => {
    return new Intl.DateTimeFormat('en-US', {
@@ -73,8 +20,17 @@ const formatDate = (dateString: string) => {
    }).format(new Date(dateString));
 };
 
-function ParcelDetailsPage() {
-   const parcel = mockParcelData;
+async function ParcelDetailsPage({
+   params,
+}: {
+   params: Promise<{ id: string }>;
+}) {
+   const parcelId = (await params).id;
+   const response = await authFetch('/parcels/' + parcelId);
+   const parcel = await response.json();
+   if (!response.ok) {
+      throw new Error(parcel.message);
+   }
 
    return (
       <div className="bg-background min-h-screen">

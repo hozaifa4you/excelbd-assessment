@@ -7,7 +7,7 @@ import { Fees, PaymentMethod, PaymentStatus } from '@/types/parcel';
 const formatCurrency = (amount: number) => {
    return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'BDT',
    }).format(amount);
 };
 
@@ -42,21 +42,21 @@ const PDPaymentInfo = ({
                {fees.price && (
                   <div className="flex justify-between">
                      <span className="text-sm">Item Value</span>
-                     <span className="font-medium">
+                     <span className="font-sans font-medium">
                         {formatCurrency(fees.price)}
                      </span>
                   </div>
                )}
                <div className="flex justify-between">
                   <span className="text-sm">Delivery Fee</span>
-                  <span className="font-medium">
+                  <span className="font-sans font-medium">
                      {formatCurrency(fees?.deliveryFee ?? 0)}
                   </span>
                </div>
                {fees.handlingFee && (
                   <div className="flex justify-between">
                      <span className="text-sm">Handling Fee</span>
-                     <span className="font-medium">
+                     <span className="font-sans font-medium">
                         {formatCurrency(fees.handlingFee)}
                      </span>
                   </div>
@@ -64,7 +64,7 @@ const PDPaymentInfo = ({
                {fees.insuranceFee && (
                   <div className="flex justify-between">
                      <span className="text-sm">Insurance</span>
-                     <span className="font-medium">
+                     <span className="font-sans font-medium">
                         {formatCurrency(fees.insuranceFee)}
                      </span>
                   </div>
@@ -72,7 +72,7 @@ const PDPaymentInfo = ({
                {fees.signatureFee && (
                   <div className="flex justify-between">
                      <span className="text-sm">Signature Required</span>
-                     <span className="font-medium">
+                     <span className="font-sans font-medium">
                         {formatCurrency(fees.signatureFee)}
                      </span>
                   </div>
@@ -83,7 +83,7 @@ const PDPaymentInfo = ({
 
             <div className="flex justify-between text-lg font-semibold">
                <span>Total</span>
-               <span>{formatCurrency(totalAmount)}</span>
+               <span className="font-sans">{formatCurrency(totalAmount)}</span>
             </div>
 
             <div className="pt-2">
