@@ -11,7 +11,7 @@ import {
    SelectTrigger,
    SelectValue,
 } from '@/components/ui/select';
-import { Package, Search, UserPlus, CheckCircle } from 'lucide-react';
+import { Package, Search, UserPlus, CheckCircle, Loader2 } from 'lucide-react';
 import { DbHeader } from '@/components/dashboard/admin/db-header';
 import { DBAvailableAgents } from '@/components/dashboard/admin/db-available-agents';
 import { ParcelCard } from '@/components/dashboard/admin/parcel-card';
@@ -21,8 +21,11 @@ import {
    fetchAssignableParcels,
    selectAssignableAgents,
    selectAssignableParcels,
+   selectStatusParcel,
+   setAssignParcel,
 } from '@/redux/reducers/adminSlice';
 import { useSession } from '@/hooks/use-session';
+import { toast } from 'sonner';
 
 export default function DeliveryAgentAssignment() {
    const [selectedAgent, setSelectedAgent] = useState<string>('');
@@ -34,9 +37,9 @@ export default function DeliveryAgentAssignment() {
    const dispatch = useAppDispatch();
    const assignableParcels = useAppSelector(selectAssignableParcels);
    const assignableAgents = useAppSelector(selectAssignableAgents);
+   const assignmentStatus = useAppSelector(selectStatusParcel);
    const { session } = useSession();
 
-   // Memoize filtered parcels
    const filteredParcels = useMemo(() => {
       return assignableParcels.filter((parcel) => {
          const matchesSearch =
@@ -55,25 +58,26 @@ export default function DeliveryAgentAssignment() {
       });
    }, [assignableParcels, searchTerm, statusFilter]);
 
-   // Memoize selected agent data
    const selectedAgentData = useMemo(
       () => assignableAgents.find((a) => a.id === selectedAgent),
       [assignableAgents, selectedAgent],
    );
 
-   // Memoize canAssign check
    const canAssign = useMemo(
-      () => Boolean(selectedAgent && selectedParcels.length > 0),
-      [selectedAgent, selectedParcels.length],
+      () =>
+         Boolean(
+            selectedAgent &&
+               selectedParcels.length > 0 &&
+               assignmentStatus !== 'loading',
+         ),
+      [selectedAgent, selectedParcels.length, assignmentStatus],
    );
 
-   // Memoize agents count
    const agentsCount = useMemo(
       () => assignableAgents.length,
       [assignableAgents.length],
    );
 
-   // Memoize select all checkbox state
    const selectAllState = useMemo(
       () => ({
          checked:
@@ -86,7 +90,6 @@ export default function DeliveryAgentAssignment() {
       [selectedParcels.length, filteredParcels.length],
    );
 
-   // Optimize callback functions with useCallback
    const handleParcelSelect = useCallback((parcelId: string) => {
       setSelectedParcels((prev) =>
          prev.includes(parcelId)
@@ -103,16 +106,39 @@ export default function DeliveryAgentAssignment() {
       }
    }, [selectedParcels.length, filteredParcels]);
 
-   const handleAssignParcels = useCallback(() => {
-      if (!selectedAgent || selectedParcels.length === 0) return;
+   const handleAssignParcels = useCallback(async () => {
+      if (
+         !selectedAgent ||
+         selectedParcels.length === 0 ||
+         !session?.accessToken
+      )
+         return;
 
-      // Reset selections after assignment
-      setSelectedParcels([]);
-      setSelectedAgent('');
+      try {
+         await dispatch(
+            setAssignParcel(
+               session.accessToken,
+               selectedAgent,
+               selectedParcels,
+            ),
+         );
 
-      // Here you would typically make an API call to assign the parcels
-      // TODO: Implement actual API call
-   }, [selectedAgent, selectedParcels.length]);
+         setSelectedParcels([]);
+         setSelectedAgent('');
+
+         toast.success('Parcels Assigned Successfully', {
+            description: `${selectedParcels.length} parcel(s) have been assigned to the selected agent.`,
+         });
+      } catch (error) {
+         toast.error('Assignment Failed', {
+            description:
+               error instanceof Error
+                  ? error.message
+                  : 'Failed to assign parcels. Please try again.',
+         });
+         console.error('Failed to assign parcels:', error);
+      }
+   }, [selectedAgent, selectedParcels, session?.accessToken, dispatch]);
 
    const handleSearchChange = useCallback(
       (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -121,7 +147,6 @@ export default function DeliveryAgentAssignment() {
       [],
    );
 
-   // Optimize data fetching
    useEffect(() => {
       if (session?.accessToken) {
          dispatch(fetchAssignableAgents(session.accessToken));
@@ -238,8 +263,14 @@ export default function DeliveryAgentAssignment() {
                                  disabled={!canAssign}
                                  className="min-w-32"
                               >
-                                 <UserPlus className="mr-2 h-4 w-4" />
-                                 Assign Parcels
+                                 {assignmentStatus === 'loading' ? (
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                 ) : (
+                                    <UserPlus className="mr-2 h-4 w-4" />
+                                 )}
+                                 {assignmentStatus === 'loading'
+                                    ? 'Assigning...'
+                                    : 'Assign Parcels'}
                               </Button>
                            </div>
                         </CardContent>

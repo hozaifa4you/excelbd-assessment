@@ -129,6 +129,52 @@ export const fetchAssignableParcels =
       dispatch(adminSlice.actions.setStatusParcel('success'));
    };
 
+export const setAssignParcel =
+   (token: string, agentId: string, parcelIds: string[]): AppThunk =>
+   async (dispatch) => {
+      dispatch(adminSlice.actions.setStatusParcel('loading'));
+
+      try {
+         const response = await fetch(
+            `${appEnv.NEXT_PUBLIC_API_URL}/api/admin/assign-agent`,
+            {
+               method: 'PUT',
+               headers: {
+                  Authorization: `Bearer ${token}`,
+                  'Content-Type': 'application/json',
+               },
+               body: JSON.stringify({ agentId, parcelIds }),
+            },
+         );
+
+         const data = await response.json();
+
+         if (!response.ok) {
+            throw new Error(
+               data.message || `HTTP error! status: ${response.status}`,
+            );
+         }
+
+         if (!data.success) {
+            throw new Error(data.message || 'Failed to assign parcels');
+         }
+
+         dispatch(adminSlice.actions.setStatusParcel('success'));
+         // Refresh the assignable parcels list to reflect the changes
+         await dispatch(fetchAssignableParcels(token));
+
+         return data;
+      } catch (error) {
+         const errorMessage =
+            error instanceof Error
+               ? error.message
+               : 'An unexpected error occurred';
+         dispatch(adminSlice.actions.setError(errorMessage));
+         dispatch(adminSlice.actions.setStatusParcel('error'));
+         throw error; // Re-throw to allow component-level error handling
+      }
+   };
+
 export const {
    selectAssignableAgents,
    selectAssignableParcels,
