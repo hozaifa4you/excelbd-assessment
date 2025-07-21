@@ -1,4 +1,9 @@
-import { Icon, IconDashboard, IconPackage } from '@tabler/icons-react';
+import {
+   Icon,
+   IconDashboard,
+   IconPackage,
+   IconTruckDelivery,
+} from '@tabler/icons-react';
 import { route } from './routes';
 
 export interface AppSidebarItem {
@@ -41,13 +46,18 @@ export const dashboardMenuItems: MenuItemType = {
    admin: [
       {
          title: 'Dashboard',
-         url: route('dashboard'),
+         url: route('admin.dashboard'),
          Icon: IconDashboard,
       },
       {
          title: 'Bookings',
-         url: route('dashboard'),
+         url: route('admin.bookings'),
          Icon: IconPackage,
+      },
+      {
+         title: 'Assign Agent',
+         url: route('admin.assign'),
+         Icon: IconTruckDelivery,
       },
    ],
 };
