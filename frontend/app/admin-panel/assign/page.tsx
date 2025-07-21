@@ -22,160 +22,161 @@ import {
    selectAssignableAgents,
    selectAssignableParcels,
    selectStatus,
+   selectStatusParcel,
 } from '@/redux/reducers/adminSlice';
 import { useSession } from '@/hooks/use-session';
 
-// Mock data for delivery agents
-const mockAgents = [
-   {
-      id: 'agent1',
-      name: 'David Rodriguez',
-      phone: '+1 (555) 456-7890',
-      email: 'david.rodriguez@company.com',
-      status: 'ACTIVE',
-      currentParcels: 8,
-      maxCapacity: 15,
-      rating: 4.8,
-      completedDeliveries: 1247,
-      zone: 'Downtown',
-      vehicleType: 'Van',
-   },
-   {
-      id: 'agent2',
-      name: 'Sarah Chen',
-      phone: '+1 (555) 789-0123',
-      email: 'sarah.chen@company.com',
-      status: 'ACTIVE',
-      currentParcels: 12,
-      maxCapacity: 20,
-      rating: 4.9,
-      completedDeliveries: 892,
-      zone: 'North Side',
-      vehicleType: 'Truck',
-   },
-   {
-      id: 'agent3',
-      name: 'Michael Johnson',
-      phone: '+1 (555) 234-5678',
-      email: 'michael.johnson@company.com',
-      status: 'BUSY',
-      currentParcels: 15,
-      maxCapacity: 15,
-      rating: 4.7,
-      completedDeliveries: 2103,
-      zone: 'East District',
-      vehicleType: 'Motorcycle',
-   },
-   {
-      id: 'agent4',
-      name: 'Emma Wilson',
-      phone: '+1 (555) 345-6789',
-      email: 'emma.wilson@company.com',
-      status: 'ACTIVE',
-      currentParcels: 5,
-      maxCapacity: 18,
-      rating: 4.9,
-      completedDeliveries: 567,
-      zone: 'West End',
-      vehicleType: 'Van',
-   },
-];
-// Mock data for unassigned parcels
-const mockParcels = [
-   {
-      id: 'parcel1',
-      trackingNumber: 'PX24567890123',
-      parcelType: 'Electronics',
-      weight: 2.5,
-      status: 'PICKED_UP',
-      deliveryType: 'EXPRESS',
-      estimatedDelivery: '2024-01-25T14:30:00Z',
-      recipient: { name: 'Michael Chen', phone: '+1 (555) 987-6543' },
-      deliveryAddress: {
-         street: '5678 Innovation Blvd',
-         city: 'Austin',
-         state: 'TX',
-         zip: '73301',
-      },
-      priority: 'HIGH',
-      createdAt: '2024-01-20T10:15:00Z',
-   },
-   {
-      id: 'parcel2',
-      trackingNumber: 'PX24567890124',
-      parcelType: 'Documents',
-      weight: 0.5,
-      status: 'PICKED_UP',
-      deliveryType: 'STANDARD',
-      estimatedDelivery: '2024-01-26T16:00:00Z',
-      recipient: { name: 'Lisa Park', phone: '+1 (555) 123-9876' },
-      deliveryAddress: {
-         street: '1234 Business Ave',
-         city: 'Austin',
-         state: 'TX',
-         zip: '73302',
-      },
-      priority: 'MEDIUM',
-      createdAt: '2024-01-21T09:30:00Z',
-   },
-   {
-      id: 'parcel3',
-      trackingNumber: 'PX24567890125',
-      parcelType: 'Clothing',
-      weight: 1.8,
-      status: 'PICKED_UP',
-      deliveryType: 'EXPRESS',
-      estimatedDelivery: '2024-01-25T12:00:00Z',
-      recipient: { name: 'John Smith', phone: '+1 (555) 456-1234' },
-      deliveryAddress: {
-         street: '9876 Retail St',
-         city: 'Austin',
-         state: 'TX',
-         zip: '73303',
-      },
-      priority: 'HIGH',
-      createdAt: '2024-01-20T14:45:00Z',
-   },
-   {
-      id: 'parcel4',
-      trackingNumber: 'PX24567890126',
-      parcelType: 'Books',
-      weight: 3.2,
-      status: 'PICKED_UP',
-      deliveryType: 'STANDARD',
-      estimatedDelivery: '2024-01-27T10:30:00Z',
-      recipient: { name: 'Anna Davis', phone: '+1 (555) 789-4567' },
-      deliveryAddress: {
-         street: '4567 Academic Dr',
-         city: 'Austin',
-         state: 'TX',
-         zip: '73304',
-      },
-      priority: 'LOW',
-      createdAt: '2024-01-21T11:20:00Z',
-   },
-   {
-      id: 'parcel5',
-      trackingNumber: 'PX24567890127',
-      parcelType: 'Medical Supplies',
-      weight: 1.2,
-      status: 'PICKED_UP',
-      deliveryType: 'SAME_DAY',
-      estimatedDelivery: '2024-01-24T18:00:00Z',
-      recipient: { name: 'Dr. Robert Lee', phone: '+1 (555) 321-6547' },
-      deliveryAddress: {
-         street: '7890 Health Plaza',
-         city: 'Austin',
-         state: 'TX',
-         zip: '73305',
-      },
-      priority: 'URGENT',
-      createdAt: '2024-01-24T08:15:00Z',
-   },
-];
+// // Mock data for delivery agents
+// const mockAgents = [
+//    {
+//       id: 'agent1',
+//       name: 'David Rodriguez',
+//       phone: '+1 (555) 456-7890',
+//       email: 'david.rodriguez@company.com',
+//       status: 'ACTIVE',
+//       currentParcels: 8,
+//       maxCapacity: 15,
+//       rating: 4.8,
+//       completedDeliveries: 1247,
+//       zone: 'Downtown',
+//       vehicleType: 'Van',
+//    },
+//    {
+//       id: 'agent2',
+//       name: 'Sarah Chen',
+//       phone: '+1 (555) 789-0123',
+//       email: 'sarah.chen@company.com',
+//       status: 'ACTIVE',
+//       currentParcels: 12,
+//       maxCapacity: 20,
+//       rating: 4.9,
+//       completedDeliveries: 892,
+//       zone: 'North Side',
+//       vehicleType: 'Truck',
+//    },
+//    {
+//       id: 'agent3',
+//       name: 'Michael Johnson',
+//       phone: '+1 (555) 234-5678',
+//       email: 'michael.johnson@company.com',
+//       status: 'BUSY',
+//       currentParcels: 15,
+//       maxCapacity: 15,
+//       rating: 4.7,
+//       completedDeliveries: 2103,
+//       zone: 'East District',
+//       vehicleType: 'Motorcycle',
+//    },
+//    {
+//       id: 'agent4',
+//       name: 'Emma Wilson',
+//       phone: '+1 (555) 345-6789',
+//       email: 'emma.wilson@company.com',
+//       status: 'ACTIVE',
+//       currentParcels: 5,
+//       maxCapacity: 18,
+//       rating: 4.9,
+//       completedDeliveries: 567,
+//       zone: 'West End',
+//       vehicleType: 'Van',
+//    },
+// ];
+// // Mock data for unassigned parcels
+// const mockParcels = [
+//    {
+//       id: 'parcel1',
+//       trackingNumber: 'PX24567890123',
+//       parcelType: 'Electronics',
+//       weight: 2.5,
+//       status: 'PICKED_UP',
+//       deliveryType: 'EXPRESS',
+//       estimatedDelivery: '2024-01-25T14:30:00Z',
+//       recipient: { name: 'Michael Chen', phone: '+1 (555) 987-6543' },
+//       deliveryAddress: {
+//          street: '5678 Innovation Blvd',
+//          city: 'Austin',
+//          state: 'TX',
+//          zip: '73301',
+//       },
+//       priority: 'HIGH',
+//       createdAt: '2024-01-20T10:15:00Z',
+//    },
+//    {
+//       id: 'parcel2',
+//       trackingNumber: 'PX24567890124',
+//       parcelType: 'Documents',
+//       weight: 0.5,
+//       status: 'PICKED_UP',
+//       deliveryType: 'STANDARD',
+//       estimatedDelivery: '2024-01-26T16:00:00Z',
+//       recipient: { name: 'Lisa Park', phone: '+1 (555) 123-9876' },
+//       deliveryAddress: {
+//          street: '1234 Business Ave',
+//          city: 'Austin',
+//          state: 'TX',
+//          zip: '73302',
+//       },
+//       priority: 'MEDIUM',
+//       createdAt: '2024-01-21T09:30:00Z',
+//    },
+//    {
+//       id: 'parcel3',
+//       trackingNumber: 'PX24567890125',
+//       parcelType: 'Clothing',
+//       weight: 1.8,
+//       status: 'PICKED_UP',
+//       deliveryType: 'EXPRESS',
+//       estimatedDelivery: '2024-01-25T12:00:00Z',
+//       recipient: { name: 'John Smith', phone: '+1 (555) 456-1234' },
+//       deliveryAddress: {
+//          street: '9876 Retail St',
+//          city: 'Austin',
+//          state: 'TX',
+//          zip: '73303',
+//       },
+//       priority: 'HIGH',
+//       createdAt: '2024-01-20T14:45:00Z',
+//    },
+//    {
+//       id: 'parcel4',
+//       trackingNumber: 'PX24567890126',
+//       parcelType: 'Books',
+//       weight: 3.2,
+//       status: 'PICKED_UP',
+//       deliveryType: 'STANDARD',
+//       estimatedDelivery: '2024-01-27T10:30:00Z',
+//       recipient: { name: 'Anna Davis', phone: '+1 (555) 789-4567' },
+//       deliveryAddress: {
+//          street: '4567 Academic Dr',
+//          city: 'Austin',
+//          state: 'TX',
+//          zip: '73304',
+//       },
+//       priority: 'LOW',
+//       createdAt: '2024-01-21T11:20:00Z',
+//    },
+//    {
+//       id: 'parcel5',
+//       trackingNumber: 'PX24567890127',
+//       parcelType: 'Medical Supplies',
+//       weight: 1.2,
+//       status: 'PICKED_UP',
+//       deliveryType: 'SAME_DAY',
+//       estimatedDelivery: '2024-01-24T18:00:00Z',
+//       recipient: { name: 'Dr. Robert Lee', phone: '+1 (555) 321-6547' },
+//       deliveryAddress: {
+//          street: '7890 Health Plaza',
+//          city: 'Austin',
+//          state: 'TX',
+//          zip: '73305',
+//       },
+//       priority: 'URGENT',
+//       createdAt: '2024-01-24T08:15:00Z',
+//    },
+// ];
 
-export type AgentType = (typeof mockAgents)[number];
-export type ParcelType = (typeof mockParcels)[number];
+// export type AgentType = (typeof mockAgents)[number];
+// export type ParcelType = (typeof mockParcels)[number];
 
 export default function DeliveryAgentAssignment() {
    const [selectedAgent, setSelectedAgent] = useState<string>('');
@@ -187,13 +188,12 @@ export default function DeliveryAgentAssignment() {
    const assignableParcels = useAppSelector(selectAssignableParcels);
    const assignableAgents = useAppSelector(selectAssignableAgents);
    const { session } = useSession();
-   const status = useAppSelector(selectStatus);
-
-   console.log({ status }, assignableParcels, assignableAgents);
+   const statusAgent = useAppSelector(selectStatus);
+   const statusParcel = useAppSelector(selectStatusParcel);
 
    // Filter parcels based on search and filters
    const filteredParcels = useMemo(() => {
-      return mockParcels.filter((parcel) => {
+      return assignableParcels.filter((parcel) => {
          const matchesSearch =
             parcel.trackingNumber
                .toLowerCase()
@@ -205,12 +205,13 @@ export default function DeliveryAgentAssignment() {
 
          const matchesStatus =
             statusFilter === 'ALL' || parcel.status === statusFilter;
-         const matchesPriority =
-            priorityFilter === 'ALL' || parcel.priority === priorityFilter;
+         // const matchesPriority =
+         //    priorityFilter === 'ALL' || parcel.priority === priorityFilter;
 
-         return matchesSearch && matchesStatus && matchesPriority;
+         return matchesSearch && matchesStatus;
+         //  && matchesPriority;
       });
-   }, [searchTerm, statusFilter, priorityFilter]);
+   }, [assignableParcels, searchTerm, statusFilter]);
 
    const handleParcelSelect = (parcelId: string) => {
       setSelectedParcels((prev) =>
@@ -231,10 +232,7 @@ export default function DeliveryAgentAssignment() {
    const handleAssignParcels = () => {
       if (!selectedAgent || selectedParcels.length === 0) return;
 
-      const agent = mockAgents.find((a) => a.id === selectedAgent);
-      console.log(
-         `Assigning ${selectedParcels.length} parcels to ${agent?.name}`,
-      );
+      const agent = assignableAgents.find((a) => a.id === selectedAgent);
 
       // Reset selections after assignment
       setSelectedParcels([]);
@@ -243,7 +241,9 @@ export default function DeliveryAgentAssignment() {
       // Here you would typically make an API call to assign the parcels
    };
 
-   const selectedAgentData = mockAgents.find((a) => a.id === selectedAgent);
+   const selectedAgentData = assignableAgents.find(
+      (a) => a.id === selectedAgent,
+   );
    const canAssign = selectedAgent && selectedParcels.length > 0;
 
    useEffect(() => {
@@ -267,9 +267,10 @@ export default function DeliveryAgentAssignment() {
             <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
                {/* Left Column - Agent Selection */}
                <DBAvailableAgents
-                  agents={mockAgents}
+                  agents={assignableAgents}
                   selectedAgent={selectedAgent}
                   setSelectedAgent={setSelectedAgent}
+                  count={assignableAgents.length}
                />
 
                {/* Right Column - Parcel Selection */}
@@ -354,7 +355,7 @@ export default function DeliveryAgentAssignment() {
                                        {selectedParcels.length} parcel(s)
                                        selected
                                        {selectedAgentData &&
-                                          ` for ${selectedAgentData.name}`}
+                                          ` for ${selectedAgentData.firstName}`}
                                     </p>
                                  </div>
                               </div>

@@ -40,4 +40,6 @@ export interface AssignableParcel {
    deliveryAddress: Address;
    recipient: Person;
    weight: number;
+   status: Status;
+   estimatedDelivery: Date;
 }

@@ -12,6 +12,7 @@ interface ParcelBookingSliceType {
    selectedParcelsFroAssign: string[];
    status: StoreStatus;
    error?: string;
+   statusParcel: StoreStatus;
 }
 
 const initialState: ParcelBookingSliceType = {
@@ -20,6 +21,7 @@ const initialState: ParcelBookingSliceType = {
    selectedAgentFroAssignParcel: null,
    selectedParcelsFroAssign: [],
    status: 'loading',
+   statusParcel: 'loading',
    error: undefined,
 };
 
@@ -55,6 +57,9 @@ export const adminSlice = createAppSlice({
       setStatus: create.reducer<StoreStatus>((state, action) => {
          state.status = action.payload;
       }),
+      setStatusParcel: create.reducer<StoreStatus>((state, action) => {
+         state.statusParcel = action.payload;
+      }),
    }),
    selectors: {
       selectAssignableParcels: (state) => state.assignableParcels,
@@ -64,6 +69,7 @@ export const adminSlice = createAppSlice({
       selectSelectedParcelsFroAssign: (state) => state.selectedParcelsFroAssign,
       selectStatus: (state) => state.status,
       selectError: (state) => state.error,
+      selectStatusParcel: (state) => state.statusParcel,
    },
 });
 
@@ -98,7 +104,7 @@ export const fetchAssignableAgents =
 export const fetchAssignableParcels =
    (token: string): AppThunk =>
    async (dispatch) => {
-      dispatch(adminSlice.actions.setStatus('loading'));
+      dispatch(adminSlice.actions.setStatusParcel('loading'));
 
       const response = await fetch(
          `${appEnv.NEXT_PUBLIC_API_URL}/api/admin/assignable-parcels`,
@@ -116,11 +122,11 @@ export const fetchAssignableParcels =
                data.message || 'Failed to fetch agents',
             ),
          );
-         dispatch(adminSlice.actions.setStatus('error'));
+         dispatch(adminSlice.actions.setStatusParcel('error'));
          return;
       }
       dispatch(adminSlice.actions.setAssignableParcels(data));
-      dispatch(adminSlice.actions.setStatus('success'));
+      dispatch(adminSlice.actions.setStatusParcel('success'));
    };
 
 export const {
@@ -130,6 +136,7 @@ export const {
    selectSelectedParcelsFroAssign,
    selectStatus,
    selectError,
+   selectStatusParcel,
 } = adminSlice.selectors;
 export const {
    resetAdminState,

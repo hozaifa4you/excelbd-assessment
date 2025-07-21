@@ -52,6 +52,8 @@ export class AdminService {
             deliveryAddress: true,
             recipient: true,
             weight: true,
+            status: true,
+            estimatedDelivery: true,
          },
          skip,
          take: limit,

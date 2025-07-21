@@ -1,11 +1,10 @@
-import { ParcelType } from '@/app/admin-panel/assign/page';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
+import { AssignableParcel, DeliveryType } from '@/types/parcel';
 import { Calendar, MapPin, Phone } from 'lucide-react';
-import { Dispatch, SetStateAction } from 'react';
 
 interface ParcelCardProps {
-   parcel: ParcelType;
+   parcel: AssignableParcel;
    selectedParcels: string[];
    handleSelectedParcel: (parcelId: string) => void;
 }
@@ -19,18 +18,31 @@ const formatDate = (dateString: string) => {
    }).format(new Date(dateString));
 };
 
-const getPriorityColor = (priority: string) => {
+const getPriorityColor = (priority: DeliveryType) => {
    switch (priority) {
-      case 'URGENT':
+      case 'SAME_DAY':
          return 'text-red-600 bg-red-50 border-red-200';
-      case 'HIGH':
+      case 'EXPRESS':
          return 'text-orange-600 bg-orange-50 border-orange-200';
-      case 'MEDIUM':
+      case 'OVERNIGHT':
          return 'text-blue-600 bg-blue-50 border-blue-200';
-      case 'LOW':
+      case 'STANDARD':
          return 'text-gray-600 bg-gray-50 border-gray-200';
       default:
          return 'text-gray-600 bg-gray-50 border-gray-200';
+   }
+};
+
+export const getPriority = (priority: DeliveryType) => {
+   switch (priority) {
+      case 'SAME_DAY':
+         return 'HIGH';
+      case 'EXPRESS':
+         return 'MEDIUM';
+      case 'OVERNIGHT':
+         return 'LOW';
+      case 'STANDARD':
+         return 'LOW';
    }
 };
 
@@ -62,9 +74,9 @@ const ParcelCard = ({
                         {parcel.trackingNumber}
                      </code>
                      <Badge
-                        className={`text-xs ${getPriorityColor(parcel.priority)}`}
+                        className={`text-xs ${getPriorityColor(parcel.deliveryType)}`}
                      >
-                        {parcel.priority}
+                        {getPriority(parcel.deliveryType)}
                      </Badge>
                   </div>
                   <Badge variant="outline" className="text-xs">
@@ -110,7 +122,7 @@ const ParcelCard = ({
                            Est. Delivery
                         </p>
                         <p className="text-sm font-medium">
-                           {formatDate(parcel.estimatedDelivery)}
+                           {formatDate(parcel.estimatedDelivery.toString())}
                         </p>
                      </div>
                   </div>
