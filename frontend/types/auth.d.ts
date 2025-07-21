@@ -1,4 +1,4 @@
-export type Role = 'USER' | 'ADMIN' | 'DELIVERY_AGENT';
+export type Role = 'CUSTOMER' | 'ADMIN' | 'DELIVERY_AGENT';
 
 type LoginState =
    | {
