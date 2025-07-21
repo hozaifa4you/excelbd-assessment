@@ -1,6 +1,7 @@
 'use client';
 import * as React from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import {
    IconChevronDown,
    IconChevronLeft,
@@ -62,6 +63,7 @@ import {
    TableRow,
 } from '@/components/ui/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { route } from '@/lib/routes';
 
 export const schema = z.object({
    id: z.string(),
@@ -122,9 +124,14 @@ const columns: ColumnDef<CustomerData>[] = [
                   </AvatarFallback>
                </Avatar>
                <div>
-                  <div className="font-medium">
+                  <Link
+                     href={route('admin.customers.details', {
+                        username: customer.username,
+                     })}
+                     className="font-medium transition-all duration-200 hover:underline hover:underline-offset-4"
+                  >
                      {customer.firstName} {customer.lastName}
-                  </div>
+                  </Link>
                   <div className="text-muted-foreground text-sm">
                      @{customer.username}
                   </div>
@@ -295,6 +302,7 @@ export function DataTableCustomers({
       [],
    );
    const [sorting, setSorting] = React.useState<SortingState>([]);
+   const [globalFilter, setGlobalFilter] = React.useState('');
 
    // Initialize pagination state from paginationInfo
    const [pagination, setPagination] = React.useState({
@@ -360,6 +368,7 @@ export function DataTableCustomers({
          rowSelection,
          columnFilters,
          pagination,
+         globalFilter,
       },
       getRowId: (row) => row.id,
       enableRowSelection: true,
@@ -368,6 +377,18 @@ export function DataTableCustomers({
       onColumnFiltersChange: setColumnFilters,
       onColumnVisibilityChange: setColumnVisibility,
       onPaginationChange: setPagination,
+      onGlobalFilterChange: setGlobalFilter,
+      globalFilterFn: (row, columnId, filterValue) => {
+         const customer = row.original;
+         const searchValue = filterValue.toLowerCase();
+         return (
+            customer.firstName.toLowerCase().includes(searchValue) ||
+            customer.lastName.toLowerCase().includes(searchValue) ||
+            customer.username.toLowerCase().includes(searchValue) ||
+            customer.email.toLowerCase().includes(searchValue) ||
+            customer.phone.toLowerCase().includes(searchValue)
+         );
+      },
       getCoreRowModel: getCoreRowModel(),
       getFilteredRowModel: getFilteredRowModel(),
       getSortedRowModel: getSortedRowModel(),
@@ -390,16 +411,8 @@ export function DataTableCustomers({
             <div className="flex items-center gap-2">
                <Input
                   placeholder="Search customers..."
-                  value={
-                     (table
-                        .getColumn('customer')
-                        ?.getFilterValue() as string) ?? ''
-                  }
-                  onChange={(event) =>
-                     table
-                        .getColumn('customer')
-                        ?.setFilterValue(event.target.value)
-                  }
+                  value={globalFilter ?? ''}
+                  onChange={(event) => setGlobalFilter(event.target.value)}
                   className="max-w-sm"
                />
                <DropdownMenu>

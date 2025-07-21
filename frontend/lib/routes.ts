@@ -8,6 +8,7 @@ export type RouteType =
    | 'admin.bookings'
    | 'admin.assign'
    | 'admin.customers'
+   | 'admin.customers.details'
    | 'admin.agents'
    | 'agent.dashboard'
    | 'user.bookings'
@@ -24,6 +25,7 @@ type RouteParamsMap = {
    'admin.bookings': undefined;
    'admin.assign': undefined;
    'admin.customers': undefined;
+   'admin.customers.details': { username: string };
    'admin.agents': undefined;
    'agent.dashboard': undefined;
    'user.bookings': undefined;
@@ -41,6 +43,7 @@ type RouteQueryMap = {
    'admin.bookings': Record<string, string>;
    'admin.assign': Record<string, string>;
    'admin.customers': Record<string, string>;
+   'admin.customers.details': Record<string, string>;
    'admin.agents': Record<string, string>;
    'agent.dashboard': Record<string, string>;
    'user.bookings': Record<string, string>;
@@ -78,6 +81,11 @@ export const route = <T extends RouteType>(
          return '/admin-panel/assign' + queryString;
       case 'admin.customers':
          return '/admin-panel/customers' + queryString;
+      case 'admin.customers.details':
+         return (
+            `/admin-panel/customers/${(params as { username: string }).username}` +
+            queryString
+         );
       case 'admin.agents':
          return '/admin-panel/agents' + queryString;
       case 'dashboard':
