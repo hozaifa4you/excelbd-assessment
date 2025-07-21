@@ -1,8 +1,15 @@
-import { Badge, CheckCircle, MapPin, Package, Truck } from 'lucide-react';
+'use client';
+import { useState } from 'react';
+import { Badge, CheckCircle, Copy, MapPin, Package, Truck } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Card, CardContent } from '../ui/card';
 import { Progress } from '../ui/progress';
-import { useState } from 'react';
+import { Status } from '@/types/parcel';
+
+interface PDStatusProps {
+   status: Status;
+   trackingNumber: string;
+}
 
 const statusSteps = [
    { key: 'PENDING', label: 'Order Placed', icon: Package },
@@ -36,19 +43,19 @@ const getStatusProgress = (status: string) => {
    return ((statusIndex + 1) / statusSteps.length) * 100;
 };
 
-const PDStatus = () => {
+const PDStatus = ({ status, trackingNumber }: PDStatusProps) => {
    const [copiedTracking, setCopiedTracking] = useState(false);
    const currentStatusIndex = statusSteps.findIndex(
-      (step) => step.key === parcel.status,
+      (step) => step.key === status,
    );
-   const progressValue = getStatusProgress(parcel.status);
+   const progressValue = getStatusProgress(status);
    const copyTrackingNumber = async () => {
       try {
-         await navigator.clipboard.writeText(parcel.trackingNumber);
+         await navigator.clipboard.writeText(trackingNumber);
          setCopiedTracking(true);
          setTimeout(() => setCopiedTracking(false), 2000);
       } catch (err) {
-         console.error('Failed to copy tracking number');
+         alert(err);
       }
    };
 
@@ -62,7 +69,7 @@ const PDStatus = () => {
                   </p>
                   <div className="flex items-center gap-3">
                      <code className="bg-muted rounded px-3 py-1 font-mono text-2xl font-semibold">
-                        {parcel.trackingNumber}
+                        {trackingNumber}
                      </code>
                      <Button
                         variant="ghost"
@@ -80,9 +87,9 @@ const PDStatus = () => {
                   </div>
                </div>
                <Badge
-                  className={`px-4 py-2 text-sm font-medium ${getStatusColor(parcel.status)}`}
+                  className={`px-4 py-2 text-sm font-medium ${getStatusColor(status)}`}
                >
-                  {parcel.status.replace('_', ' ')}
+                  {status.replace('_', ' ')}
                </Badge>
             </div>
 

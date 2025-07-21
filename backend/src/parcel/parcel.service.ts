@@ -57,6 +57,11 @@ export class ParcelService {
          newBooking.trackingNumber,
       );
 
+      await this.prisma.parcel.update({
+         where: { id: newBooking.id },
+         data: { trackingQrCode: qrCode },
+      });
+
       const cost =
          (newBooking.fees.price ?? 0) +
          (newBooking.fees.deliveryFee ?? 0) +

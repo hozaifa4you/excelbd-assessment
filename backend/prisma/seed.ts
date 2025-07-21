@@ -2,16 +2,26 @@ import 'dotenv/config';
 import { PrismaClient } from '../generated/prisma';
 import { faker } from '@faker-js/faker';
 import { log } from 'console';
+import { UploaderService } from '../src/uploader/uploader.service';
 
 const client = new PrismaClient();
+const uploadService = new UploaderService();
 
 async function main() {
-   const seedCount = 5000;
-   const parcel = false;
+   const seedCount = 500;
+   const parcel = true;
 
    log('Seeding parcels...');
    for (let i = 0; i < seedCount; i++) {
       if (!parcel) break;
+      await client.parcel.deleteMany();
+
+      const trackingNumber = Math.random().toString(36).substring(2, 15);
+
+      const qrCode = await uploadService.qrCodeUploader(
+         trackingNumber,
+         trackingNumber,
+      );
 
       await client.parcel.create({
          data: {
@@ -54,10 +64,11 @@ async function main() {
                name: faker.person.fullName(),
                phone: faker.phone.number(),
             },
-            trackingNumber: faker.string.ulid(),
+            trackingNumber: trackingNumber,
             status: faker.helpers.arrayElement(['CANCELLED', 'DELIVERED']),
             createdAt: faker.date.recent({ days: 90 }),
             estimatedDelivery: faker.date.soon({ days: 5 }),
+            trackingQrCode: qrCode,
          },
       });
    }

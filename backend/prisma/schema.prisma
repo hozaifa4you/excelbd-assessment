@@ -95,6 +95,7 @@ model Parcel {
   deliveryType      DeliveryType   @default(STANDARD)
   deliveredAt       DateTime?
   notes             String?
+  trackingQrCode    String?
   sender            Person
   recipient         Person
   pickupAddress     Address
