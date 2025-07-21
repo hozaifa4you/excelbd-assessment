@@ -9,6 +9,7 @@ import { PDTransitInfo } from '@/components/parcel/pd-transit-info';
 import { PDPaymentInfo } from '@/components/parcel/pd-payment-info';
 import { PDDeliveryAgent } from '@/components/parcel/pd-delivery-agent';
 import { authFetch } from '@/lib/authFetch';
+import { PDParcelAuthorInfo } from '@/components/parcel/pd-parcel-author-info';
 
 const formatDate = (dateString: string) => {
    return new Intl.DateTimeFormat('en-US', {
@@ -56,6 +57,8 @@ async function ParcelDetailsPage({
                      estimatedDelivery={parcel.estimatedDelivery}
                      notes={parcel.notes}
                   />
+
+                  <PDParcelAuthorInfo author={parcel.creator} />
 
                   <PDTransitInfo
                      deliveryAddress={parcel.deliveryAddress}

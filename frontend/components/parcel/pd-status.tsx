@@ -1,10 +1,11 @@
 'use client';
 import { useState } from 'react';
-import { Badge, CheckCircle, Copy, MapPin, Package, Truck } from 'lucide-react';
+import { CheckCircle, Copy, MapPin, Package, Truck } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Card, CardContent } from '../ui/card';
 import { Progress } from '../ui/progress';
 import { Status } from '@/types/parcel';
+import { Badge } from '../ui/badge';
 
 interface PDStatusProps {
    status: Status;
@@ -86,11 +87,13 @@ const PDStatus = ({ status, trackingNumber }: PDStatusProps) => {
                      )}
                   </div>
                </div>
-               <Badge
-                  className={`px-4 py-2 text-sm font-medium ${getStatusColor(status)}`}
-               >
-                  {status.replace('_', ' ')}
-               </Badge>
+               <div>
+                  <Badge
+                     className={`px-4 py-2 text-sm font-medium ${getStatusColor(status)}`}
+                  >
+                     {status.replace('_', ' ')}
+                  </Badge>
+               </div>
             </div>
 
             {/* Progress Bar */}
