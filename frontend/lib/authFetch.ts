@@ -26,7 +26,7 @@ export const authFetch = async (
 
    // FIXME: should be fix it
    if (response.status === 401) {
-      await fetch('/api/auth/signout', { method: 'DELETE' });
+      await fetch(`${appEnv.APP_URL}/api/auth/signout`, { method: 'DELETE' });
       return redirect(route('signin'));
    }
 

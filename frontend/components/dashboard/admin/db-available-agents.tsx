@@ -12,7 +12,6 @@ interface DBAvailableAgentsProps {
    count: number;
 }
 
-// Memoized individual agent component to prevent unnecessary re-renders
 const AgentItem = memo(
    ({
       agent,
@@ -64,7 +63,6 @@ const AgentItem = memo(
       );
    },
 );
-
 AgentItem.displayName = 'AgentItem';
 
 const DBAvailableAgents = memo(
@@ -99,7 +97,6 @@ const DBAvailableAgents = memo(
       );
    },
 );
-
 DBAvailableAgents.displayName = 'DBAvailableAgents';
 
 export { DBAvailableAgents };

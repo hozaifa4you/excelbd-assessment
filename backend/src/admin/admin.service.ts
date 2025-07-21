@@ -1,11 +1,12 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { AssignAgentDto } from './dto/assign-agent.dto';
 
 @Injectable()
 export class AdminService {
    constructor(private readonly prisma: PrismaService) {}
 
-   public async getAgents(page = 1, limit = 10) {
+   public async getAvailableAgents(page = 1, limit = 10) {
       const skip = (page - 1) * limit;
 
       const agents = await this.prisma.user.findMany({
@@ -33,7 +34,7 @@ export class AdminService {
       return customers;
    }
 
-   public async getNonDeliveryParcels(page = 1, limit = 10) {
+   public async getAssignableParcels(page = 1, limit = 10) {
       const skip = (page - 1) * limit;
 
       const parcels = await this.prisma.parcel.findMany({
@@ -61,5 +62,24 @@ export class AdminService {
       });
 
       return parcels;
+   }
+
+   public async setAssignAgent(assignAgentDto: AssignAgentDto) {
+      const { agentId, parcelIds } = assignAgentDto;
+
+      const updatedParcels = await this.prisma.parcel.updateMany({
+         where: { id: { in: parcelIds } },
+         data: { deliveryAgentId: agentId },
+      });
+
+      if (updatedParcels.count === 0) {
+         throw new BadRequestException(
+            'No parcels were updated. Please check the parcel IDs.',
+         );
+      }
+
+      return {
+         success: true,
+      };
    }
 }
