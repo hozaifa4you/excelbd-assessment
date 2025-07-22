@@ -105,6 +105,7 @@ model Parcel {
   notes             String?
   trackingQrCode    String?
   barcode           String?
+  barcodeUrl        String?
   sender            Person
   recipient         Person
   pickupAddress     Address

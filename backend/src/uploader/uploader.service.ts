@@ -24,18 +24,21 @@ export class UploaderService {
       return qrCodeUrl;
    }
 
-   public async barcodeUploader(payload: string, trackingNumber: string) {
-      const barcodeBuffer = await this.barcodeGenerator(payload);
+   public async barcodeUploader(trackingNumber: string) {
+      const { barcode, buffer } = await this.barcodeGenerator();
 
       const fileName = `booking-barcode/barcode-${trackingNumber}.jpg`;
       const file = bucket.file(fileName);
 
-      await file.save(barcodeBuffer, {
+      await file.save(buffer, {
          metadata: { contentType: 'image/jpg' },
          public: true,
       });
 
-      return `https://storage.googleapis.com/${bucket.name}/${fileName}`;
+      return {
+         barcode,
+         url: `https://storage.googleapis.com/${bucket.name}/${fileName}`,
+      };
    }
 
    public async QRCodeGenerator(payload: string) {
@@ -53,26 +56,30 @@ export class UploaderService {
       return buffer;
    }
 
-   private async barcodeGenerator(payload: string) {
+   private async barcodeGenerator() {
+      const barcode = Math.ceil(Math.random() * 1000000000).toString();
+
       try {
-         const barcodeBuffer = await BwipJs.toBuffer({
+         const buffer = await BwipJs.toBuffer({
             bcid: 'code128',
-            text: payload,
+            text: barcode,
             scale: 3,
             height: 10,
-            width: 10,
-            paddingtop: 5,
+            // width: 20,
+            // paddingtop: 2,
             paddingleft: 5,
             paddingright: 5,
+            paddingbottom: 3,
             includetext: true,
             textxalign: 'center',
+            textsize: 12,
          });
 
-         if (!barcodeBuffer) {
+         if (!buffer) {
             throw new Error('Failed to generate barcode buffer');
          }
 
-         return barcodeBuffer;
+         return { barcode, buffer };
       } catch (err: unknown) {
          const message =
             err instanceof Error ? err.message : 'An unknown error occurred';

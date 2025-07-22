@@ -58,14 +58,13 @@ export class ParcelService {
          newBooking.trackingNumber,
       );
 
-      const barcode = await this.uploaderService.barcodeUploader(
-         newBooking.id,
+      const { barcode, url } = await this.uploaderService.barcodeUploader(
          newBooking.trackingNumber,
       );
 
       await this.prisma.parcel.update({
          where: { id: newBooking.id },
-         data: { trackingQrCode: qrCode, barcode },
+         data: { trackingQrCode: qrCode, barcode, barcodeUrl: url },
       });
 
       const cost =
