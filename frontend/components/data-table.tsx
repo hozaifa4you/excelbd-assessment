@@ -42,6 +42,7 @@ import { z } from 'zod';
 import { Badge } from '@/components/ui/badge';
 import { downloadParcelCsv } from '@/lib/exportReport';
 import { useSession } from '@/hooks/use-session';
+import { Session } from '@/lib/sessions';
 import { Button } from '@/components/ui/button';
 import {
    DropdownMenu,
@@ -112,7 +113,7 @@ export const schema = z.object({
 
 type ParcelData = z.infer<typeof schema>;
 
-const columns: ColumnDef<ParcelData>[] = [
+const createColumns = (session: Session | null): ColumnDef<ParcelData>[] => [
    {
       accessorKey: 'parcelType',
       header: 'Parcel Type',
@@ -404,20 +405,23 @@ const columns: ColumnDef<ParcelData>[] = [
 
          return (
             <div className="flex items-center gap-2">
-               {isVisible && (
-                  <Button
-                     variant="outline"
-                     size="sm"
-                     className="h-8 px-3 text-sm font-medium"
-                     onClick={() => {
-                        // Handle make update functionality
-                        // TODO: Implement make update functionality
-                     }}
-                  >
-                     <IconRefresh className="mr-1 h-3 w-3" />
-                     Make Update
-                  </Button>
-               )}
+               {/* Make Update button - only show for ADMIN and DELIVERY_AGENT */}
+               {isVisible &&
+                  (session?.user?.role === 'ADMIN' ||
+                     session?.user?.role === 'DELIVERY_AGENT') && (
+                     <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-8 px-3 text-sm font-medium"
+                        onClick={() => {
+                           // Handle make update functionality
+                           // TODO: Implement make update functionality
+                        }}
+                     >
+                        <IconRefresh className="mr-1 h-3 w-3" />
+                        Make Update
+                     </Button>
+                  )}
 
                <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -431,46 +435,57 @@ const columns: ColumnDef<ParcelData>[] = [
                      </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-40">
-                     <DropdownMenuItem
-                        onClick={() => {
-                           // Handle edit functionality
-                           // TODO: Implement edit functionality
-                        }}
-                     >
-                        <IconEdit className="mr-2 h-4 w-4" />
-                        Edit
-                     </DropdownMenuItem>
-                     <DropdownMenuItem
-                        onClick={() => {
-                           // Handle cancel functionality
-                           if (
-                              confirm(
-                                 'Are you sure you want to cancel this parcel?',
-                              )
-                           ) {
-                              // TODO: Implement cancel functionality
-                           }
-                        }}
-                     >
-                        <IconX className="mr-2 h-4 w-4" />
-                        Cancel
-                     </DropdownMenuItem>
-                     <DropdownMenuItem
-                        className="text-red-600 focus:bg-red-50 focus:text-red-600 dark:focus:bg-red-950"
-                        onClick={() => {
-                           // Handle delete functionality
-                           if (
-                              confirm(
-                                 'Are you sure you want to delete this parcel? This action cannot be undone.',
-                              )
-                           ) {
-                              // TODO: Implement delete functionality
-                           }
-                        }}
-                     >
-                        <IconTrash className="mr-2 h-4 w-4" />
-                        Delete
-                     </DropdownMenuItem>
+                     {/* Edit button - only show for CUSTOMER */}
+                     {session?.user?.role === 'CUSTOMER' && (
+                        <DropdownMenuItem
+                           onClick={() => {
+                              // Handle edit functionality
+                              // TODO: Implement edit functionality
+                           }}
+                        >
+                           <IconEdit className="mr-2 h-4 w-4" />
+                           Edit
+                        </DropdownMenuItem>
+                     )}
+
+                     {/* Cancel button - show for all roles but not for DELIVERED or CANCELLED parcels */}
+                     {isVisible && (
+                        <DropdownMenuItem
+                           onClick={() => {
+                              // Handle cancel functionality
+                              if (
+                                 confirm(
+                                    'Are you sure you want to cancel this parcel?',
+                                 )
+                              ) {
+                                 // TODO: Implement cancel functionality
+                              }
+                           }}
+                        >
+                           <IconX className="mr-2 h-4 w-4" />
+                           Cancel
+                        </DropdownMenuItem>
+                     )}
+
+                     {/* Delete button - only show for ADMIN */}
+                     {session?.user?.role === 'ADMIN' && (
+                        <DropdownMenuItem
+                           className="text-red-600 focus:bg-red-50 focus:text-red-600 dark:focus:bg-red-950"
+                           onClick={() => {
+                              // Handle delete functionality
+                              if (
+                                 confirm(
+                                    'Are you sure you want to delete this parcel? This action cannot be undone.',
+                                 )
+                              ) {
+                                 // TODO: Implement delete functionality
+                              }
+                           }}
+                        >
+                           <IconTrash className="mr-2 h-4 w-4" />
+                           Delete
+                        </DropdownMenuItem>
+                     )}
                   </DropdownMenuContent>
                </DropdownMenu>
             </div>
@@ -578,7 +593,7 @@ export function DataTable({
 
    const table = useReactTable({
       data,
-      columns,
+      columns: createColumns(session),
       state: {
          sorting,
          columnVisibility,
@@ -747,7 +762,7 @@ export function DataTable({
                         ) : (
                            <TableRow>
                               <TableCell
-                                 colSpan={columns.length}
+                                 colSpan={table.getAllColumns().length}
                                  className="h-24 text-center"
                               >
                                  No results.
