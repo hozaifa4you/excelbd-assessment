@@ -83,15 +83,15 @@ export class ParcelService {
       userId: string,
       page = 1,
       limit = 10,
-      s: TimeFilter,
+      s: TimeFilter = TimeFilter.TODAY,
    ) {
       switch (role) {
          case Role.ADMIN:
-            return this.getAdminBookings(page, limit);
+            return this.getAdminBookings(page, limit, s);
          case Role.CUSTOMER:
-            return this.getUserBookings(userId, page, limit);
+            return this.getUserBookings(userId, page, limit, s);
          case Role.DELIVERY_AGENT:
-            return this.getAgentBookings(userId, page, limit);
+            return this.getAgentBookings(userId, page, limit, s);
          default:
             throw new BadRequestException();
       }
@@ -151,8 +151,17 @@ export class ParcelService {
       }
    }
 
-   private async getAdminBookings(page = 1, limit = 10) {
+   private async getAdminBookings(
+      page = 1,
+      limit = 10,
+      s: TimeFilter = TimeFilter.TODAY,
+   ) {
+      const dateRange = this.getDateRange(s);
+
       const bookings = await this.prisma.parcel.findMany({
+         where: {
+            createdAt: dateRange,
+         },
          skip: (page - 1) * limit,
          take: limit,
          orderBy: { createdAt: 'desc' },
@@ -189,7 +198,11 @@ export class ParcelService {
          },
       });
 
-      const total = await this.prisma.parcel.count();
+      const total = await this.prisma.parcel.count({
+         where: {
+            createdAt: dateRange,
+         },
+      });
 
       return {
          bookings,
@@ -201,9 +214,19 @@ export class ParcelService {
       };
    }
 
-   private async getUserBookings(userId: string, page = 1, limit = 10) {
+   private async getUserBookings(
+      userId: string,
+      page = 1,
+      limit = 10,
+      s: TimeFilter,
+   ) {
+      const dateRange = this.getDateRange(s);
+
       const bookings = await this.prisma.parcel.findMany({
-         where: { creatorId: userId },
+         where: {
+            creatorId: userId,
+            createdAt: dateRange,
+         },
          skip: (page - 1) * limit,
          take: limit,
          orderBy: { createdAt: 'desc' },
@@ -240,7 +263,12 @@ export class ParcelService {
          },
       });
 
-      const total = await this.prisma.parcel.count();
+      const total = await this.prisma.parcel.count({
+         where: {
+            creatorId: userId,
+            createdAt: dateRange,
+         },
+      });
 
       return {
          bookings,
@@ -252,9 +280,19 @@ export class ParcelService {
       };
    }
 
-   private async getAgentBookings(userId: string, page = 1, limit = 10) {
+   private async getAgentBookings(
+      userId: string,
+      page = 1,
+      limit = 10,
+      s: TimeFilter,
+   ) {
+      const dateRange = this.getDateRange(s);
+
       const bookings = await this.prisma.parcel.findMany({
-         where: { deliveryAgentId: userId },
+         where: {
+            deliveryAgentId: userId,
+            createdAt: dateRange,
+         },
          skip: (page - 1) * limit,
          take: limit,
          orderBy: { createdAt: 'desc' },
@@ -291,7 +329,12 @@ export class ParcelService {
          },
       });
 
-      const total = await this.prisma.parcel.count();
+      const total = await this.prisma.parcel.count({
+         where: {
+            deliveryAgentId: userId,
+            createdAt: dateRange,
+         },
+      });
 
       return {
          bookings,
@@ -301,5 +344,58 @@ export class ParcelService {
             pages: Math.ceil(total / limit),
          },
       };
+   }
+
+   private getDateRange(timeFilter: TimeFilter) {
+      const now = new Date();
+      const startOfDay = new Date(
+         now.getFullYear(),
+         now.getMonth(),
+         now.getDate(),
+      );
+      const endOfDay = new Date(startOfDay.getTime() + 24 * 60 * 60 * 1000 - 1);
+
+      switch (timeFilter) {
+         case TimeFilter.TODAY: {
+            return {
+               gte: startOfDay,
+               lte: endOfDay,
+            };
+         }
+
+         case TimeFilter.WEEK: {
+            const startOfWeek = new Date(startOfDay);
+            startOfWeek.setDate(startOfDay.getDate() - 7);
+            return {
+               gte: startOfWeek,
+               lte: endOfDay,
+            };
+         }
+
+         case TimeFilter.MONTH: {
+            const startOfMonth = new Date(startOfDay);
+            startOfMonth.setDate(startOfDay.getDate() - 30);
+            return {
+               gte: startOfMonth,
+               lte: endOfDay,
+            };
+         }
+
+         case TimeFilter.QUARTER: {
+            const startOfQuarter = new Date(startOfDay);
+            startOfQuarter.setDate(startOfDay.getDate() - 90);
+            return {
+               gte: startOfQuarter,
+               lte: endOfDay,
+            };
+         }
+
+         default: {
+            return {
+               gte: startOfDay,
+               lte: endOfDay,
+            };
+         }
+      }
    }
 }

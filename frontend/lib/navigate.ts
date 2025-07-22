@@ -41,7 +41,7 @@ export const dashboardMenuItems: MenuItemType = {
       },
       {
          title: 'Bookings',
-         url: route('dashboard'),
+         url: route('agent.bookings'),
          Icon: IconPackage,
       },
    ],
