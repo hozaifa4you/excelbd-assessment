@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { bucket } from '../config/gcp.config';
 import { toDataURL } from 'qrcode';
+import BwipJs from '@bwip-js/node';
 
 @Injectable()
 export class UploaderService {
@@ -23,6 +24,20 @@ export class UploaderService {
       return qrCodeUrl;
    }
 
+   public async barcodeUploader(payload: string, trackingNumber: string) {
+      const barcodeBuffer = await this.barcodeGenerator(payload);
+
+      const fileName = `booking-barcode/barcode-${trackingNumber}.jpg`;
+      const file = bucket.file(fileName);
+
+      await file.save(barcodeBuffer, {
+         metadata: { contentType: 'image/jpg' },
+         public: true,
+      });
+
+      return `https://storage.googleapis.com/${bucket.name}/${fileName}`;
+   }
+
    public async QRCodeGenerator(payload: string) {
       const base64Code = await toDataURL(payload, {
          width: 400,
@@ -36,5 +51,18 @@ export class UploaderService {
       const base64Data = base64.replace(/^data:image\/\w+;base64,/, '');
       const buffer = Buffer.from(base64Data, 'base64');
       return buffer;
+   }
+
+   private async barcodeGenerator(payload: string) {
+      const barcodeBuffer = await BwipJs.toBuffer({
+         bcid: 'code128',
+         text: payload,
+         scale: 3,
+         height: 10,
+         includetext: true,
+         textxalign: 'center',
+      });
+
+      return barcodeBuffer;
    }
 }

@@ -8,11 +8,11 @@ const client = new PrismaClient();
 const uploadService = new UploaderService();
 
 async function main() {
-   const parcelCount = 500;
+   const parcelCount = 1;
    const agentCount = 50;
-   const parcel = false;
+   const parcel = true;
    const agent = false;
-   const customer = true;
+   const customer = false;
 
    if (parcel) {
       log('Deleting existing parcels...');
@@ -29,7 +29,7 @@ async function main() {
          const paymentStatus = faker.helpers.arrayElement(['PAID', 'COD']);
          const paymentMethod = paymentStatus === 'PAID' ? 'ONLINE' : null;
 
-         await client.parcel.create({
+         const parcel = await client.parcel.create({
             data: {
                creatorId: '687916eb6a5be35de22a11a2',
                deliveryAddress: {
@@ -97,6 +97,16 @@ async function main() {
                deliveryAgentId: '687a1ecf8f2e3894f2dec0f5',
                paymentMethod: paymentMethod,
             },
+         });
+
+         const barcode = await uploadService.barcodeUploader(
+            parcel.id,
+            trackingNumber,
+         );
+
+         await client.parcel.update({
+            where: { id: parcel.id },
+            data: { barcode },
          });
       }
    }
