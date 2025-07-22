@@ -13,7 +13,13 @@ import {
    IconLayoutColumns,
    IconLoader,
    IconReport,
-   IconTransfer,
+   IconTruck,
+   IconCash,
+   IconCreditCard,
+   IconWorld,
+   IconClock,
+   IconBolt,
+   IconRocket,
 } from '@tabler/icons-react';
 import {
    ColumnDef,
@@ -30,7 +36,7 @@ import {
 } from '@tanstack/react-table';
 import { z } from 'zod';
 
-import { Badge, badgeVariants } from '@/components/ui/badge';
+import { Badge } from '@/components/ui/badge';
 import { downloadParcelCsv } from '@/lib/exportReport';
 import { useSession } from '@/hooks/use-session';
 import { Button } from '@/components/ui/button';
@@ -65,12 +71,20 @@ import {
 } from '@/components/ui/tooltip';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
+import { route } from '@/lib/routes';
 
 export const schema = z.object({
    id: z.string(),
    parcelType: z.string(),
    trackingNumber: z.string(),
-   status: z.string(),
+   status: z.enum([
+      'PENDING',
+      'PICKED_UP',
+      'IN_TRANSIT',
+      'DELIVERING',
+      'DELIVERED',
+      'CANCELLED',
+   ]),
    estimatedDelivery: z.string().nullable(),
    recipient: z.object({
       name: z.string(),
@@ -82,6 +96,9 @@ export const schema = z.object({
    }),
    pickupAddress: z.object({ city: z.string() }),
    deliveryAddress: z.object({ city: z.string() }),
+   deliveryType: z.enum(['STANDARD', 'EXPRESS', 'OVERNIGHT', 'SAME_DAY']),
+   paymentStatus: z.enum(['PAID', 'COD']),
+   paymentMethod: z.enum(['CASH', 'CARD', 'ONLINE']).nullable(),
    fees: z.object({
       deliveryFee: z.number().nullable(),
       handlingFee: z.number().nullable(),
@@ -128,33 +145,86 @@ const columns: ColumnDef<ParcelData>[] = [
       cell: ({ row }) => {
          return (
             <Button
+               asChild
                variant="link"
                className="text-foreground w-fit px-0 text-left"
             >
-               {row.original.parcelType}
+               <Link href={route('parcels.details', { id: row.original.id })}>
+                  {row.original.parcelType}
+               </Link>
             </Button>
          );
       },
       enableHiding: false,
    },
    {
-      accessorKey: 'trackingNumber',
-      header: 'Track. Number',
-      cell: ({ row }) => (
-         <div className="w-32">
-            <Link
-               href={`/parcels/tracking?id=${row.original.trackingNumber}`}
-               target="_blank"
-               className={badgeVariants({
-                  class: 'text-muted-foreground px-1.5 font-sans',
-                  variant: 'outline',
-               })}
-            >
-               <IconTransfer className="mr-1" />{' '}
-               {row.original.trackingNumber.substring(0, 6) + '...'}
-            </Link>
-         </div>
-      ),
+      id: 'details',
+      header: 'Details',
+      cell: ({ row }) => {
+         const getDeliveryIcon = (type: string) => {
+            switch (type) {
+               case 'STANDARD':
+                  return <IconTruck className="h-4 w-4 text-blue-600" />;
+               case 'EXPRESS':
+                  return <IconClock className="h-4 w-4 text-orange-600" />;
+               case 'OVERNIGHT':
+                  return <IconBolt className="h-4 w-4 text-purple-600" />;
+               case 'SAME_DAY':
+                  return <IconRocket className="h-4 w-4 text-red-600" />;
+               default:
+                  return <IconTruck className="h-4 w-4 text-gray-600" />;
+            }
+         };
+
+         const getPaymentStatusIcon = (status: string) => {
+            switch (status) {
+               case 'PAID':
+                  return (
+                     <IconCircleCheckFilled className="h-4 w-4 text-green-600" />
+                  );
+               case 'COD':
+                  return <IconCash className="h-4 w-4 text-amber-600" />;
+               default:
+                  return <IconCircleX className="h-4 w-4 text-gray-600" />;
+            }
+         };
+
+         const getPaymentMethodIcon = (method: string | null) => {
+            switch (method) {
+               case 'CASH':
+                  return <IconCash className="h-4 w-4 text-green-600" />;
+               case 'CARD':
+                  return <IconCreditCard className="h-4 w-4 text-blue-600" />;
+               case 'ONLINE':
+                  return <IconWorld className="h-4 w-4 text-purple-600" />;
+               default:
+                  return <IconCash className="h-4 w-4 text-gray-400" />;
+            }
+         };
+
+         return (
+            <div className="space-y-1 text-sm">
+               <div className="flex items-center gap-2">
+                  {getDeliveryIcon(row.original.deliveryType)}
+                  <span className="font-medium capitalize">
+                     {row.original.deliveryType.toLowerCase().replace('_', ' ')}
+                  </span>
+               </div>
+               <div className="flex items-center gap-2">
+                  {getPaymentStatusIcon(row.original.paymentStatus)}
+                  <span className="text-muted-foreground">
+                     {row.original.paymentStatus}
+                  </span>
+               </div>
+               <div className="flex items-center gap-2">
+                  {getPaymentMethodIcon(row.original.paymentMethod)}
+                  <span className="text-muted-foreground">
+                     {row.original.paymentMethod || 'COD'}
+                  </span>
+               </div>
+            </div>
+         );
+      },
    },
    {
       id: 'route',
@@ -391,11 +461,9 @@ export function DataTable({
    );
    const [sorting, setSorting] = React.useState<SortingState>([]);
    const [isExporting, setIsExporting] = React.useState(false);
-
    const [selectedTimeFilter, setSelectedTimeFilter] = React.useState(
       () => searchParams.get('s') || 'today',
    );
-
    const [pagination, setPagination] = React.useState({
       pageIndex: paginationInfo.page - 1,
       pageSize: Number(searchParams.get('limit')) || 10,

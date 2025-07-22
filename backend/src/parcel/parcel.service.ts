@@ -89,7 +89,7 @@ export class ParcelService {
          case Role.ADMIN:
             return this.getAdminBookings(page, limit, s);
          case Role.CUSTOMER:
-            return this.getUserBookings(userId, page, limit, s);
+            return this.getCustomerBookings(userId, page, limit, s);
          case Role.DELIVERY_AGENT:
             return this.getAgentBookings(userId, page, limit, s);
          default:
@@ -172,6 +172,9 @@ export class ParcelService {
             status: true,
             estimatedDelivery: true,
             createdAt: true,
+            deliveryType: true,
+            paymentStatus: true,
+            paymentMethod: true,
             pickupAddress: {
                select: {
                   city: true,
@@ -214,7 +217,7 @@ export class ParcelService {
       };
    }
 
-   private async getUserBookings(
+   private async getCustomerBookings(
       userId: string,
       page = 1,
       limit = 10,
@@ -237,6 +240,9 @@ export class ParcelService {
             status: true,
             estimatedDelivery: true,
             createdAt: true,
+            deliveryType: true,
+            paymentStatus: true,
+            paymentMethod: true,
             pickupAddress: {
                select: {
                   city: true,
@@ -303,6 +309,9 @@ export class ParcelService {
             status: true,
             estimatedDelivery: true,
             createdAt: true,
+            deliveryType: true,
+            paymentStatus: true,
+            paymentMethod: true,
             pickupAddress: {
                select: {
                   city: true,
