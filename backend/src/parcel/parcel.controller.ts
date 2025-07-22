@@ -39,6 +39,7 @@ export class ParcelController {
          user.id,
          pagination.page,
          pagination.limit,
+         pagination.s,
       );
    }
 

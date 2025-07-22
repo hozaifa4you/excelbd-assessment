@@ -4,15 +4,17 @@ import { authFetch } from '@/lib/authFetch';
 const UserBookingsPage = async ({
    searchParams,
 }: {
-   searchParams: Promise<{ page?: string; limit?: string }>;
+   searchParams: Promise<{ page?: string; limit?: string; s?: string }>;
 }) => {
-   const { page, limit } = await searchParams;
+   const { page, limit, s } = await searchParams;
 
    const pageNumber = Math.max(1, parseInt(page || '1', 10) || 1);
    const limitNumber = Math.max(1, parseInt(limit || '10', 10) || 10);
 
    const response = await authFetch(
-      `/parcels?page=${pageNumber}&limit=${limitNumber}`,
+      `/parcels?page=${pageNumber}&limit=${limitNumber}&s=${encodeURIComponent(
+         s ?? 'today',
+      )}`,
    );
    const data = await response.json();
 

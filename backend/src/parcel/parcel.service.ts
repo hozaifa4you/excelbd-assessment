@@ -7,6 +7,7 @@ import { BookingParcelDto } from './dto/booking-parcel.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { DeliveryType, PaymentMethod, Role } from 'generated/prisma';
 import { UploaderService } from 'src/uploader/uploader.service';
+import { TimeFilter } from 'src/pipes/pagination.pipe';
 
 @Injectable()
 export class ParcelService {
@@ -77,7 +78,13 @@ export class ParcelService {
       };
    }
 
-   public async getBookings(role: Role, userId: string, page = 1, limit = 10) {
+   public async getBookings(
+      role: Role,
+      userId: string,
+      page = 1,
+      limit = 10,
+      s: TimeFilter,
+   ) {
       switch (role) {
          case Role.ADMIN:
             return this.getAdminBookings(page, limit);

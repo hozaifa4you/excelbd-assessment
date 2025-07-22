@@ -77,7 +77,6 @@ import {
    TableHeader,
    TableRow,
 } from '@/components/ui/table';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
    Tooltip,
    TooltipContent,
@@ -248,7 +247,6 @@ const columns: ColumnDef<ParcelData>[] = [
          const diffTime = date.getTime() - now.getTime();
          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-         // Format the date
          const formattedDate = date.toLocaleDateString('en-US', {
             month: 'short',
             day: 'numeric',
@@ -262,7 +260,6 @@ const columns: ColumnDef<ParcelData>[] = [
             hour12: true,
          });
 
-         // Determine status and color
          let statusColor = 'bg-green-500';
          let statusText = '';
          let textColor = 'text-green-700 dark:text-green-400';
@@ -406,13 +403,15 @@ export function DataTable({
    );
    const [sorting, setSorting] = React.useState<SortingState>([]);
 
-   // Initialize pagination state from paginationInfo
+   const [selectedTimeFilter, setSelectedTimeFilter] = React.useState(
+      () => searchParams.get('s') || 'today',
+   );
+
    const [pagination, setPagination] = React.useState({
-      pageIndex: paginationInfo.page - 1, // Convert to 0-based index
+      pageIndex: paginationInfo.page - 1,
       pageSize: Number(searchParams.get('limit')) || 10,
    });
 
-   // Sync pagination state when paginationInfo changes
    React.useEffect(() => {
       setPagination((prev) => ({
          ...prev,
@@ -420,12 +419,10 @@ export function DataTable({
       }));
    }, [paginationInfo.page]);
 
-   // Update data when initialData changes
    React.useEffect(() => {
       setData(initialData);
    }, [initialData]);
 
-   // Update URL parameters when pagination changes
    const updateURL = React.useCallback(
       (page: number, limit: number) => {
          const params = new URLSearchParams(searchParams.toString());
@@ -436,29 +433,38 @@ export function DataTable({
       [router, searchParams],
    );
 
-   // Handle page size change
    const handlePageSizeChange = React.useCallback(
       (newPageSize: number) => {
-         const newPageIndex = 0; // Reset to first page when changing page size
+         const newPageIndex = 0;
          setPagination({
             pageIndex: newPageIndex,
             pageSize: newPageSize,
          });
-         updateURL(1, newPageSize); // Convert back to 1-based for URL
+         updateURL(1, newPageSize);
       },
       [updateURL],
    );
 
-   // Handle page navigation
    const handlePageChange = React.useCallback(
       (newPageIndex: number) => {
          setPagination((prev) => ({
             ...prev,
             pageIndex: newPageIndex,
          }));
-         updateURL(newPageIndex + 1, pagination.pageSize); // Convert to 1-based for URL
+         updateURL(newPageIndex + 1, pagination.pageSize);
       },
       [updateURL, pagination.pageSize],
+   );
+
+   const handleTimeFilterChange = React.useCallback(
+      (filter: string) => {
+         setSelectedTimeFilter(filter);
+         const params = new URLSearchParams(searchParams.toString());
+         params.set('s', filter);
+         params.set('page', '1');
+         router.push(`?${params.toString()}`);
+      },
+      [router, searchParams],
    );
 
    const table = useReactTable({
@@ -483,51 +489,67 @@ export function DataTable({
       getSortedRowModel: getSortedRowModel(),
       getFacetedRowModel: getFacetedRowModel(),
       getFacetedUniqueValues: getFacetedUniqueValues(),
-      // Disable built-in pagination since we're handling it server-side
       manualPagination: true,
       pageCount: paginationInfo.pages,
    });
 
    return (
-      <Tabs
-         defaultValue="outline"
-         className="w-full flex-col justify-start gap-6"
-      >
-         <div className="flex items-center justify-between px-4 lg:px-6">
-            <Label htmlFor="view-selector" className="sr-only">
-               View
-            </Label>
-            <Select defaultValue="outline">
-               <SelectTrigger
-                  className="flex w-fit @4xl/main:hidden"
+      <div className="w-full flex-col justify-start gap-6">
+         <div className="mb-4 flex items-center justify-between px-4 lg:px-6">
+            <div className="border-input bg-background inline-flex items-center rounded-lg border p-1">
+               <Button
+                  variant="ghost"
                   size="sm"
-                  id="view-selector"
+                  className={cn(
+                     'rounded-md px-3 py-1.5 text-sm font-medium transition-all',
+                     selectedTimeFilter === 'today'
+                        ? 'bg-primary text-primary-foreground shadow-sm'
+                        : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                  )}
+                  onClick={() => handleTimeFilterChange('today')}
                >
-                  <SelectValue placeholder="Select a view" />
-               </SelectTrigger>
-               <SelectContent>
-                  <SelectItem value="outline">Outline</SelectItem>
-                  <SelectItem value="past-performance">
-                     Past Performance
-                  </SelectItem>
-                  <SelectItem value="key-personnel">Key Personnel</SelectItem>
-                  <SelectItem value="focus-documents">
-                     Focus Documents
-                  </SelectItem>
-               </SelectContent>
-            </Select>
-            <TabsList className="**:data-[slot=badge]:bg-muted-foreground/30 hidden **:data-[slot=badge]:size-5 **:data-[slot=badge]:rounded-full **:data-[slot=badge]:px-1 @4xl/main:flex">
-               <TabsTrigger value="outline">Outline</TabsTrigger>
-               <TabsTrigger value="past-performance">
-                  Past Performance <Badge variant="secondary">3</Badge>
-               </TabsTrigger>
-               <TabsTrigger value="key-personnel">
-                  Key Personnel <Badge variant="secondary">2</Badge>
-               </TabsTrigger>
-               <TabsTrigger value="focus-documents">
-                  Focus Documents
-               </TabsTrigger>
-            </TabsList>
+                  Today
+               </Button>
+               <Button
+                  variant="ghost"
+                  size="sm"
+                  className={cn(
+                     'rounded-md px-3 py-1.5 text-sm font-medium transition-all',
+                     selectedTimeFilter === 'week'
+                        ? 'bg-primary text-primary-foreground shadow-sm'
+                        : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                  )}
+                  onClick={() => handleTimeFilterChange('week')}
+               >
+                  Last Week
+               </Button>
+               <Button
+                  variant="ghost"
+                  size="sm"
+                  className={cn(
+                     'rounded-md px-3 py-1.5 text-sm font-medium transition-all',
+                     selectedTimeFilter === 'month'
+                        ? 'bg-primary text-primary-foreground shadow-sm'
+                        : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                  )}
+                  onClick={() => handleTimeFilterChange('month')}
+               >
+                  Last Month
+               </Button>
+               <Button
+                  variant="ghost"
+                  size="sm"
+                  className={cn(
+                     'rounded-md px-3 py-1.5 text-sm font-medium transition-all',
+                     selectedTimeFilter === 'quarter'
+                        ? 'bg-primary text-primary-foreground shadow-sm'
+                        : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                  )}
+                  onClick={() => handleTimeFilterChange('quarter')}
+               >
+                  3 Months
+               </Button>
+            </div>
             <div className="flex items-center gap-2">
                <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -573,11 +595,7 @@ export function DataTable({
                </Link>
             </div>
          </div>
-         <TabsContent
-            value="outline"
-            className="scrollbar-thin relative flex flex-col gap-4 overflow-auto px-4 lg:px-6"
-         >
-            {' '}
+         <div className="scrollbar-thin relative flex flex-col gap-4 overflow-auto px-4 lg:px-6">
             <div className="overflow-hidden rounded-lg border">
                <div className="scrollbar-thin max-h-[600px] overflow-auto">
                   <Table>
@@ -721,26 +739,8 @@ export function DataTable({
                   </div>
                </div>
             </div>
-         </TabsContent>
-         <TabsContent
-            value="past-performance"
-            className="flex flex-col px-4 lg:px-6"
-         >
-            <div className="aspect-video w-full flex-1 rounded-lg border border-dashed"></div>
-         </TabsContent>
-         <TabsContent
-            value="key-personnel"
-            className="flex flex-col px-4 lg:px-6"
-         >
-            <div className="aspect-video w-full flex-1 rounded-lg border border-dashed"></div>
-         </TabsContent>
-         <TabsContent
-            value="focus-documents"
-            className="flex flex-col px-4 lg:px-6"
-         >
-            <div className="aspect-video w-full flex-1 rounded-lg border border-dashed"></div>
-         </TabsContent>
-      </Tabs>
+         </div>
+      </div>
    );
 }
 
