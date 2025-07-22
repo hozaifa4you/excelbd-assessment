@@ -42,6 +42,7 @@ export class AnalyticsController {
 
       const csvStream = await this.analyticsService.generateBookingReportCsv(
          user.role,
+         user.id,
       );
 
       csvStream.pipe(res);

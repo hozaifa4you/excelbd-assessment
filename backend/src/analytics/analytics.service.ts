@@ -30,16 +30,16 @@ export class AnalyticsService {
       }
    }
 
-   public async generateBookingReportCsv(role: Role) {
+   public async generateBookingReportCsv(role: Role, userId: string) {
       switch (role) {
          case 'ADMIN':
             return this.getBookingReportAdmin();
          case 'DELIVERY_AGENT':
-            return this.getBookingReportAgent();
+            return this.getBookingReportAgent(userId);
          case 'CUSTOMER':
-            return this.getBookingReportCustomer();
+            return this.getBookingReportCustomer(userId);
          default:
-            return this.getBookingReportCustomer();
+            return this.getBookingReportCustomer(userId);
       }
    }
 
@@ -290,8 +290,9 @@ export class AnalyticsService {
       return csvStream;
    }
 
-   private async getBookingReportAgent() {
+   private async getBookingReportAgent(userId: string) {
       const parcels = await this.prisma.parcel.findMany({
+         where: { deliveryAgentId: userId },
          select: {
             trackingNumber: true,
             status: true,
@@ -346,8 +347,9 @@ export class AnalyticsService {
       return csvStream;
    }
 
-   private async getBookingReportCustomer() {
+   private async getBookingReportCustomer(userId: string) {
       const parcels = await this.prisma.parcel.findMany({
+         where: { creatorId: userId },
          select: {
             trackingNumber: true,
             status: true,
