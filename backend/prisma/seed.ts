@@ -10,7 +10,7 @@ const uploadService = new UploaderService();
 async function main() {
    const parcelCount = 50;
    const agentCount = 50;
-   const parcel = true;
+   const parcel = false;
    const agent = false;
    const customer = false;
 
