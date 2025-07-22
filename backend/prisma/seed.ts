@@ -8,9 +8,9 @@ const client = new PrismaClient();
 const uploadService = new UploaderService();
 
 async function main() {
-   const parcelCount = 50;
+   const parcelCount = 500;
    const agentCount = 50;
-   const parcel = false;
+   const parcel = true;
    const agent = false;
    const customer = false;
 

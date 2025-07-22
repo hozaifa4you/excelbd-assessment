@@ -39,7 +39,6 @@ import {
    VisibilityState,
 } from '@tanstack/react-table';
 import { z } from 'zod';
-
 import { Badge } from '@/components/ui/badge';
 import { downloadParcelCsv } from '@/lib/exportReport';
 import { useSession } from '@/hooks/use-session';
@@ -398,77 +397,85 @@ const columns: ColumnDef<ParcelData>[] = [
    {
       id: 'actions',
       header: 'Actions',
-      cell: ({ row }) => (
-         <div className="flex items-center gap-2">
-            <Button
-               variant="outline"
-               size="sm"
-               className="h-8 px-3 text-sm font-medium"
-               onClick={() => {
-                  // Handle make update functionality
-                  // TODO: Implement make update functionality
-               }}
-            >
-               <IconRefresh className="mr-1 h-3 w-3" />
-               Make Update
-            </Button>
+      cell: ({ row }) => {
+         const isVisible =
+            row.original.status !== 'CANCELLED' &&
+            row.original.status !== 'DELIVERED';
 
-            <DropdownMenu>
-               <DropdownMenuTrigger asChild>
+         return (
+            <div className="flex items-center gap-2">
+               {isVisible && (
                   <Button
-                     variant="ghost"
+                     variant="outline"
                      size="sm"
-                     className="text-muted-foreground data-[state=open]:bg-muted h-8 w-8 p-0"
+                     className="h-8 px-3 text-sm font-medium"
+                     onClick={() => {
+                        // Handle make update functionality
+                        // TODO: Implement make update functionality
+                     }}
                   >
-                     <IconDotsVertical className="h-4 w-4" />
-                     <span className="sr-only">Open menu</span>
+                     <IconRefresh className="mr-1 h-3 w-3" />
+                     Make Update
                   </Button>
-               </DropdownMenuTrigger>
-               <DropdownMenuContent align="end" className="w-40">
-                  <DropdownMenuItem
-                     onClick={() => {
-                        // Handle edit functionality
-                        // TODO: Implement edit functionality
-                     }}
-                  >
-                     <IconEdit className="mr-2 h-4 w-4" />
-                     Edit
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                     onClick={() => {
-                        // Handle cancel functionality
-                        if (
-                           confirm(
-                              'Are you sure you want to cancel this parcel?',
-                           )
-                        ) {
-                           // TODO: Implement cancel functionality
-                        }
-                     }}
-                  >
-                     <IconX className="mr-2 h-4 w-4" />
-                     Cancel
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                     className="text-red-600 focus:bg-red-50 focus:text-red-600 dark:focus:bg-red-950"
-                     onClick={() => {
-                        // Handle delete functionality
-                        if (
-                           confirm(
-                              'Are you sure you want to delete this parcel? This action cannot be undone.',
-                           )
-                        ) {
-                           // TODO: Implement delete functionality
-                        }
-                     }}
-                  >
-                     <IconTrash className="mr-2 h-4 w-4" />
-                     Delete
-                  </DropdownMenuItem>
-               </DropdownMenuContent>
-            </DropdownMenu>
-         </div>
-      ),
+               )}
+
+               <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                     <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-muted-foreground data-[state=open]:bg-muted h-8 w-8 p-0"
+                     >
+                        <IconDotsVertical className="h-4 w-4" />
+                        <span className="sr-only">Open menu</span>
+                     </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-40">
+                     <DropdownMenuItem
+                        onClick={() => {
+                           // Handle edit functionality
+                           // TODO: Implement edit functionality
+                        }}
+                     >
+                        <IconEdit className="mr-2 h-4 w-4" />
+                        Edit
+                     </DropdownMenuItem>
+                     <DropdownMenuItem
+                        onClick={() => {
+                           // Handle cancel functionality
+                           if (
+                              confirm(
+                                 'Are you sure you want to cancel this parcel?',
+                              )
+                           ) {
+                              // TODO: Implement cancel functionality
+                           }
+                        }}
+                     >
+                        <IconX className="mr-2 h-4 w-4" />
+                        Cancel
+                     </DropdownMenuItem>
+                     <DropdownMenuItem
+                        className="text-red-600 focus:bg-red-50 focus:text-red-600 dark:focus:bg-red-950"
+                        onClick={() => {
+                           // Handle delete functionality
+                           if (
+                              confirm(
+                                 'Are you sure you want to delete this parcel? This action cannot be undone.',
+                              )
+                           ) {
+                              // TODO: Implement delete functionality
+                           }
+                        }}
+                     >
+                        <IconTrash className="mr-2 h-4 w-4" />
+                        Delete
+                     </DropdownMenuItem>
+                  </DropdownMenuContent>
+               </DropdownMenu>
+            </div>
+         );
+      },
    },
 ];
 
