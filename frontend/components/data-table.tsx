@@ -19,9 +19,11 @@ import {
    IconClock,
    IconBolt,
    IconRocket,
-   IconEye,
    IconTrash,
    IconEdit,
+   IconDotsVertical,
+   IconX,
+   IconRefresh,
 } from '@tabler/icons-react';
 import {
    ColumnDef,
@@ -47,6 +49,7 @@ import {
    DropdownMenu,
    DropdownMenuCheckboxItem,
    DropdownMenuContent,
+   DropdownMenuItem,
    DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Label } from '@/components/ui/label';
@@ -425,72 +428,74 @@ const columns: ColumnDef<ParcelData>[] = [
       id: 'actions',
       header: 'Actions',
       cell: ({ row }) => (
-         <div className="flex items-center gap-1">
-            <Tooltip>
-               <TooltipTrigger asChild>
+         <div className="flex items-center gap-2">
+            <Button
+               variant="outline"
+               size="sm"
+               className="h-8 px-3 text-sm font-medium"
+               onClick={() => {
+                  // Handle make update functionality
+                  // TODO: Implement make update functionality
+               }}
+            >
+               <IconRefresh className="mr-1 h-3 w-3" />
+               Make Update
+            </Button>
+
+            <DropdownMenu>
+               <DropdownMenuTrigger asChild>
                   <Button
                      variant="ghost"
                      size="sm"
-                     className="h-8 w-8 p-0 text-blue-600 hover:bg-blue-50 hover:text-blue-700 dark:text-blue-400 dark:hover:bg-blue-950 dark:hover:text-blue-300"
+                     className="text-muted-foreground data-[state=open]:bg-muted h-8 w-8 p-0"
+                  >
+                     <IconDotsVertical className="h-4 w-4" />
+                     <span className="sr-only">Open menu</span>
+                  </Button>
+               </DropdownMenuTrigger>
+               <DropdownMenuContent align="end" className="w-40">
+                  <DropdownMenuItem
                      onClick={() => {
-                        // Handle action/edit functionality
+                        // Handle edit functionality
                         // TODO: Implement edit functionality
                      }}
                   >
-                     <IconEdit className="h-4 w-4" />
-                     <span>Edit parcel</span>
-                  </Button>
-               </TooltipTrigger>
-               <TooltipContent>
-                  <p>Edit</p>
-               </TooltipContent>
-            </Tooltip>
-
-            <Tooltip>
-               <TooltipTrigger asChild>
-                  <Button
-                     variant="ghost"
-                     size="sm"
-                     className="h-8 w-8 p-0 text-green-600 hover:bg-green-50 hover:text-green-700 dark:text-green-400 dark:hover:bg-green-950 dark:hover:text-green-300"
+                     <IconEdit className="mr-2 h-4 w-4" />
+                     Edit
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
                      onClick={() => {
-                        // Handle tracking functionality
-                        // TODO: Implement tracking functionality
+                        // Handle cancel functionality
+                        if (
+                           confirm(
+                              'Are you sure you want to cancel this parcel?',
+                           )
+                        ) {
+                           // TODO: Implement cancel functionality
+                        }
                      }}
                   >
-                     <IconEye className="h-4 w-4" />
-                     <span className="sr-only">Track parcel</span>
-                  </Button>
-               </TooltipTrigger>
-               <TooltipContent>
-                  <p>Track</p>
-               </TooltipContent>
-            </Tooltip>
-
-            <Tooltip>
-               <TooltipTrigger asChild>
-                  <Button
-                     variant="ghost"
-                     size="sm"
-                     className="h-8 w-8 p-0 text-red-600 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-950 dark:hover:text-red-300"
+                     <IconX className="mr-2 h-4 w-4" />
+                     Cancel
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                     className="text-red-600 focus:bg-red-50 focus:text-red-600 dark:focus:bg-red-950"
                      onClick={() => {
                         // Handle delete functionality
                         if (
                            confirm(
-                              'Are you sure you want to delete this parcel?',
+                              'Are you sure you want to delete this parcel? This action cannot be undone.',
                            )
                         ) {
                            // TODO: Implement delete functionality
                         }
                      }}
                   >
-                     <IconTrash className="h-4 w-4" />
-                     <span className="sr-only">Delete parcel</span>
-                  </Button>
-               </TooltipTrigger>
-               <TooltipContent>
-                  <p>Delete</p>
-               </TooltipContent>
-            </Tooltip>
+                     <IconTrash className="mr-2 h-4 w-4" />
+                     Delete
+                  </DropdownMenuItem>
+               </DropdownMenuContent>
+            </DropdownMenu>
          </div>
       ),
    },
