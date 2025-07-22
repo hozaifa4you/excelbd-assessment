@@ -5,7 +5,12 @@ import {
 } from '@nestjs/common';
 import { BookingParcelDto } from './dto/booking-parcel.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { DeliveryType, PaymentMethod, Role } from 'generated/prisma';
+import {
+   DeliveryType,
+   ParcelStatus,
+   PaymentMethod,
+   Role,
+} from 'generated/prisma';
 import { UploaderService } from 'src/uploader/uploader.service';
 import { TimeFilter } from 'src/pipes/pagination.pipe';
 
@@ -136,6 +141,7 @@ export class ParcelService {
       const parcel = await this.prisma.parcel.findFirst({
          where: { barcode, deliveryAgentId: userId },
          select: {
+            id: true,
             pickupAddress: true,
             sender: true,
             recipient: true,
@@ -158,6 +164,24 @@ export class ParcelService {
       }
 
       return parcel;
+   }
+
+   public async deliveryUpdate(parcelId: string, target: ParcelStatus) {
+      const booking = await this.prisma.parcel.findUnique({
+         where: { id: parcelId },
+      });
+      if (!booking) {
+         throw new NotFoundException(`Parcel with ID ${parcelId} not found`);
+      }
+
+      await this.prisma.parcel.update({
+         where: { id: parcelId },
+         data: {
+            status: target,
+         },
+      });
+
+      return { success: true };
    }
 
    private trackingNumberGenerator() {

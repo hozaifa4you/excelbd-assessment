@@ -24,16 +24,20 @@ import {
    CheckCircle,
    X,
    Download,
-   Printer as Print,
-   Share2,
+   ArrowLeft,
+   Loader,
 } from 'lucide-react';
 import { Address, DeliveryType, Person, Status } from '@/types/parcel';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { route } from '@/lib/routes';
 import { Separator } from '../ui/separator';
+import { useSession } from '@/hooks/use-session';
+import { appEnv } from '@/config/env.config';
+import { toast } from 'sonner';
 
 export interface ParcelData {
+   id: string;
    deliveryAddress: Address;
    pickupAddress: Address;
    recipient: Person;
@@ -70,10 +74,38 @@ export default function ParcelBookingDetails({
    data,
 }: ParcelBookingDetailsProps) {
    const [isSubmitting, setIsSubmitting] = useState(false);
+   const [statue, setStatue] = useState<Status>(data.status);
    const router = useRouter();
+   const { session } = useSession();
 
-   const handleSubmit = async () => {
+   const handleSubmit = async (target: string) => {
       setIsSubmitting(true);
+
+      const response = await fetch(
+         `${appEnv.NEXT_PUBLIC_API_URL}/api/parcels/${data.id}/delivery-update?target=${target}`,
+         {
+            method: 'PUT',
+            headers: {
+               'Content-Type': 'application/json',
+               Authorization: `Bearer ${session?.accessToken}`,
+            },
+         },
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+         toast.error('Delivery Update', {
+            description: result.message ?? 'Failed to update delivery',
+         });
+         setIsSubmitting(false);
+         return;
+      }
+      setIsSubmitting(false);
+      toast.success('Delivery Updated Successfully', {
+         description: `Parcel status updated to ${target}`,
+      });
+      router.push(route('parcels.options'));
    };
 
    const handleCancel = () => {
@@ -89,7 +121,7 @@ export default function ParcelBookingDetails({
          {/* Header */}
          <div className="bg-card border-b">
             <div className="container mx-auto px-4 py-4 lg:py-6">
-               <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+               <div className="flex justify-between gap-4">
                   <div className="flex items-center gap-3 lg:gap-4">
                      <div className="bg-primary/10 rounded-xl p-3">
                         <Package className="text-primary h-6 w-6 lg:h-8 lg:w-8" />
@@ -104,13 +136,11 @@ export default function ParcelBookingDetails({
                      </div>
                   </div>
                   <div className="flex gap-2 lg:gap-3">
-                     <Button variant="outline" size="sm">
-                        <Print className="mr-2 h-4 w-4" />
-                        <span className="hidden sm:inline">Print</span>
-                     </Button>
-                     <Button variant="outline" size="sm">
-                        <Share2 className="mr-2 h-4 w-4" />
-                        <span className="hidden sm:inline">Share</span>
+                     <Button variant="outline" size="sm" asChild>
+                        <Link href={route('parcels.options')}>
+                           <ArrowLeft className="mr-2 h-4 w-4" />
+                           <span className="hidden sm:inline">Back</span>
+                        </Link>
                      </Button>
                   </div>
                </div>
@@ -156,7 +186,12 @@ export default function ParcelBookingDetails({
                               Available Options
                            </label>
                            <div className="mt-2 flex items-center gap-2">
-                              <Select defaultValue={data.status}>
+                              <Select
+                                 defaultValue={data.status}
+                                 onValueChange={(value) =>
+                                    setStatue(value as Status)
+                                 }
+                              >
                                  <SelectTrigger className="w-[300px]">
                                     <SelectValue placeholder="Select a fruit" />
                                  </SelectTrigger>
@@ -187,7 +222,15 @@ export default function ParcelBookingDetails({
                                  </SelectContent>
                               </Select>
 
-                              <Button>Save</Button>
+                              <Button
+                                 disabled={isSubmitting}
+                                 onClick={() => handleSubmit(statue)}
+                              >
+                                 {isSubmitting && (
+                                    <Loader className="mr-2 animate-spin" />
+                                 )}
+                                 Save
+                              </Button>
                            </div>
                         </div>
                      </CardContent>
@@ -411,7 +454,7 @@ export default function ParcelBookingDetails({
                   <Card className="animate-fade-in-up">
                      <CardContent className="space-y-3 p-6">
                         <Button
-                           onClick={handleSubmit}
+                           onClick={() => handleSubmit('CANCELLED')}
                            disabled={isSubmitting}
                            className="w-full"
                            size="lg"

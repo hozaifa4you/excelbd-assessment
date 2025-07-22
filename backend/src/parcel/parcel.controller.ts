@@ -6,6 +6,7 @@ import {
    HttpStatus,
    Param,
    Post,
+   Put,
    Query,
    UseGuards,
 } from '@nestjs/common';
@@ -16,10 +17,11 @@ import { JwtGuard } from 'src/auth/guards/jwt.guard';
 import { BookingParcelDto } from './dto/booking-parcel.dto';
 import { AuthUser as DAuthUser } from 'src/auth/decorators/auth-user.decorator';
 import { AuthUser } from 'src/auth/types/auth-user';
-import { Role } from 'generated/prisma';
+import { ParcelStatus, Role } from 'generated/prisma';
 import { PaginationPipe } from '../pipes/pagination.pipe';
 import { AccessGuard } from 'src/auth/guards/access.guard';
 import { MongoIdValidationPipe } from './pipes/mongo-id-validation.pipe';
+import { DeliveryAccessGuard } from 'src/auth/guards/deliery-access.guard';
 
 @Controller('parcels')
 export class ParcelController {
@@ -75,5 +77,18 @@ export class ParcelController {
       @Param('parcelId', MongoIdValidationPipe) parcelId: string,
    ) {
       return this.parcelService.bookingDetails(parcelId);
+   }
+
+   @HttpCode(HttpStatus.OK)
+   @Roles(Role.DELIVERY_AGENT)
+   @UseGuards(DeliveryAccessGuard)
+   @UseGuards(RolesGuard)
+   @UseGuards(JwtGuard)
+   @Put(':parcelId/delivery-update')
+   async updateParcelOptions(
+      @Param('parcelId', MongoIdValidationPipe) parcelId: string,
+      @Query('target') target: ParcelStatus,
+   ) {
+      return this.parcelService.deliveryUpdate(parcelId, target);
    }
 }
