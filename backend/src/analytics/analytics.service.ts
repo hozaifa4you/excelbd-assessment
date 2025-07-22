@@ -2,6 +2,8 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { Role } from 'generated/prisma';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { format, subMonths } from 'date-fns';
+import { format as csvFormat } from '@fast-csv/format';
+import Stream from 'stream';
 
 @Injectable()
 export class AnalyticsService {
@@ -25,6 +27,19 @@ export class AnalyticsService {
          }
          default:
             throw new BadRequestException();
+      }
+   }
+
+   public async generateBookingReportCsv(role: Role) {
+      switch (role) {
+         case 'ADMIN':
+            return this.getBookingReportAdmin();
+         case 'DELIVERY_AGENT':
+            return this.getBookingReportAgent();
+         case 'CUSTOMER':
+            return this.getBookingReportCustomer();
+         default:
+            return this.getBookingReportCustomer();
       }
    }
 
@@ -217,5 +232,173 @@ export class AnalyticsService {
          cancel: { canceled, canceledGrowth },
          pending,
       };
+   }
+
+   private async getBookingReportAdmin(): Promise<Stream> {
+      const parcels = await this.prisma.parcel.findMany({
+         select: {
+            trackingNumber: true,
+            status: true,
+            parcelType: true,
+            weight: true,
+            createdAt: true,
+            paymentMethod: true,
+            paymentStatus: true,
+            creator: { select: { lastName: true, firstName: true } },
+            deliveryAgent: {
+               select: { lastName: true, firstName: true, phone: true },
+            },
+            deliveryType: true,
+            deliveryAddress: {
+               select: { city: true },
+            },
+            pickupAddress: {
+               select: { city: true },
+            },
+            estimatedDelivery: true,
+            fees: true,
+            recipient: { select: { name: true, phone: true } },
+            sender: { select: { name: true, phone: true } },
+         },
+      });
+
+      const plainParcels = parcels.map((parcel) => ({
+         ...parcel.fees,
+         trackingNumber: parcel.trackingNumber,
+         status: parcel.status,
+         parcelType: parcel.parcelType,
+         weight: parcel.weight,
+         deliveryType: parcel.deliveryType,
+         estimatedDelivery: parcel.estimatedDelivery,
+         deliveryAgentName: parcel.creator
+            ? `${parcel.creator.firstName ?? ''} ${parcel.creator.lastName ?? ''}`.trim()
+            : '',
+         deliveryAgentPhone: parcel.deliveryAgent?.phone ?? '',
+         deliveryCity: parcel.deliveryAddress?.city ?? '',
+         pickupCity: parcel.pickupAddress?.city ?? '',
+         recipientName: parcel.recipient?.name ?? '',
+         recipientPhone: parcel.recipient?.phone ?? '',
+         senderName: parcel.sender?.name ?? '',
+         senderPhone: parcel.sender?.phone ?? '',
+         createdAt: parcel.createdAt,
+      }));
+
+      const csvStream = csvFormat({ headers: true });
+
+      csvStream.write(plainParcels);
+      csvStream.end();
+      return csvStream;
+   }
+
+   private async getBookingReportAgent() {
+      const parcels = await this.prisma.parcel.findMany({
+         select: {
+            trackingNumber: true,
+            status: true,
+            parcelType: true,
+            weight: true,
+            createdAt: true,
+            paymentMethod: true,
+            paymentStatus: true,
+            creator: { select: { lastName: true, firstName: true } },
+            deliveryAgent: {
+               select: { lastName: true, firstName: true, phone: true },
+            },
+            deliveryType: true,
+            deliveryAddress: {
+               select: { city: true },
+            },
+            pickupAddress: {
+               select: { city: true },
+            },
+            estimatedDelivery: true,
+            fees: true,
+            recipient: { select: { name: true, phone: true } },
+            sender: { select: { name: true, phone: true } },
+         },
+      });
+
+      const plainParcels = parcels.map((parcel) => ({
+         ...parcel.fees,
+         trackingNumber: parcel.trackingNumber,
+         status: parcel.status,
+         parcelType: parcel.parcelType,
+         weight: parcel.weight,
+         deliveryType: parcel.deliveryType,
+         estimatedDelivery: parcel.estimatedDelivery,
+         deliveryAgentName: parcel.creator
+            ? `${parcel.creator.firstName ?? ''} ${parcel.creator.lastName ?? ''}`.trim()
+            : '',
+         deliveryAgentPhone: parcel.deliveryAgent?.phone ?? '',
+         deliveryCity: parcel.deliveryAddress?.city ?? '',
+         pickupCity: parcel.pickupAddress?.city ?? '',
+         recipientName: parcel.recipient?.name ?? '',
+         recipientPhone: parcel.recipient?.phone ?? '',
+         senderName: parcel.sender?.name ?? '',
+         senderPhone: parcel.sender?.phone ?? '',
+         createdAt: parcel.createdAt,
+      }));
+
+      const csvStream = csvFormat({ headers: true });
+
+      csvStream.write(plainParcels);
+      csvStream.end();
+      return csvStream;
+   }
+
+   private async getBookingReportCustomer() {
+      const parcels = await this.prisma.parcel.findMany({
+         select: {
+            trackingNumber: true,
+            status: true,
+            parcelType: true,
+            weight: true,
+            createdAt: true,
+            paymentMethod: true,
+            paymentStatus: true,
+            creator: { select: { lastName: true, firstName: true } },
+            deliveryAgent: {
+               select: { lastName: true, firstName: true, phone: true },
+            },
+            deliveryType: true,
+            deliveryAddress: {
+               select: { city: true },
+            },
+            pickupAddress: {
+               select: { city: true },
+            },
+            estimatedDelivery: true,
+            fees: true,
+            recipient: { select: { name: true, phone: true } },
+            sender: { select: { name: true, phone: true } },
+         },
+      });
+
+      const plainParcels = parcels.map((parcel) => ({
+         ...parcel.fees,
+         trackingNumber: parcel.trackingNumber,
+         status: parcel.status,
+         parcelType: parcel.parcelType,
+         weight: parcel.weight,
+         deliveryType: parcel.deliveryType,
+         estimatedDelivery: parcel.estimatedDelivery,
+         deliveryAgentName: parcel.creator
+            ? `${parcel.creator.firstName ?? ''} ${parcel.creator.lastName ?? ''}`.trim()
+            : '',
+         deliveryAgentPhone: parcel.deliveryAgent?.phone ?? '',
+         deliveryCity: parcel.deliveryAddress?.city ?? '',
+         pickupCity: parcel.pickupAddress?.city ?? '',
+         recipientName: parcel.recipient?.name ?? '',
+         recipientPhone: parcel.recipient?.phone ?? '',
+         senderName: parcel.sender?.name ?? '',
+         senderPhone: parcel.sender?.phone ?? '',
+         createdAt: parcel.createdAt,
+      }));
+
+      const csvStream = csvFormat({ headers: true });
+
+      csvStream.write(plainParcels);
+      csvStream.end();
+      return csvStream;
    }
 }
