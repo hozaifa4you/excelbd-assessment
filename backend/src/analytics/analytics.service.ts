@@ -285,7 +285,10 @@ export class AnalyticsService {
 
       const csvStream = csvFormat({ headers: true });
 
-      csvStream.write(plainParcels);
+      plainParcels.forEach((row) => {
+         csvStream.write(row);
+      });
+
       csvStream.end();
       return csvStream;
    }
@@ -342,7 +345,10 @@ export class AnalyticsService {
 
       const csvStream = csvFormat({ headers: true });
 
-      csvStream.write(plainParcels);
+      plainParcels.forEach((row) => {
+         csvStream.write(row);
+      });
+
       csvStream.end();
       return csvStream;
    }
@@ -399,7 +405,10 @@ export class AnalyticsService {
 
       const csvStream = csvFormat({ headers: true });
 
-      csvStream.write(plainParcels);
+      plainParcels.forEach((row) => {
+         csvStream.write(row);
+      });
+
       csvStream.end();
       return csvStream;
    }
