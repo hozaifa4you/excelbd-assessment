@@ -8,6 +8,8 @@ import { AuthJwtPayload } from './types/jwt';
 import { AuthUser } from './types/auth-user';
 import { SignupDto } from './dto/signup.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { EmailService } from '../email/email.service';
+import { error } from 'console';
 
 @Injectable()
 export class AuthService {
@@ -17,6 +19,7 @@ export class AuthService {
       @Inject(jwtRefreshConfig.KEY)
       private readonly refreshJwtConfig: ConfigType<typeof jwtRefreshConfig>,
       private readonly prisma: PrismaService,
+      private readonly emailService: EmailService,
    ) {}
 
    async signup(createUserDto: SignupDto) {
@@ -29,12 +32,22 @@ export class AuthService {
 
       const hashedPassword = await argon2.hash(createUserDto.password);
 
-      await this.prisma.user.create({
+      const newUser = await this.prisma.user.create({
          data: { ...createUserDto, username, password: hashedPassword },
       });
 
+      // Send welcome email
+      try {
+         await this.emailService.sendWelcomeEmail(
+            newUser.email,
+            `${newUser.firstName} ${newUser.lastName}`,
+         );
+      } catch (err) {
+         error('Failed to send welcome email:', err);
+      }
+
       return {
-         message: `Welcome to Quicko! We&apos;ve sent a verification email to ${createUserDto.email}. Please check your inbox and click the verification link to activate your account.`,
+         message: `Welcome to Quicko! We've sent a welcome email to ${createUserDto.email}. Your account has been successfully created.`,
       };
    }
 
@@ -131,16 +144,30 @@ export class AuthService {
    }
 
    async validateGoogleUser(createUserDto: SignupDto) {
-      const user = await this.userService.findByEmail(createUserDto.email);
-      if (user) return user;
+      const existingUser = await this.userService.findByEmail(
+         createUserDto.email,
+      );
+      if (existingUser) return existingUser;
 
       const username = await this.userService.usernameGenerator(
          createUserDto.email,
       );
 
-      return await this.prisma.user.create({
+      const newUser = await this.prisma.user.create({
          data: { ...createUserDto, username },
       });
+
+      // Send welcome email for new Google OAuth users
+      try {
+         await this.emailService.sendWelcomeEmail(
+            newUser.email,
+            `${newUser.firstName} ${newUser.lastName}`,
+         );
+      } catch (err) {
+         error('Failed to send welcome email to Google user:', err);
+      }
+
+      return newUser;
    }
 
    async updateRememberToken(

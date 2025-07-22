@@ -13,6 +13,7 @@ import appConfig from './config/app.config';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { ConfigService } from '@nestjs/config';
+import { EmailModule } from './email/email.module';
 
 @Module({
    imports: [
@@ -47,6 +48,7 @@ import { ConfigService } from '@nestjs/config';
          inject: [ConfigService],
       }),
       PrismaModule,
+      EmailModule,
       AuthModule,
       UserModule,
       ParcelModule,

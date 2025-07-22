@@ -9,12 +9,14 @@ import jwtConfig from 'src/config/jwt.config';
 import jwtRefreshConfig from 'src/config/jwt-refresh.config';
 import { LocalStrategy } from './strategies/local.strategy';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { EmailModule } from '../email/email.module';
 
 @Module({
    imports: [
       JwtModule.registerAsync(jwtConfig.asProvider()),
       ConfigModule.forFeature(jwtConfig),
       ConfigModule.forFeature(jwtRefreshConfig),
+      EmailModule,
    ],
    providers: [
       AuthService,
