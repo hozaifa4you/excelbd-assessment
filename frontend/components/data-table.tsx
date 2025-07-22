@@ -34,6 +34,8 @@ import { z } from 'zod';
 
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Badge, badgeVariants } from '@/components/ui/badge';
+import { downloadParcelCsv } from '@/lib/exportReport';
+import { useSession } from '@/hooks/use-session';
 import { Button } from '@/components/ui/button';
 import {
    ChartConfig,
@@ -393,6 +395,7 @@ export function DataTable({
 }) {
    const router = useRouter();
    const searchParams = useSearchParams();
+   const { session } = useSession();
    const [data, setData] = React.useState(() => initialData);
    const [rowSelection, setRowSelection] = React.useState({});
    const [columnVisibility, setColumnVisibility] =
@@ -401,6 +404,7 @@ export function DataTable({
       [],
    );
    const [sorting, setSorting] = React.useState<SortingState>([]);
+   const [isExporting, setIsExporting] = React.useState(false);
 
    const [selectedTimeFilter, setSelectedTimeFilter] = React.useState(
       () => searchParams.get('s') || 'today',
@@ -465,6 +469,22 @@ export function DataTable({
       },
       [router, searchParams],
    );
+
+   const handleExportCsv = React.useCallback(async () => {
+      if (!session?.accessToken) {
+         console.error('No access token available');
+         return;
+      }
+
+      setIsExporting(true);
+      try {
+         await downloadParcelCsv(session.accessToken);
+      } catch (error) {
+         console.error('Failed to export CSV:', error);
+      } finally {
+         setIsExporting(false);
+      }
+   }, [session?.accessToken]);
 
    const table = useReactTable({
       data,
@@ -585,9 +605,16 @@ export function DataTable({
                         })}
                   </DropdownMenuContent>
                </DropdownMenu>
-               <Button variant="outline" size="sm">
+               <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleExportCsv}
+                  disabled={isExporting}
+               >
                   <IconReport />
-                  <span className="hidden lg:inline">Export Report</span>
+                  <span className="hidden lg:inline">
+                     {isExporting ? 'Exporting...' : 'Export Report'}
+                  </span>
                </Button>
             </div>
          </div>
