@@ -1,7 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { bucket } from '../config/gcp.config';
 import { toDataURL } from 'qrcode';
-import BwipJs from '@bwip-js/node';
+import * as BwipJs from '@bwip-js/node';
 
 @Injectable()
 export class UploaderService {
@@ -54,15 +54,29 @@ export class UploaderService {
    }
 
    private async barcodeGenerator(payload: string) {
-      const barcodeBuffer = await BwipJs.toBuffer({
-         bcid: 'code128',
-         text: payload,
-         scale: 3,
-         height: 10,
-         includetext: true,
-         textxalign: 'center',
-      });
+      try {
+         const barcodeBuffer = await BwipJs.toBuffer({
+            bcid: 'code128',
+            text: payload,
+            scale: 3,
+            height: 10,
+            width: 10,
+            paddingtop: 5,
+            paddingleft: 5,
+            paddingright: 5,
+            includetext: true,
+            textxalign: 'center',
+         });
 
-      return barcodeBuffer;
+         if (!barcodeBuffer) {
+            throw new Error('Failed to generate barcode buffer');
+         }
+
+         return barcodeBuffer;
+      } catch (err: unknown) {
+         const message =
+            err instanceof Error ? err.message : 'An unknown error occurred';
+         throw new BadRequestException(message);
+      }
    }
 }
