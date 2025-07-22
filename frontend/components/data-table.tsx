@@ -12,7 +12,7 @@ import {
    IconDotsVertical,
    IconLayoutColumns,
    IconLoader,
-   IconPlus,
+   IconReport,
    IconTransfer,
    IconTrendingUp,
 } from '@tabler/icons-react';
@@ -34,7 +34,7 @@ import { z } from 'zod';
 
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Badge, badgeVariants } from '@/components/ui/badge';
-import { Button, buttonVariants } from '@/components/ui/button';
+import { Button } from '@/components/ui/button';
 import {
    ChartConfig,
    ChartContainer,
@@ -83,7 +83,6 @@ import {
    TooltipTrigger,
 } from '@/components/ui/tooltip';
 import Link from 'next/link';
-import { route } from '@/lib/routes';
 import { cn } from '@/lib/utils';
 
 export const schema = z.object({
@@ -586,13 +585,10 @@ export function DataTable({
                         })}
                   </DropdownMenuContent>
                </DropdownMenu>
-               <Link
-                  href={route('parcels.booking')}
-                  className={buttonVariants({ variant: 'outline', size: 'sm' })}
-               >
-                  <IconPlus />
-                  <span className="hidden lg:inline">New Booking</span>
-               </Link>
+               <Button variant="outline" size="sm">
+                  <IconReport />
+                  <span className="hidden lg:inline">Export Report</span>
+               </Button>
             </div>
          </div>
          <div className="scrollbar-thin relative flex flex-col gap-4 overflow-auto px-4 lg:px-6">
