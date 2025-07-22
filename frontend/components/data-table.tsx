@@ -9,7 +9,6 @@ import {
    IconChevronsRight,
    IconCircleCheckFilled,
    IconCircleX,
-   IconDotsVertical,
    IconLayoutColumns,
    IconLoader,
    IconReport,
@@ -20,6 +19,9 @@ import {
    IconClock,
    IconBolt,
    IconRocket,
+   IconEye,
+   IconTrash,
+   IconEdit,
 } from '@tabler/icons-react';
 import {
    ColumnDef,
@@ -45,7 +47,6 @@ import {
    DropdownMenu,
    DropdownMenuCheckboxItem,
    DropdownMenuContent,
-   DropdownMenuItem,
    DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Label } from '@/components/ui/label';
@@ -239,24 +240,99 @@ const columns: ColumnDef<ParcelData>[] = [
       ),
    },
    {
-      accessorKey: 'status',
-      header: 'Status',
-      cell: ({ row }) => (
-         <Badge variant="outline" className="text-muted-foreground px-1.5">
-            {row.original.status === 'DELIVERED' ? (
+      id: 'statusAndDelivery',
+      header: 'Status & Delivery',
+      cell: ({ row }) => {
+         const status = row.original.status;
+         const deliveryDate = row.original?.estimatedDelivery;
+
+         // Status icon logic
+         let statusIcon;
+         if (status === 'DELIVERED') {
+            statusIcon = (
                <IconCircleCheckFilled className="fill-green-500 dark:fill-green-400" />
-            ) : row.original.status === 'CANCELLED' ? (
-               <IconCircleX className="text-red-500" />
-            ) : (
+            );
+         } else if (status === 'CANCELLED') {
+            statusIcon = <IconCircleX className="text-red-500" />;
+         } else {
+            statusIcon = (
                <IconLoader
                   className={cn({
-                     'text-amber-500': row.original.status === 'DELIVERING',
+                     'text-amber-500': status === 'DELIVERING',
                   })}
                />
-            )}
-            {row.original.status}
-         </Badge>
-      ),
+            );
+         }
+
+         // Delivery date logic
+         let deliveryInfo = null;
+         if (deliveryDate) {
+            const date = new Date(deliveryDate);
+            const now = new Date();
+            const diffTime = date.getTime() - now.getTime();
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+            const formattedDate = date.toLocaleDateString('en-US', {
+               month: 'short',
+               day: 'numeric',
+               year:
+                  date.getFullYear() !== now.getFullYear()
+                     ? 'numeric'
+                     : undefined,
+            });
+
+            let statusColor = 'bg-green-500';
+            let statusText = '';
+            let textColor = 'text-green-700 dark:text-green-400';
+
+            if (diffDays < 0) {
+               statusColor = 'bg-red-500';
+               statusText = `${Math.abs(diffDays)} days overdue`;
+               textColor = 'text-red-700 dark:text-red-400';
+            } else if (diffDays === 0) {
+               statusColor = 'bg-orange-500';
+               statusText = 'Today';
+               textColor = 'text-orange-700 dark:text-orange-400';
+            } else if (diffDays === 1) {
+               statusColor = 'bg-yellow-500';
+               statusText = 'Tomorrow';
+               textColor = 'text-yellow-700 dark:text-yellow-400';
+            } else if (diffDays <= 3) {
+               statusColor = 'bg-blue-500';
+               statusText = `In ${diffDays} days`;
+               textColor = 'text-blue-700 dark:text-blue-400';
+            } else {
+               statusText = `In ${diffDays} days`;
+            }
+
+            deliveryInfo = (
+               <div className={`flex items-center gap-1 text-xs ${textColor}`}>
+                  <div
+                     className={`h-1.5 w-1.5 rounded-full ${statusColor}`}
+                  ></div>
+                  <span>
+                     {formattedDate} • {statusText}
+                  </span>
+               </div>
+            );
+         }
+
+         return (
+            <div className="text-sm">
+               <div className="mb-1 flex items-center gap-2">
+                  <Badge variant="outline" className="px-1.5 text-xs">
+                     {statusIcon} {status}
+                  </Badge>
+               </div>
+               {deliveryInfo || (
+                  <div className="text-muted-foreground flex items-center gap-1 text-xs">
+                     <div className="h-1.5 w-1.5 rounded-full bg-gray-400"></div>
+                     <span>Not set</span>
+                  </div>
+               )}
+            </div>
+         );
+      },
    },
    {
       accessorKey: 'sender',
@@ -281,80 +357,6 @@ const columns: ColumnDef<ParcelData>[] = [
             </div>
          </div>
       ),
-   },
-   {
-      accessorKey: 'estimatedDelivery',
-      header: 'Est. Delivery',
-      cell: ({ row }) => {
-         const deliveryDate = row.original?.estimatedDelivery;
-
-         if (!deliveryDate) {
-            return (
-               <div className="text-muted-foreground text-sm">
-                  <div className="flex items-center gap-1">
-                     <div className="h-2 w-2 rounded-full bg-gray-400"></div>
-                     <span>Not set</span>
-                  </div>
-               </div>
-            );
-         }
-
-         const date = new Date(deliveryDate);
-         const now = new Date();
-         const diffTime = date.getTime() - now.getTime();
-         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-         const formattedDate = date.toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            year:
-               date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined,
-         });
-
-         const formattedTime = date.toLocaleTimeString('en-US', {
-            hour: 'numeric',
-            minute: '2-digit',
-            hour12: true,
-         });
-
-         let statusColor = 'bg-green-500';
-         let statusText = '';
-         let textColor = 'text-green-700 dark:text-green-400';
-
-         if (diffDays < 0) {
-            statusColor = 'bg-red-500';
-            statusText = `${Math.abs(diffDays)} days overdue`;
-            textColor = 'text-red-700 dark:text-red-400';
-         } else if (diffDays === 0) {
-            statusColor = 'bg-orange-500';
-            statusText = 'Today';
-            textColor = 'text-orange-700 dark:text-orange-400';
-         } else if (diffDays === 1) {
-            statusColor = 'bg-yellow-500';
-            statusText = 'Tomorrow';
-            textColor = 'text-yellow-700 dark:text-yellow-400';
-         } else if (diffDays <= 3) {
-            statusColor = 'bg-blue-500';
-            statusText = `In ${diffDays} days`;
-            textColor = 'text-blue-700 dark:text-blue-400';
-         } else {
-            statusText = `In ${diffDays} days`;
-         }
-
-         return (
-            <div className="text-sm">
-               <div className={`flex items-center gap-2 ${textColor}`}>
-                  <div className={`h-2 w-2 rounded-full ${statusColor}`}></div>
-                  <div className="flex flex-col">
-                     <span className="font-medium">{formattedDate}</span>
-                     <span className="text-muted-foreground text-xs">
-                        {formattedTime} • {statusText}
-                     </span>
-                  </div>
-               </div>
-            </div>
-         );
-      },
    },
    {
       accessorKey: 'fees',
@@ -421,23 +423,75 @@ const columns: ColumnDef<ParcelData>[] = [
    },
    {
       id: 'actions',
-      cell: () => (
-         <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-               <Button
-                  variant="ghost"
-                  className="data-[state=open]:bg-muted text-muted-foreground flex size-8"
-                  size="icon"
-               >
-                  <IconDotsVertical />
-                  <span className="sr-only">Open menu</span>
-               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-32">
-               <DropdownMenuItem>Edit</DropdownMenuItem>
-               <DropdownMenuItem variant="destructive">Cancel</DropdownMenuItem>
-            </DropdownMenuContent>
-         </DropdownMenu>
+      header: 'Actions',
+      cell: ({ row }) => (
+         <div className="flex items-center gap-1">
+            <Tooltip>
+               <TooltipTrigger asChild>
+                  <Button
+                     variant="ghost"
+                     size="sm"
+                     className="h-8 w-8 p-0 text-blue-600 hover:bg-blue-50 hover:text-blue-700 dark:text-blue-400 dark:hover:bg-blue-950 dark:hover:text-blue-300"
+                     onClick={() => {
+                        // Handle action/edit functionality
+                        // TODO: Implement edit functionality
+                     }}
+                  >
+                     <IconEdit className="h-4 w-4" />
+                     <span>Edit parcel</span>
+                  </Button>
+               </TooltipTrigger>
+               <TooltipContent>
+                  <p>Edit</p>
+               </TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+               <TooltipTrigger asChild>
+                  <Button
+                     variant="ghost"
+                     size="sm"
+                     className="h-8 w-8 p-0 text-green-600 hover:bg-green-50 hover:text-green-700 dark:text-green-400 dark:hover:bg-green-950 dark:hover:text-green-300"
+                     onClick={() => {
+                        // Handle tracking functionality
+                        // TODO: Implement tracking functionality
+                     }}
+                  >
+                     <IconEye className="h-4 w-4" />
+                     <span className="sr-only">Track parcel</span>
+                  </Button>
+               </TooltipTrigger>
+               <TooltipContent>
+                  <p>Track</p>
+               </TooltipContent>
+            </Tooltip>
+
+            <Tooltip>
+               <TooltipTrigger asChild>
+                  <Button
+                     variant="ghost"
+                     size="sm"
+                     className="h-8 w-8 p-0 text-red-600 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-950 dark:hover:text-red-300"
+                     onClick={() => {
+                        // Handle delete functionality
+                        if (
+                           confirm(
+                              'Are you sure you want to delete this parcel?',
+                           )
+                        ) {
+                           // TODO: Implement delete functionality
+                        }
+                     }}
+                  >
+                     <IconTrash className="h-4 w-4" />
+                     <span className="sr-only">Delete parcel</span>
+                  </Button>
+               </TooltipTrigger>
+               <TooltipContent>
+                  <p>Delete</p>
+               </TooltipContent>
+            </Tooltip>
+         </div>
       ),
    },
 ];
