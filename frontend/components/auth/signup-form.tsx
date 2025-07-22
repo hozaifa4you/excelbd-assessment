@@ -42,7 +42,7 @@ const SignupForm = () => {
    }, [pending]);
 
    useEffect(() => {
-      if (!pending && message) {
+      if (!pending && message && !state?.success) {
          toast.error('Register Failed', {
             description: message.toString(),
             icon: <AlertCircle />,

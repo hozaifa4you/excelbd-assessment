@@ -71,12 +71,15 @@ export async function signUp(
       };
    }
 
+   // eslint-disable-next-line @typescript-eslint/no-unused-vars
+   const { confirmPassword, ...data } = validatedFields.data;
+
    const response = await fetch(`${appEnv.API_URL}/api/auth/signup`, {
       method: 'POST',
       headers: {
          'Content-Type': 'application/json',
       },
-      body: JSON.stringify(validatedFields.data),
+      body: JSON.stringify(data),
    });
    const result = await response.json();
 

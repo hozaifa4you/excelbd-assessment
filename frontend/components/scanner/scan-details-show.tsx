@@ -6,7 +6,9 @@ import { Button } from '@/components/ui/button';
 import {
    Select,
    SelectContent,
+   SelectGroup,
    SelectItem,
+   SelectLabel,
    SelectTrigger,
    SelectValue,
 } from '@/components/ui/select';
@@ -25,7 +27,11 @@ import {
    Printer as Print,
    Share2,
 } from 'lucide-react';
-import { Address, DeliveryType, Person } from '@/types/parcel';
+import { Address, DeliveryType, Person, Status } from '@/types/parcel';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { route } from '@/lib/routes';
+import { Separator } from '../ui/separator';
 
 export interface ParcelData {
    deliveryAddress: Address;
@@ -38,6 +44,8 @@ export interface ParcelData {
    barcode: string;
    barcodeUrl: string;
    trackingQrCode: string;
+   status: Status;
+   notes: string | null;
 }
 
 interface ParcelBookingDetailsProps {
@@ -61,24 +69,15 @@ const deliveryTypeOptions = [
 export default function ParcelBookingDetails({
    data,
 }: ParcelBookingDetailsProps) {
-   const [selectedDeliveryType, setSelectedDeliveryType] = useState(
-      data.deliveryType,
-   );
    const [isSubmitting, setIsSubmitting] = useState(false);
+   const router = useRouter();
 
    const handleSubmit = async () => {
       setIsSubmitting(true);
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      setIsSubmitting(false);
-      console.log(
-         'Parcel booking submitted with delivery type:',
-         selectedDeliveryType,
-      );
    };
 
    const handleCancel = () => {
-      console.log('Parcel booking cancelled');
+      router.push(route('parcels.options'));
    };
 
    const formatAddress = (address: typeof data.deliveryAddress) => {
@@ -153,28 +152,42 @@ export default function ParcelBookingDetails({
                         </div>
 
                         <div>
-                           <label className="text-muted-foreground text-sm font-medium">
-                              Delivery Type
+                           <label className="text-muted-foreground text-sm font-semibold">
+                              Available Options
                            </label>
-                           <div className="mt-2">
-                              <Select
-                                 value={selectedDeliveryType}
-                                 // onValueChange={setSelectedDeliveryType}
-                              >
-                                 <SelectTrigger className="w-full sm:w-64">
-                                    <SelectValue />
+                           <div className="mt-2 flex items-center gap-2">
+                              <Select defaultValue={data.status}>
+                                 <SelectTrigger className="w-[300px]">
+                                    <SelectValue placeholder="Select a fruit" />
                                  </SelectTrigger>
                                  <SelectContent>
-                                    {deliveryTypeOptions.map((option) => (
-                                       <SelectItem
-                                          key={option.value}
-                                          value={option.value}
-                                       >
-                                          {option.label}
+                                    <SelectGroup>
+                                       <SelectLabel>
+                                          Available Options
+                                       </SelectLabel>
+                                       <SelectItem value="PENDING">
+                                          PENDING
                                        </SelectItem>
-                                    ))}
+                                       <SelectItem value="PICKED_UP">
+                                          PICKED UP
+                                       </SelectItem>
+                                       <SelectItem value="IN_TRANSIT">
+                                          IN TRANSIT
+                                       </SelectItem>
+                                       <SelectItem value="DELIVERING">
+                                          DELIVERING
+                                       </SelectItem>
+                                       <SelectItem value="DELIVERED">
+                                          DELIVERED
+                                       </SelectItem>
+                                       <SelectItem value="CANCELLED">
+                                          CANCELLED
+                                       </SelectItem>
+                                    </SelectGroup>
                                  </SelectContent>
                               </Select>
+
+                              <Button>Save</Button>
                            </div>
                         </div>
                      </CardContent>
@@ -202,9 +215,7 @@ export default function ParcelBookingDetails({
                            </div>
                         </div>
 
-                        <div className="flex justify-center">
-                           <div className="bg-border h-8 w-px"></div>
-                        </div>
+                        <Separator />
 
                         {/* Delivery Address */}
                         <div>
@@ -217,6 +228,23 @@ export default function ParcelBookingDetails({
                            <div className="bg-muted/50 rounded-lg p-4">
                               <p className="text-sm leading-relaxed">
                                  {formatAddress(data.deliveryAddress)}
+                              </p>
+                           </div>
+                        </div>
+
+                        <Separator />
+
+                        <div>
+                           <div className="mb-3 flex items-center gap-2">
+                              <div className="h-3 w-3 rounded-full bg-indigo-500"></div>
+                              <h3 className="font-semibold">
+                                 Delivery Instruction
+                              </h3>
+                           </div>
+                           <div className="bg-muted/50 rounded-lg p-4">
+                              <p className="text-sm leading-relaxed">
+                                 {data.notes ??
+                                    'No special instructions provided.'}
                               </p>
                            </div>
                         </div>
@@ -299,12 +327,12 @@ export default function ParcelBookingDetails({
                   <Card className="animate-fade-in-up">
                      <CardContent className="p-6 text-center">
                         <Badge
-                           className={`px-4 py-2 text-sm ${deliveryTypeColors[selectedDeliveryType]}`}
+                           className={`px-4 py-2 text-sm ${deliveryTypeColors[data.deliveryType]}`}
                         >
                            <Truck className="mr-2 h-4 w-4" />
                            {
                               deliveryTypeOptions.find(
-                                 (opt) => opt.value === selectedDeliveryType,
+                                 (opt) => opt.value === data.deliveryType,
                               )?.label
                            }
                         </Badge>
@@ -321,6 +349,7 @@ export default function ParcelBookingDetails({
                      </CardHeader>
                      <CardContent className="space-y-4 text-center">
                         <div className="rounded-lg border bg-white p-4">
+                           {/* eslint-disable-next-line @next/next/no-img-element */}
                            <img
                               src={data.barcodeUrl}
                               alt="Barcode"
@@ -330,9 +359,16 @@ export default function ParcelBookingDetails({
                         <p className="text-muted-foreground font-mono text-xs">
                            {data.trackingNumber}
                         </p>
-                        <Button variant="outline" size="sm" className="w-full">
-                           <Download className="mr-2 h-4 w-4" />
-                           Download Barcode
+                        <Button
+                           variant="outline"
+                           size="sm"
+                           className="w-full"
+                           asChild
+                        >
+                           <Link href={data.barcodeUrl} download>
+                              <Download className="mr-2 h-4 w-4" />
+                              Download Barcode
+                           </Link>
                         </Button>
                      </CardContent>
                   </Card>
@@ -347,6 +383,7 @@ export default function ParcelBookingDetails({
                      </CardHeader>
                      <CardContent className="space-y-4 text-center">
                         <div className="inline-block rounded-lg border bg-white p-4">
+                           {/* eslint-disable-next-line @next/next/no-img-element */}
                            <img
                               src={data.trackingQrCode}
                               alt="QR Code"
@@ -356,9 +393,16 @@ export default function ParcelBookingDetails({
                         <p className="text-muted-foreground text-xs">
                            Scan to track parcel
                         </p>
-                        <Button variant="outline" size="sm" className="w-full">
-                           <Download className="mr-2 h-4 w-4" />
-                           Download QR Code
+                        <Button
+                           variant="outline"
+                           size="sm"
+                           className="w-full"
+                           asChild
+                        >
+                           <Link href={data.trackingQrCode} download>
+                              <Download className="mr-2 h-4 w-4" />
+                              Download QR Code
+                           </Link>
                         </Button>
                      </CardContent>
                   </Card>
@@ -380,7 +424,7 @@ export default function ParcelBookingDetails({
                            ) : (
                               <>
                                  <CheckCircle className="mr-2 h-4 w-4" />
-                                 Submit Booking
+                                 Cancel Delivery
                               </>
                            )}
                         </Button>
@@ -392,7 +436,7 @@ export default function ParcelBookingDetails({
                            size="lg"
                         >
                            <X className="mr-2 h-4 w-4" />
-                           Cancel Booking
+                           Scan Again
                         </Button>
                      </CardContent>
                   </Card>

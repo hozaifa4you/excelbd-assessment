@@ -56,16 +56,6 @@ export class ParcelController {
    }
 
    @HttpCode(HttpStatus.OK)
-   @UseGuards(AccessGuard)
-   @UseGuards(JwtGuard)
-   @Get('/:parcelId')
-   async parcelDetails(
-      @Param('parcelId', MongoIdValidationPipe) parcelId: string,
-   ) {
-      return this.parcelService.bookingDetails(parcelId);
-   }
-
-   @HttpCode(HttpStatus.OK)
    @Roles(Role.DELIVERY_AGENT)
    @UseGuards(RolesGuard)
    @UseGuards(JwtGuard)
@@ -75,5 +65,15 @@ export class ParcelController {
       @Query('barcode') barcode: string,
    ) {
       return this.parcelService.getParcelOptions(user.id, barcode);
+   }
+
+   @HttpCode(HttpStatus.OK)
+   @UseGuards(AccessGuard)
+   @UseGuards(JwtGuard)
+   @Get('/:parcelId')
+   async parcelDetails(
+      @Param('parcelId', MongoIdValidationPipe) parcelId: string,
+   ) {
+      return this.parcelService.bookingDetails(parcelId);
    }
 }

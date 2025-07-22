@@ -146,6 +146,8 @@ export class ParcelService {
             trackingNumber: true,
             parcelType: true,
             deliveryType: true,
+            status: true,
+            notes: true,
          },
       });
 
