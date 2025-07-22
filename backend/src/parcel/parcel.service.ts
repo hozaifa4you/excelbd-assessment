@@ -132,6 +132,32 @@ export class ParcelService {
       return parcel;
    }
 
+   public async getParcelOptions(userId: string, barcode: string) {
+      const parcel = await this.prisma.parcel.findFirst({
+         where: { barcode, deliveryAgentId: userId },
+         select: {
+            pickupAddress: true,
+            sender: true,
+            recipient: true,
+            deliveryAddress: true,
+            barcode: true,
+            barcodeUrl: true,
+            trackingQrCode: true,
+            trackingNumber: true,
+            parcelType: true,
+            deliveryType: true,
+         },
+      });
+
+      if (!parcel) {
+         throw new NotFoundException(
+            `Parcel with barcode ${barcode} not found`,
+         );
+      }
+
+      return parcel;
+   }
+
    private trackingNumberGenerator() {
       const trackingNumber = Math.random().toString(36).substring(2, 15);
 

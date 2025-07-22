@@ -20,4 +20,8 @@ export class SignupDto {
    @IsString()
    @Length(6, 32)
    password: string;
+
+   @IsString()
+   @Length(6, 32)
+   confirmPassword: string;
 }

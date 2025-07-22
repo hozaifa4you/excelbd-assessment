@@ -64,4 +64,16 @@ export class ParcelController {
    ) {
       return this.parcelService.bookingDetails(parcelId);
    }
+
+   @HttpCode(HttpStatus.OK)
+   @Roles(Role.DELIVERY_AGENT)
+   @UseGuards(RolesGuard)
+   @UseGuards(JwtGuard)
+   @Get('/options')
+   async getParcelOptions(
+      @DAuthUser() user: AuthUser,
+      @Query('barcode') barcode: string,
+   ) {
+      return this.parcelService.getParcelOptions(user.id, barcode);
+   }
 }
