@@ -44,7 +44,6 @@ import { Badge } from '@/components/ui/badge';
 import { downloadParcelCsv } from '@/lib/exportReport';
 import { useSession } from '@/hooks/use-session';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
    DropdownMenu,
    DropdownMenuCheckboxItem,
@@ -115,34 +114,6 @@ export const schema = z.object({
 type ParcelData = z.infer<typeof schema>;
 
 const columns: ColumnDef<ParcelData>[] = [
-   {
-      id: 'select',
-      header: ({ table }) => (
-         <div className="flex items-center justify-center">
-            <Checkbox
-               checked={
-                  table.getIsAllPageRowsSelected() ||
-                  (table.getIsSomePageRowsSelected() && 'indeterminate')
-               }
-               onCheckedChange={(value) =>
-                  table.toggleAllPageRowsSelected(!!value)
-               }
-               aria-label="Select all"
-            />
-         </div>
-      ),
-      cell: ({ row }) => (
-         <div className="flex items-center justify-center">
-            <Checkbox
-               checked={row.getIsSelected()}
-               onCheckedChange={(value) => row.toggleSelected(!!value)}
-               aria-label="Select row"
-            />
-         </div>
-      ),
-      enableSorting: false,
-      enableHiding: false,
-   },
    {
       accessorKey: 'parcelType',
       header: 'Parcel Type',
@@ -512,7 +483,6 @@ export function DataTable({
    const searchParams = useSearchParams();
    const { session } = useSession();
    const [data, setData] = React.useState(() => initialData);
-   const [rowSelection, setRowSelection] = React.useState({});
    const [columnVisibility, setColumnVisibility] =
       React.useState<VisibilityState>({});
    const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -605,13 +575,10 @@ export function DataTable({
       state: {
          sorting,
          columnVisibility,
-         rowSelection,
          columnFilters,
          pagination,
       },
       getRowId: (row) => row.id,
-      enableRowSelection: true,
-      onRowSelectionChange: setRowSelection,
       onSortingChange: setSorting,
       onColumnFiltersChange: setColumnFilters,
       onColumnVisibilityChange: setColumnVisibility,
@@ -759,10 +726,7 @@ export function DataTable({
                      <TableBody className="**:data-[slot=table-cell]:first:w-8">
                         {table.getRowModel().rows?.length ? (
                            table.getRowModel().rows.map((row) => (
-                              <TableRow
-                                 key={row.id}
-                                 data-state={row.getIsSelected() && 'selected'}
-                              >
+                              <TableRow key={row.id}>
                                  {row.getVisibleCells().map((cell) => (
                                     <TableCell key={cell.id}>
                                        {flexRender(
@@ -789,9 +753,7 @@ export function DataTable({
             </div>
             <div className="flex items-center justify-between px-4">
                <div className="text-muted-foreground hidden flex-1 text-sm lg:flex">
-                  {table.getFilteredSelectedRowModel().rows.length} of{' '}
-                  {paginationInfo.total} row(s) selected. Showing {data.length}{' '}
-                  of {paginationInfo.total} total records.
+                  Showing {data.length} of {paginationInfo.total} total records.
                </div>
                <div className="flex w-full items-center gap-8 lg:w-fit">
                   <div className="hidden items-center gap-2 lg:flex">
