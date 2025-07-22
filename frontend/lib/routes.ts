@@ -15,7 +15,8 @@ export type RouteType =
    | 'agent.bookings'
    | 'user.bookings'
    | 'parcels.booking'
-   | 'parcels.details';
+   | 'parcels.details'
+   | 'parcels.options';
 
 type RouteParamsMap = {
    home: undefined;
@@ -35,6 +36,7 @@ type RouteParamsMap = {
    'user.bookings': undefined;
    'parcels.booking': undefined;
    'parcels.details': { id: string };
+   'parcels.options': undefined;
 };
 
 type RouteQueryMap = {
@@ -55,6 +57,7 @@ type RouteQueryMap = {
    'user.bookings': Record<string, string>;
    'parcels.booking': Record<string, string>;
    'parcels.details': Record<string, string>;
+   'parcels.options': Record<string, string>;
 };
 
 export const route = <T extends RouteType>(
@@ -111,6 +114,8 @@ export const route = <T extends RouteType>(
          return '/parcels/booking' + queryString;
       case 'parcels.details':
          return `/profile/${(params as { id: string }).id}` + queryString;
+      case 'parcels.options':
+         return '/parcels/options' + queryString;
       default:
          return '/' + queryString;
    }

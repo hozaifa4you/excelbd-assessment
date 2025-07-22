@@ -65,8 +65,6 @@ export class UploaderService {
             text: barcode,
             scale: 3,
             height: 10,
-            // width: 20,
-            // paddingtop: 2,
             paddingleft: 5,
             paddingright: 5,
             paddingbottom: 3,
