@@ -70,6 +70,20 @@ export class AuthService {
       return { message: 'User signed out successfully' };
    }
 
+   async refreshToken(user: AuthUser) {
+      const { accessToken, refreshToken } = await this.generateTokens(user.id);
+
+      const hashedRememberToken = await argon2.hash(refreshToken);
+
+      await this.updateRememberToken(user.id, hashedRememberToken);
+
+      return {
+         user,
+         accessToken,
+         refreshToken,
+      };
+   }
+
    async validateUser(email: string, password: string) {
       const user = await this.userService.findByEmail(email);
       if (!user) throw new UnauthorizedException('Invalid credentials');
@@ -97,16 +111,6 @@ export class AuthService {
       return { accessToken, refreshToken };
    }
 
-   async refreshToken(userId: string) {
-      const payload: AuthJwtPayload = { sub: userId };
-      const token = await this.jwtService.signAsync(payload);
-
-      return {
-         id: userId,
-         token,
-      };
-   }
-
    async validateRefreshToken(userId: string, refreshToken: string) {
       const user = await this.userService.findMe(userId);
       if (!user?.rememberToken) {
@@ -118,7 +122,15 @@ export class AuthService {
          throw new UnauthorizedException('Unauthorized');
       }
 
-      return { id: user.id };
+      const currentUser: AuthUser = {
+         id: user.id,
+         firstName: user.firstName,
+         lastName: user.lastName,
+         email: user.email,
+         role: user.role,
+      };
+
+      return currentUser;
    }
 
    async logout(userId: string) {

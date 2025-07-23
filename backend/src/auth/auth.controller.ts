@@ -11,8 +11,10 @@ import {
 import { SignupDto } from './dto/signup.dto';
 import { AuthService } from './auth.service';
 import { LocalAuthGuard } from './guards/local.guard';
-import { AuthRequest } from './types/auth-user';
+import { AuthRequest, AuthUser } from './types/auth-user';
 import { JwtGuard } from './guards/jwt.guard';
+import { AuthUser as DAuth } from './decorators/auth-user.decorator';
+import { JwtRefreshGuard } from './guards/jwt-refresh.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -37,5 +39,12 @@ export class AuthController {
    signout(@Req() req: AuthRequest) {
       const userId = req.user.id;
       return this.authService.signout(userId);
+   }
+
+   @HttpCode(HttpStatus.OK)
+   @UseGuards(JwtRefreshGuard)
+   @Post('refresh-token')
+   async refresh(@DAuth() user: AuthUser) {
+      return this.authService.refreshToken(user);
    }
 }

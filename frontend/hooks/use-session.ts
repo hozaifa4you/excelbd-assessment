@@ -24,6 +24,7 @@ export const useSession = () => {
             setLoading(false);
          }
       };
+
       fetchSession();
    }, []);
 
