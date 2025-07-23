@@ -1,7 +1,6 @@
 // import { refreshToken } from './auth';
 import { appEnv } from '@/config/env.config';
 import { getSession } from '@/lib/sessions';
-import { refreshToken } from './auth';
 
 export interface FetchOptions extends RequestInit {
    headers?: Record<string, string>;
@@ -24,14 +23,8 @@ export const authFetch = async (
    let response = await fetch(fullUrl, options);
 
    if (response.status === 401) {
-      if (!session?.refreshToken) throw new Error('refresh token not found!');
-
-      const newAccessToken = await refreshToken(session.refreshToken);
-
-      if (newAccessToken) {
-         options.headers.Authorization = `Bearer ${newAccessToken}`;
-         response = await fetch(url, options);
-      }
+      // Uncomment the following lines if you implement token refresh logic
    }
+
    return response;
 };

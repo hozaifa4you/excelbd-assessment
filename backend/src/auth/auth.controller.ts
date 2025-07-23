@@ -45,8 +45,6 @@ export class AuthController {
    @UseGuards(JwtRefreshGuard)
    @Post('refresh-token')
    async refresh(@DAuth() user: AuthUser) {
-      console.log({ 'hit-refresh-token': user });
-
       return this.authService.refreshToken(user);
    }
 }
