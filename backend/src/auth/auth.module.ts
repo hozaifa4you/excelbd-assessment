@@ -10,6 +10,7 @@ import jwtRefreshConfig from 'src/config/jwt-refresh.config';
 import { LocalStrategy } from './strategies/local.strategy';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { EmailModule } from '../email/email.module';
+import { JwtRefreshStrategy } from './strategies/jwt-refresh.strategy';
 
 @Module({
    imports: [
@@ -24,6 +25,7 @@ import { EmailModule } from '../email/email.module';
       PrismaService,
       LocalStrategy,
       JwtStrategy,
+      JwtRefreshStrategy,
    ],
    controllers: [AuthController],
 })

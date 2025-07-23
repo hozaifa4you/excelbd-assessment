@@ -1,8 +1,7 @@
 // import { refreshToken } from './auth';
 import { appEnv } from '@/config/env.config';
 import { getSession } from '@/lib/sessions';
-import { redirect } from 'next/navigation';
-import { route } from './routes';
+import { refreshToken } from './auth';
 
 export interface FetchOptions extends RequestInit {
    headers?: Record<string, string>;
@@ -22,23 +21,17 @@ export const authFetch = async (
       Authorization: `Bearer ${session?.accessToken}`,
       'Content-Type': 'application/json',
    };
-   const response = await fetch(fullUrl, options);
+   let response = await fetch(fullUrl, options);
 
-   // FIXME: should be fix it
    if (response.status === 401) {
-      await fetch(`${appEnv.APP_URL}/api/auth/signout`, { method: 'DELETE' });
-      return redirect(route('signin'));
+      if (!session?.refreshToken) throw new Error('refresh token not found!');
+
+      const newAccessToken = await refreshToken(session.refreshToken);
+
+      if (newAccessToken) {
+         options.headers.Authorization = `Bearer ${newAccessToken}`;
+         response = await fetch(url, options);
+      }
    }
-
-   // if (response.status === 401) {
-   //    if (!session?.refreshToken) throw new Error('refresh token not found!');
-
-   //    const newAccessToken = await refreshToken(session.refreshToken);
-
-   //    if (newAccessToken) {
-   //       options.headers.Authorization = `Bearer ${newAccessToken}`;
-   //       response = await fetch(url, options);
-   //    }
-   // }
    return response;
 };
