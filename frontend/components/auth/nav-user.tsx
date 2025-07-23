@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { BellDot, CreditCard, LogOut, User, UserCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useSession } from '@/hooks/use-session';
 
 export function NavUser({
    user,
@@ -21,18 +22,7 @@ export function NavUser({
       avatar: string;
    };
 }) {
-   const handleLogout = async () => {
-      const response = await fetch('/api/auth/signout', {
-         method: 'DELETE',
-         headers: {
-            'Content-Type': 'application/json',
-         },
-      });
-
-      if (response.ok) {
-         window.location.href = '/';
-      }
-   };
+   const { handleLogout } = useSession();
 
    return (
       <DropdownMenu>
