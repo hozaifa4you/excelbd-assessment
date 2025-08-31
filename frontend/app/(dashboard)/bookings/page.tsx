@@ -1,0 +1,32 @@
+import { DataTable } from '@/components/data-table';
+import { authFetch } from '@/lib/authFetch';
+
+const UserBookingsPage = async ({
+   searchParams,
+}: {
+   searchParams: Promise<{ page?: string; limit?: string; s?: string }>;
+}) => {
+   const { page, limit, s } = await searchParams;
+
+   const pageNumber = Math.max(1, parseInt(page || '1', 10) || 1);
+   const limitNumber = Math.max(1, parseInt(limit || '10', 10) || 10);
+
+   const response = await authFetch(
+      `/parcels?page=${pageNumber}&limit=${limitNumber}&s=${encodeURIComponent(
+         s ?? 'today',
+      )}`,
+   );
+   const data = await response.json();
+
+   if (!response.ok) {
+      throw new Error(data.message);
+   }
+
+   return (
+      <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
+         <DataTable data={data.bookings} paginationInfo={data.meta} />
+      </div>
+   );
+};
+
+export default UserBookingsPage;

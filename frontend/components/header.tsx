@@ -1,0 +1,197 @@
+'use client';
+import { useState } from 'react';
+import { Button, buttonVariants } from '@/components/ui/button';
+import { ThemeToggle } from '@/components/theme-toggle';
+import {
+   Sheet,
+   SheetContent,
+   SheetHeader,
+   SheetTitle,
+   SheetTrigger,
+} from '@/components/ui/sheet';
+import { LayoutDashboard, Menu, Package, Phone, User } from 'lucide-react';
+import Link from 'next/link';
+import { Logo } from './logo';
+import { Session } from '@/lib/sessions';
+import { route } from '@/lib/routes';
+import { NavUser } from './auth/nav-user';
+
+interface HeaderProps {
+   session: Session | null;
+}
+
+export function Header({ session }: HeaderProps) {
+   const [isOpen, setIsOpen] = useState(false);
+
+   const navigation = [
+      { name: 'Services', href: '#services' },
+      { name: 'Track Package', href: '#track' },
+      { name: 'How it Works', href: '#how-it-works' },
+      { name: 'Pricing', href: '#pricing' },
+      { name: 'About', href: '#about' },
+      { name: 'Contact', href: '#contact' },
+   ];
+
+   const handleNavClick = (href: string) => {
+      setIsOpen(false);
+      // Smooth scroll to section
+      const element = document.querySelector(href);
+      if (element) {
+         element.scrollIntoView({ behavior: 'smooth' });
+      }
+   };
+
+   return (
+      <header className="border-border/40 bg-background/95 supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 w-full border-b backdrop-blur">
+         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex h-16 items-center justify-between">
+               {/* Logo */}
+               <Logo />
+
+               {/* Desktop Navigation */}
+               <nav className="hidden items-center space-x-8 lg:flex">
+                  {navigation.map((item) => (
+                     <button
+                        key={item.name}
+                        onClick={() => handleNavClick(item.href)}
+                        className="text-muted-foreground hover:text-foreground text-sm font-medium transition-colors duration-200"
+                     >
+                        {item.name}
+                     </button>
+                  ))}
+               </nav>
+
+               {/* Desktop Actions */}
+               <div className="hidden items-center space-x-4 lg:flex">
+                  <ThemeToggle />
+                  {session ? (
+                     <>
+                        <Link
+                           href={route('dashboard')}
+                           className={buttonVariants({
+                              className: 'text-sm',
+                              variant: 'secondary',
+                              size: 'sm',
+                           })}
+                        >
+                           <LayoutDashboard className="mr-1 h-4 w-4" />
+                           Dashboard
+                        </Link>
+                        <NavUser
+                           user={{
+                              avatar: 'CN',
+                              name: `${session.user.firstName} ${session.user.lastName}`,
+                              email: session.user.email,
+                           }}
+                        />
+                     </>
+                  ) : (
+                     <>
+                        <Link
+                           href={route('signin')}
+                           className={buttonVariants({
+                              className: 'text-sm',
+                              variant: 'ghost',
+                              size: 'sm',
+                           })}
+                        >
+                           <User className="mr-2 h-4 w-4" />
+                           Sign In
+                        </Link>
+                        <Button size="sm" className="text-sm">
+                           <Phone className="mr-2 h-4 w-4" />
+                           Get Quote
+                        </Button>
+                     </>
+                  )}
+               </div>
+
+               {/* Mobile Actions */}
+               <div className="flex items-center space-x-2 lg:hidden">
+                  <ThemeToggle />
+                  <Sheet open={isOpen} onOpenChange={setIsOpen}>
+                     <SheetTrigger asChild>
+                        <Button
+                           variant="ghost"
+                           size="icon"
+                           className="h-10 w-10"
+                        >
+                           <Menu className="h-5 w-5" />
+                           <span className="sr-only">Open menu</span>
+                        </Button>
+                     </SheetTrigger>
+                     <SheetContent side="right" className="w-80 p-5 sm:w-96">
+                        <SheetHeader className="text-left">
+                           <SheetTitle className="flex items-center space-x-3">
+                              <div className="bg-primary flex h-8 w-8 items-center justify-center rounded-lg">
+                                 <Package className="text-primary-foreground h-5 w-5" />
+                              </div>
+                              <span className="text-xl font-bold">Quicko</span>
+                           </SheetTitle>
+                        </SheetHeader>
+
+                        <nav className="mt-8 space-y-4">
+                           {navigation.map((item) => (
+                              <button
+                                 key={item.name}
+                                 onClick={() => handleNavClick(item.href)}
+                                 className="text-muted-foreground hover:text-foreground hover:bg-accent block w-full rounded-lg px-4 py-3 text-left text-base font-medium transition-colors duration-200"
+                              >
+                                 {item.name}
+                              </button>
+                           ))}
+                        </nav>
+
+                        <div className="border-border mt-8 space-y-4 border-t pt-6">
+                           {session ? (
+                              <>
+                                 <Link
+                                    href={route('dashboard')}
+                                    className={buttonVariants({
+                                       className: 'w-full justify-start',
+                                       variant: 'ghost',
+                                       size: 'sm',
+                                    })}
+                                 >
+                                    <LayoutDashboard className="mr-2 h-4 w-4" />
+                                    Dashboard
+                                 </Link>
+                                 <Button
+                                    size="sm"
+                                    className="w-full justify-start"
+                                 >
+                                    <User className="mr-2 h-4 w-4" />
+                                    Profile
+                                 </Button>
+                              </>
+                           ) : (
+                              <>
+                                 <Link
+                                    href={route('signin')}
+                                    className={buttonVariants({
+                                       className: 'w-full justify-start',
+                                       variant: 'ghost',
+                                       size: 'sm',
+                                    })}
+                                 >
+                                    <User className="mr-2 size-5" />
+                                    Sign In
+                                 </Link>
+                                 <Button
+                                    size="sm"
+                                    className="w-full justify-start"
+                                 >
+                                    <Phone className="mr-2 h-4 w-4" />
+                                    Get Quote
+                                 </Button>
+                              </>
+                           )}
+                        </div>
+                     </SheetContent>
+                  </Sheet>
+               </div>
+            </div>
+         </div>
+      </header>
+   );
+}

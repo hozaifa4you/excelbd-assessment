@@ -1,0 +1,491 @@
+'use client';
+import React, { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import {
+   Select,
+   SelectContent,
+   SelectGroup,
+   SelectItem,
+   SelectLabel,
+   SelectTrigger,
+   SelectValue,
+} from '@/components/ui/select';
+import {
+   Package,
+   MapPin,
+   User,
+   Phone,
+   Mail,
+   Truck,
+   QrCode,
+   BarChart3,
+   CheckCircle,
+   X,
+   Download,
+   ArrowLeft,
+   Loader,
+} from 'lucide-react';
+import { Address, DeliveryType, Person, Status } from '@/types/parcel';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { route } from '@/lib/routes';
+import { Separator } from '../ui/separator';
+import { useSession } from '@/hooks/use-session';
+import { appEnv } from '@/config/env.config';
+import { toast } from 'sonner';
+
+export interface ParcelData {
+   id: string;
+   deliveryAddress: Address;
+   pickupAddress: Address;
+   recipient: Person;
+   sender: Person;
+   parcelType: string;
+   deliveryType: DeliveryType;
+   trackingNumber: string;
+   barcode: string;
+   barcodeUrl: string;
+   trackingQrCode: string;
+   status: Status;
+   notes: string | null;
+}
+
+interface ParcelBookingDetailsProps {
+   data: ParcelData;
+}
+
+const deliveryTypeColors = {
+   EXPRESS: 'text-blue-600 bg-blue-50 border-blue-200',
+   SAME_DAY: 'text-purple-600 bg-purple-50 border-purple-200',
+   STANDARD: 'text-green-600 bg-green-50 border-green-200',
+   OVERNIGHT: 'text-orange-600 bg-orange-50 border-orange-200',
+};
+
+const deliveryTypeOptions = [
+   { value: 'EXPRESS', label: 'Express Delivery' },
+   { value: 'SAME_DAY', label: 'Same Day Delivery' },
+   { value: 'STANDARD', label: 'Standard Delivery' },
+   { value: 'OVERNIGHT', label: 'Overnight Delivery' },
+];
+
+export default function ParcelBookingDetails({
+   data,
+}: ParcelBookingDetailsProps) {
+   const [isSubmitting, setIsSubmitting] = useState(false);
+   const [statue, setStatue] = useState<Status>(data.status);
+   const router = useRouter();
+   const { session } = useSession();
+
+   const handleSubmit = async (target: string) => {
+      setIsSubmitting(true);
+
+      const response = await fetch(
+         `${appEnv.NEXT_PUBLIC_API_URL}/api/parcels/${data.id}/delivery-update?target=${target}`,
+         {
+            method: 'PUT',
+            headers: {
+               'Content-Type': 'application/json',
+               Authorization: `Bearer ${session?.accessToken}`,
+            },
+         },
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+         toast.error('Delivery Update', {
+            description: result.message ?? 'Failed to update delivery',
+         });
+         setIsSubmitting(false);
+         return;
+      }
+      setIsSubmitting(false);
+      toast.success('Delivery Updated Successfully', {
+         description: `Parcel status updated to ${target}`,
+      });
+      router.push(route('parcels.options'));
+   };
+
+   const handleCancel = () => {
+      router.push(route('parcels.options'));
+   };
+
+   const formatAddress = (address: typeof data.deliveryAddress) => {
+      return `${address.street}, ${address.city}, ${address.state} ${address.zip || ''}, ${address.country}`;
+   };
+
+   return (
+      <div className="bg-background min-h-screen">
+         {/* Header */}
+         <div className="bg-card border-b">
+            <div className="container mx-auto px-4 py-4 lg:py-6">
+               <div className="flex justify-between gap-4">
+                  <div className="flex items-center gap-3 lg:gap-4">
+                     <div className="bg-primary/10 rounded-xl p-3">
+                        <Package className="text-primary h-6 w-6 lg:h-8 lg:w-8" />
+                     </div>
+                     <div>
+                        <h1 className="text-xl font-bold tracking-tight lg:text-3xl">
+                           Parcel Booking Details
+                        </h1>
+                        <p className="text-muted-foreground text-sm lg:text-base">
+                           Review and manage parcel information
+                        </p>
+                     </div>
+                  </div>
+                  <div className="flex gap-2 lg:gap-3">
+                     <Button variant="outline" size="sm" asChild>
+                        <Link href={route('parcels.options')}>
+                           <ArrowLeft className="mr-2 h-4 w-4" />
+                           <span className="hidden sm:inline">Back</span>
+                        </Link>
+                     </Button>
+                  </div>
+               </div>
+            </div>
+         </div>
+
+         <div className="container mx-auto px-4 py-6 lg:py-8">
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 lg:gap-8">
+               {/* Left Column - Main Details */}
+               <div className="space-y-6 lg:col-span-2">
+                  {/* Tracking Information */}
+                  <Card className="animate-fade-in-up">
+                     <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                           <Package className="h-5 w-5" />
+                           Tracking Information
+                        </CardTitle>
+                     </CardHeader>
+                     <CardContent className="space-y-4">
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                           <div>
+                              <label className="text-muted-foreground text-sm font-medium">
+                                 Tracking Number
+                              </label>
+                              <div className="mt-1">
+                                 <code className="bg-muted block rounded-md px-3 py-2 font-mono text-lg font-bold">
+                                    {data.trackingNumber}
+                                 </code>
+                              </div>
+                           </div>
+                           <div>
+                              <label className="text-muted-foreground text-sm font-medium">
+                                 Parcel Type
+                              </label>
+                              <p className="mt-1 text-lg font-semibold">
+                                 {data.parcelType}
+                              </p>
+                           </div>
+                        </div>
+
+                        <div>
+                           <label className="text-muted-foreground text-sm font-semibold">
+                              Available Options
+                           </label>
+                           <div className="mt-2 flex items-center gap-2">
+                              <Select
+                                 defaultValue={data.status}
+                                 onValueChange={(value) =>
+                                    setStatue(value as Status)
+                                 }
+                              >
+                                 <SelectTrigger className="w-[300px]">
+                                    <SelectValue placeholder="Select a fruit" />
+                                 </SelectTrigger>
+                                 <SelectContent>
+                                    <SelectGroup>
+                                       <SelectLabel>
+                                          Available Options
+                                       </SelectLabel>
+                                       <SelectItem value="PENDING">
+                                          PENDING
+                                       </SelectItem>
+                                       <SelectItem value="PICKED_UP">
+                                          PICKED UP
+                                       </SelectItem>
+                                       <SelectItem value="IN_TRANSIT">
+                                          IN TRANSIT
+                                       </SelectItem>
+                                       <SelectItem value="DELIVERING">
+                                          DELIVERING
+                                       </SelectItem>
+                                       <SelectItem value="DELIVERED">
+                                          DELIVERED
+                                       </SelectItem>
+                                       <SelectItem value="CANCELLED">
+                                          CANCELLED
+                                       </SelectItem>
+                                    </SelectGroup>
+                                 </SelectContent>
+                              </Select>
+
+                              <Button
+                                 disabled={isSubmitting}
+                                 onClick={() => handleSubmit(statue)}
+                              >
+                                 {isSubmitting && (
+                                    <Loader className="mr-2 animate-spin" />
+                                 )}
+                                 Save
+                              </Button>
+                           </div>
+                        </div>
+                     </CardContent>
+                  </Card>
+
+                  {/* Address Information */}
+                  <Card className="animate-fade-in-up">
+                     <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                           <MapPin className="h-5 w-5" />
+                           Address Information
+                        </CardTitle>
+                     </CardHeader>
+                     <CardContent className="space-y-6">
+                        {/* Pickup Address */}
+                        <div>
+                           <div className="mb-3 flex items-center gap-2">
+                              <div className="h-3 w-3 rounded-full bg-orange-500"></div>
+                              <h3 className="font-semibold">Pickup Address</h3>
+                           </div>
+                           <div className="bg-muted/50 rounded-lg p-4">
+                              <p className="text-sm leading-relaxed">
+                                 {formatAddress(data.pickupAddress)}
+                              </p>
+                           </div>
+                        </div>
+
+                        <Separator />
+
+                        {/* Delivery Address */}
+                        <div>
+                           <div className="mb-3 flex items-center gap-2">
+                              <div className="h-3 w-3 rounded-full bg-green-500"></div>
+                              <h3 className="font-semibold">
+                                 Delivery Address
+                              </h3>
+                           </div>
+                           <div className="bg-muted/50 rounded-lg p-4">
+                              <p className="text-sm leading-relaxed">
+                                 {formatAddress(data.deliveryAddress)}
+                              </p>
+                           </div>
+                        </div>
+
+                        <Separator />
+
+                        <div>
+                           <div className="mb-3 flex items-center gap-2">
+                              <div className="h-3 w-3 rounded-full bg-indigo-500"></div>
+                              <h3 className="font-semibold">
+                                 Delivery Instruction
+                              </h3>
+                           </div>
+                           <div className="bg-muted/50 rounded-lg p-4">
+                              <p className="text-sm leading-relaxed">
+                                 {data.notes ??
+                                    'No special instructions provided.'}
+                              </p>
+                           </div>
+                        </div>
+                     </CardContent>
+                  </Card>
+
+                  {/* Contact Information */}
+                  <Card className="animate-fade-in-up">
+                     <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                           <User className="h-5 w-5" />
+                           Contact Information
+                        </CardTitle>
+                     </CardHeader>
+                     <CardContent>
+                        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                           {/* Sender */}
+                           <div>
+                              <h3 className="mb-3 flex items-center gap-2 font-semibold">
+                                 <div className="h-2 w-2 rounded-full bg-blue-500"></div>
+                                 Sender
+                              </h3>
+                              <div className="space-y-2">
+                                 <div className="flex items-center gap-2 text-sm">
+                                    <User className="text-muted-foreground h-4 w-4" />
+                                    <span className="font-medium">
+                                       {data.sender.name}
+                                    </span>
+                                 </div>
+                                 <div className="flex items-center gap-2 text-sm">
+                                    <Phone className="text-muted-foreground h-4 w-4" />
+                                    <span>{data.sender.phone}</span>
+                                 </div>
+                                 {data.sender.email && (
+                                    <div className="flex items-center gap-2 text-sm">
+                                       <Mail className="text-muted-foreground h-4 w-4" />
+                                       <span className="truncate">
+                                          {data.sender.email}
+                                       </span>
+                                    </div>
+                                 )}
+                              </div>
+                           </div>
+
+                           {/* Recipient */}
+                           <div>
+                              <h3 className="mb-3 flex items-center gap-2 font-semibold">
+                                 <div className="h-2 w-2 rounded-full bg-green-500"></div>
+                                 Recipient
+                              </h3>
+                              <div className="space-y-2">
+                                 <div className="flex items-center gap-2 text-sm">
+                                    <User className="text-muted-foreground h-4 w-4" />
+                                    <span className="font-medium">
+                                       {data.recipient.name}
+                                    </span>
+                                 </div>
+                                 <div className="flex items-center gap-2 text-sm">
+                                    <Phone className="text-muted-foreground h-4 w-4" />
+                                    <span>{data.recipient.phone}</span>
+                                 </div>
+                                 {data.recipient.email && (
+                                    <div className="flex items-center gap-2 text-sm">
+                                       <Mail className="text-muted-foreground h-4 w-4" />
+                                       <span className="truncate">
+                                          {data.recipient.email}
+                                       </span>
+                                    </div>
+                                 )}
+                              </div>
+                           </div>
+                        </div>
+                     </CardContent>
+                  </Card>
+               </div>
+
+               {/* Right Column - Barcode & Actions */}
+               <div className="space-y-6">
+                  {/* Delivery Type Badge */}
+                  <Card className="animate-fade-in-up">
+                     <CardContent className="p-6 text-center">
+                        <Badge
+                           className={`px-4 py-2 text-sm ${deliveryTypeColors[data.deliveryType]}`}
+                        >
+                           <Truck className="mr-2 h-4 w-4" />
+                           {
+                              deliveryTypeOptions.find(
+                                 (opt) => opt.value === data.deliveryType,
+                              )?.label
+                           }
+                        </Badge>
+                     </CardContent>
+                  </Card>
+
+                  {/* Barcode */}
+                  <Card className="animate-fade-in-up">
+                     <CardHeader>
+                        <CardTitle className="flex items-center justify-center gap-2 text-center">
+                           <BarChart3 className="h-5 w-5" />
+                           Barcode
+                        </CardTitle>
+                     </CardHeader>
+                     <CardContent className="space-y-4 text-center">
+                        <div className="rounded-lg border bg-white p-4">
+                           {/* eslint-disable-next-line @next/next/no-img-element */}
+                           <img
+                              src={data.barcodeUrl}
+                              alt="Barcode"
+                              className="mx-auto w-full max-w-64"
+                           />
+                        </div>
+                        <p className="text-muted-foreground font-mono text-xs">
+                           {data.trackingNumber}
+                        </p>
+                        <Button
+                           variant="outline"
+                           size="sm"
+                           className="w-full"
+                           asChild
+                        >
+                           <Link href={data.barcodeUrl} download>
+                              <Download className="mr-2 h-4 w-4" />
+                              Download Barcode
+                           </Link>
+                        </Button>
+                     </CardContent>
+                  </Card>
+
+                  {/* QR Code */}
+                  <Card className="animate-fade-in-up">
+                     <CardHeader>
+                        <CardTitle className="flex items-center justify-center gap-2 text-center">
+                           <QrCode className="h-5 w-5" />
+                           QR Code
+                        </CardTitle>
+                     </CardHeader>
+                     <CardContent className="space-y-4 text-center">
+                        <div className="inline-block rounded-lg border bg-white p-4">
+                           {/* eslint-disable-next-line @next/next/no-img-element */}
+                           <img
+                              src={data.trackingQrCode}
+                              alt="QR Code"
+                              className="mx-auto h-32 w-32"
+                           />
+                        </div>
+                        <p className="text-muted-foreground text-xs">
+                           Scan to track parcel
+                        </p>
+                        <Button
+                           variant="outline"
+                           size="sm"
+                           className="w-full"
+                           asChild
+                        >
+                           <Link href={data.trackingQrCode} download>
+                              <Download className="mr-2 h-4 w-4" />
+                              Download QR Code
+                           </Link>
+                        </Button>
+                     </CardContent>
+                  </Card>
+
+                  {/* Action Buttons */}
+                  <Card className="animate-fade-in-up">
+                     <CardContent className="space-y-3 p-6">
+                        <Button
+                           onClick={() => handleSubmit('CANCELLED')}
+                           disabled={isSubmitting}
+                           className="w-full"
+                           size="lg"
+                        >
+                           {isSubmitting ? (
+                              <>
+                                 <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                                 Processing...
+                              </>
+                           ) : (
+                              <>
+                                 <CheckCircle className="mr-2 h-4 w-4" />
+                                 Cancel Delivery
+                              </>
+                           )}
+                        </Button>
+                        <Button
+                           variant="outline"
+                           onClick={handleCancel}
+                           disabled={isSubmitting}
+                           className="w-full"
+                           size="lg"
+                        >
+                           <X className="mr-2 h-4 w-4" />
+                           Scan Again
+                        </Button>
+                     </CardContent>
+                  </Card>
+               </div>
+            </div>
+         </div>
+      </div>
+   );
+}

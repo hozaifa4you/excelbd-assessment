@@ -1,0 +1,30 @@
+// import { refreshToken } from './auth';
+import { appEnv } from '@/config/env.config';
+import { getSession } from '@/lib/sessions';
+
+export interface FetchOptions extends RequestInit {
+   headers?: Record<string, string>;
+}
+
+export const authFetch = async (
+   url: string | URL,
+   options: FetchOptions = {},
+) => {
+   const session = await getSession();
+
+   const baseUrl = appEnv.API_URL!;
+   const fullUrl = `${baseUrl}/api${url}`;
+
+   options.headers = {
+      ...options.headers,
+      Authorization: `Bearer ${session?.accessToken}`,
+      'Content-Type': 'application/json',
+   };
+   let response = await fetch(fullUrl, options);
+
+   if (response.status === 401) {
+      // Uncomment the following lines if you implement token refresh logic
+   }
+
+   return response;
+};

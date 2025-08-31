@@ -1,0 +1,123 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  CUSTOMER
+  ADMIN
+  DELIVERY_AGENT
+}
+
+enum Status {
+  ACTIVE
+  DEACTIVATED
+  SUSPENDED
+}
+
+model User {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  firstName     String
+  lastName      String
+  avatar        String?  @default("avatar.png")
+  username      String   @unique
+  email         String   @unique
+  phone         String?  @unique
+  password      String
+  role          Role     @default(CUSTOMER)
+  status        Status   @default(ACTIVE)
+  rememberToken String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  Address       Address?
+  Parcel        Parcel[]
+  DeliveryAgent Parcel[] @relation("ParcelDeliveryAgent")
+
+  @@map("Users")
+}
+
+type Address {
+  street  String
+  city    String
+  state   String
+  country String
+  zip     String?
+}
+
+enum ParcelStatus {
+  PENDING
+  PICKED_UP
+  IN_TRANSIT
+  DELIVERING
+  DELIVERED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  COD
+  PAID
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  ONLINE
+}
+
+type Fees {
+  price        Float? @default(0)
+  deliveryFee  Float
+  handlingFee  Float? @default(0)
+  insuranceFee Float? @default(0)
+  signatureFee Float? @default(0)
+}
+
+enum DeliveryType {
+  STANDARD
+  EXPRESS
+  OVERNIGHT
+  SAME_DAY
+}
+
+type Person {
+  name  String
+  phone String
+  email String?
+}
+
+model Parcel {
+  id                String         @id @default(auto()) @map("_id") @db.ObjectId
+  trackingNumber    String         @unique
+  parcelType        String
+  weight            Float
+  dimensions        String?
+  status            ParcelStatus   @default(PENDING)
+  paymentStatus     PaymentStatus
+  paymentMethod     PaymentMethod?
+  estimatedDelivery DateTime?
+  deliveryType      DeliveryType   @default(STANDARD)
+  deliveredAt       DateTime?
+  notes             String?
+  trackingQrCode    String?
+  barcode           String?        @unique
+  barcodeUrl        String?
+  sender            Person
+  recipient         Person
+  pickupAddress     Address
+  deliveryAddress   Address
+  fees              Fees
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  deliveryAgent   User?   @relation("ParcelDeliveryAgent", fields: [deliveryAgentId], references: [id])
+  deliveryAgentId String? @db.ObjectId
+  creator         User    @relation(fields: [creatorId], references: [id])
+  creatorId       String  @db.ObjectId
+
+  @@map("Parcels")
+}
